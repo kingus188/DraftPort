@@ -7,6 +7,7 @@ import { applyDockIcon, createAppIconImage, resolveAppIconPath } from './utils/a
 import { extractFrontmatterMeta } from './utils/frontmatter';
 import { createRecentItemsStore, type RecentItemsStore, type RecentItemType } from './recentItemsStore';
 import { buildRecentOpenSubmenu } from './utils/recentMenu';
+import { registerWorkspaceAssetProtocol } from './utils/workspaceAssetProtocol';
 
 // 判断是否为开发模式 - 使用 app.isPackaged 是最可靠的方式
 // 注意：app.isPackaged 只能在 app ready 之后使用，这里用延迟判断
@@ -992,6 +993,7 @@ function createMenu() {
 app.whenReady().then(() => {
     // 开发模式运行在 Electron.app 内，macOS Dock 需要运行时显式覆盖图标。
     applyRuntimeAppIcon();
+    registerWorkspaceAssetProtocol({ isPathAllowed: isPathInsideWorkspace });
     createWindow();
     createMenu();
 

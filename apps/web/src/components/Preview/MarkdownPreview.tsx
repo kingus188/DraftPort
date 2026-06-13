@@ -24,6 +24,8 @@ import {
 } from "../../utils/mermaidConfig";
 import { renderTableBlocksForPreview } from "../../services/wechatTableRenderer";
 import type { WorkspacePreviewLayoutMode } from "../../hooks/useWorkspacePreviewLayout";
+import { useFileStore } from "../../store/fileStore";
+import { materializePreviewImageSources } from "../../utils/previewImageSources";
 import "./MarkdownPreview.css";
 
 const SYNC_SCROLL_EVENT = "draftport-sync-scroll";
@@ -54,6 +56,7 @@ export function MarkdownPreview({
   onTogglePreviewCollapsed,
 }: MarkdownPreviewProps = {}) {
   const { markdown } = useEditorStore();
+  const currentFilePath = useFileStore((state) => state.currentFile?.path);
   const { themeId: theme, customCSS, getThemeCSS } = useThemeStore();
   const uiTheme = useUITheme((state) => state.theme);
   const [html, setHtml] = useState("");
@@ -83,9 +86,13 @@ export function MarkdownPreview({
 
   useEffect(() => {
     const rawHtml = parser.render(markdown);
+    const htmlWithLocalImages = materializePreviewImageSources(
+      rawHtml,
+      currentFilePath,
+    );
     const previewHtml = linkToFootnoteEnabled
-      ? convertLinksToFootnotes(rawHtml)
-      : rawHtml;
+      ? convertLinksToFootnotes(htmlWithLocalImages)
+      : htmlWithLocalImages;
 
     // 使用 store 中的 getThemeCSS 方法，根据 UI 主题决定是否追加深色模式覆盖
     const isDarkMode = uiTheme === "dark";
@@ -102,6 +109,7 @@ export function MarkdownPreview({
     parser,
     uiTheme,
     linkToFootnoteEnabled,
+    currentFilePath,
   ]);
 
   // KaTeX 渲染：轻量级、快速，解决内存问题
