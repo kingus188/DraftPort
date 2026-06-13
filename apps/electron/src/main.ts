@@ -1,7 +1,9 @@
 import { app, BrowserWindow, Menu, dialog, ipcMain, nativeImage, IpcMainInvokeEvent, shell, clipboard } from 'electron';
+import type { NativeImage } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { checkForUpdates, openReleasesPage } from './updater';
+import { applyDockIcon, createAppIconImage, resolveAppIconPath } from './utils/appIcon';
 import { extractFrontmatterMeta } from './utils/frontmatter';
 
 // 判断是否为开发模式 - 使用 app.isPackaged 是最可靠的方式
@@ -52,22 +54,19 @@ function stopWatching() {
 
 // --- 辅助函数 ---
 
+/** Loads the current application icon for window chrome and Linux task switchers. */
 function getWindowIcon() {
+    return createAppIconImage(resolveAppIconPath(__dirname), nativeImage);
+}
 
-
-    // 方案 1: 当前脚本同级 assets 目录
-    let iconPath = path.join(__dirname, 'assets', 'icon.png');
-
-    // 方案 2: 父级 assets 目录 (dist 场景)
-    if (!fs.existsSync(iconPath)) {
-        iconPath = path.join(__dirname, '..', 'assets', 'icon.png');
-    }
-
-    // 方案 3: 绝对开发路径回退 (开发环境可选)
-    // omit for now.
-
-    const img = nativeImage.createFromPath(iconPath);
-    return img.isEmpty() ? null : img;
+/** Applies the project icon to the macOS Dock during development runtime. */
+function applyRuntimeAppIcon() {
+    applyDockIcon<NativeImage>({
+        platform: process.platform,
+        iconPath: resolveAppIconPath(__dirname),
+        dock: app.dock,
+        nativeImage,
+    });
 }
 
 // 检查文件是否存在并生成带编号的唯一路径
@@ -799,7 +798,8 @@ function createMenu() {
 }
 
 app.whenReady().then(() => {
-    // macOS 会自动使用 app bundle 中的 icon.icns 作为 dock 图标
+    // 开发模式运行在 Electron.app 内，macOS Dock 需要运行时显式覆盖图标。
+    applyRuntimeAppIcon();
     createWindow();
     createMenu();
 

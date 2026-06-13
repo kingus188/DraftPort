@@ -28,33 +28,15 @@ import {
 } from "lucide-react";
 import { useUITheme } from "../../hooks/useUITheme";
 import { useWindowControls } from "../../hooks/useWindowControls";
+import { resolveAppAssetPath } from "../../utils/assetPath";
 import { Modal, FloatingToolbarButton } from "../common";
 
-const DefaultLogoMark = () => (
-  <svg
-    width="40"
-    height="40"
-    viewBox="0 0 200 200"
-    xmlns="http://www.w3.org/2000/svg"
-    aria-hidden="true"
-  >
-    <path
-      d="M40 20 H160 C171 20 180 29 180 40 V140 C180 151 171 160 160 160 H140 L140 185 L110 160 H40 C29 160 20 151 20 140 V40 C20 29 29 20 40 20 Z"
-      fill="#1A1A1A"
-    />
-    <rect x="50" y="50" width="100" height="12" rx="6" fill="#07C160" />
-    <path
-      d="M60 85 L60 130 H80 L80 110 L100 130 L120 110 L120 130 H140 L140 85 L120 85 L100 105 L80 85 Z"
-      fill="#FFFFFF"
-    />
-  </svg>
-);
-
-const structuralismLogoSrc = `${import.meta.env.BASE_URL}favicon-light.svg`;
-
-const StructuralismLogoMark = () => (
+/** Renders the current app logo from public assets so header branding tracks favicon updates. */
+const HeaderLogoMark = ({ isDarkTheme }: { isDarkTheme: boolean }) => (
   <img
-    src={structuralismLogoSrc}
+    src={resolveAppAssetPath(
+      isDarkTheme ? "favicon-light.svg" : "favicon-dark.svg",
+    )}
     alt="DraftPort Logo"
     width={40}
     height={40}
@@ -121,7 +103,7 @@ export function Header() {
   const [showImageHostModal, setShowImageHostModal] = useState(false);
   const uiTheme = useUITheme((state) => state.theme);
   const setTheme = useUITheme((state) => state.setTheme);
-  const isStructuralismUI = uiTheme === "dark";
+  const isDarkTheme = uiTheme === "dark";
 
   const { isElectron, isWindows, platform } = useWindowControls();
 
@@ -223,11 +205,7 @@ export function Header() {
       >
         <div className="header-left">
           <div className="logo">
-            {isStructuralismUI ? (
-              <StructuralismLogoMark />
-            ) : (
-              <DefaultLogoMark />
-            )}
+            <HeaderLogoMark isDarkTheme={isDarkTheme} />
             <div className="logo-info">
               <span className="logo-text">DraftPort</span>
               <span className="logo-subtitle">公众号 Markdown 排版编辑器</span>
