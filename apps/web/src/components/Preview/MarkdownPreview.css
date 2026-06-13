@@ -81,19 +81,19 @@
 }
 
 /* 确保斜体样式生效 */
-#wemd em {
+#draftport em {
   font-style: italic !important;
   font-synthesis: style;
   /* 允许浏览器合成斜体 */
 }
 
 /* 表格容器横向滚动（主题 CSS 可能缺失此规则） */
-#wemd .table-container {
+#draftport .table-container {
   overflow-x: auto;
 }
 
 /* 强制图片自适应，修复浏览器存储模式下图片过大的问题 */
-#wemd img {
+#draftport img {
   max-width: 100% !important;
   height: auto !important;
   display: block;
@@ -101,7 +101,7 @@
 }
 
 /* 针对整个预览容器启用字体合成 */
-#wemd {
+#draftport {
   font-synthesis: style weight;
 }
 

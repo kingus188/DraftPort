@@ -6,7 +6,7 @@ describe("ThemeProcessor mac bar", () => {
     const html =
       '<pre class="custom"><span class="mac-sign" style="padding: 10px 14px 0;"><svg xmlns="http://www.w3.org/2000/svg" width="45" height="13" viewBox="0 0 450 130"></svg></span><code class="hljs language-ts">  const a = 1;\n    console.log(a);</code></pre>';
     const css = `
-      #wemd pre.custom > .mac-sign {
+      #draftport pre.custom > .mac-sign {
         display: block;
       }
     `;

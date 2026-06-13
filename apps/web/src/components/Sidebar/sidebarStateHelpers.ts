@@ -2,11 +2,11 @@ import type { FileItem, FolderItem, TreeItem } from "../../store/fileTypes";
 import type { SortMode } from "./sortUtils";
 import { compareFiles, sortTreeItems } from "./sortUtils";
 
-const COLLAPSED_KEY = "wemd-folder-collapsed";
+const COLLAPSED_KEY = "draftport-folder-collapsed";
 
 export const ROOT_DROP_TARGET = "__root__";
-export const FILE_DRAG_TYPE = "application/x-wemd-file";
-export const FOLDER_DRAG_TYPE = "application/x-wemd-folder";
+export const FILE_DRAG_TYPE = "application/x-draftport-file";
+export const FOLDER_DRAG_TYPE = "application/x-draftport-folder";
 
 export function getCollapsedState(): Set<string> {
   try {

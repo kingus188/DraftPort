@@ -71,7 +71,7 @@ describe("Header", () => {
       window.localStorage &&
       typeof window.localStorage.removeItem === "function"
     ) {
-      window.localStorage.removeItem("wemd-header-autohide");
+      window.localStorage.removeItem("draftport-header-autohide");
     }
 
     // Setup default hook returns
@@ -105,7 +105,7 @@ describe("Header", () => {
   it("renders logo and core elements", () => {
     render(<Header />);
 
-    expect(screen.getByText("WeMD")).toBeInTheDocument();
+    expect(screen.getByText("DraftPort")).toBeInTheDocument();
     expect(screen.getByText("公众号 Markdown 排版编辑器")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "图库" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "主题" })).toBeInTheDocument();
@@ -205,7 +205,7 @@ describe("Header", () => {
 
     await waitFor(() => {
       expect(storageMock.setItem).toHaveBeenCalledWith(
-        "wemd-header-autohide",
+        "draftport-header-autohide",
         "true",
       );
     });

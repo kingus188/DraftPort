@@ -42,7 +42,7 @@ export function SyntaxHelpPopover() {
 
   const openDocs = () => {
     window.open(
-      "https://wemd.app/docs/reference/markdown-syntax",
+      "https://draftport.app/docs/reference/markdown-syntax",
       "_blank",
       "noopener,noreferrer",
     );

@@ -1,6 +1,6 @@
 import { app, shell, BrowserWindow } from 'electron';
 
-const GITHUB_REPO = 'tenngoxars/WeMD';
+const GITHUB_REPO = 'kingus188/DraftPort';
 const RELEASES_URL = `https://github.com/${GITHUB_REPO}/releases`;
 const API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
 
@@ -22,7 +22,7 @@ export async function checkForUpdates(
 ): Promise<void> {
     try {
         const response = await fetch(API_URL, {
-            headers: { 'User-Agent': 'WeMD-Electron' }
+            headers: { 'User-Agent': 'DraftPort-Electron' }
         });
         if (!response.ok) return;
 

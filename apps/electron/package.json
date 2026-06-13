@@ -1,10 +1,10 @@
 {
-  "name": "wemd-electron",
+  "name": "draftport-electron",
   "version": "1.2.10",
-  "description": "WeMD - 更优雅的 Markdown 公众号排版工具",
+  "description": "DraftPort - 面向多平台发布的 Markdown 内容编辑器",
   "main": "dist/main.js",
-  "homepage": "https://wemd.app",
-  "author": "WeMD Team",
+  "homepage": "https://draftport.app",
+  "author": "DraftPort Team",
   "scripts": {
     "build": "rimraf dist && tsc",
     "test": "rimraf dist && tsc && node --test dist/**/*.test.js",

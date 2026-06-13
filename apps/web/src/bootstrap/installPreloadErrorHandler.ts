@@ -4,7 +4,7 @@
 // 用时间窗口 guard：刚刷新过的冷却期内再次失败，则不拦截，
 // 让错误按 Vite 默认行为抛出，避免死循环也便于上报。
 
-export const PRELOAD_RELOAD_AT_KEY = "wemd:preload-reloaded-at";
+export const PRELOAD_RELOAD_AT_KEY = "draftport:preload-reloaded-at";
 export const PRELOAD_RELOAD_COOLDOWN_MS = 10_000;
 
 export interface PreloadErrorHandlerDeps {

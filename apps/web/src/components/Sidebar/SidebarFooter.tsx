@@ -33,13 +33,13 @@ export function SidebarFooter() {
           <img src={logoSrc} alt="Logo" />
         </div>
         <div className="footer-info">
-          <span className="footer-name">WeMD</span>
+          <span className="footer-name">DraftPort</span>
           <span className="footer-version">v{__APP_VERSION__}</span>
         </div>
       </div>
       <div className="footer-links">
         <a
-          href="https://github.com/tenngoxars/WeMD"
+          href="https://github.com/kingus188/DraftPort"
           target="_blank"
           rel="noopener noreferrer"
           data-tooltip="GitHub 仓库"
@@ -48,7 +48,7 @@ export function SidebarFooter() {
           <GithubIcon size={16} />
         </a>
         <a
-          href="https://wemd.app"
+          href="https://draftport.app"
           target="_blank"
           rel="noopener noreferrer"
           data-tooltip="官方网站"
@@ -57,7 +57,7 @@ export function SidebarFooter() {
           <Globe size={16} />
         </a>
         <a
-          href="https://wemd.app/docs"
+          href="https://draftport.app/docs"
           target="_blank"
           rel="noopener noreferrer"
           data-tooltip="帮助文档"

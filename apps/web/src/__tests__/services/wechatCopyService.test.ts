@@ -29,7 +29,7 @@ vi.mock("mermaid", () => ({
   },
 }));
 
-vi.mock("@wemd/core", () => ({
+vi.mock("@draftport/core", () => ({
   createMarkdownParser: mocked.createMarkdownParserMock.mockImplementation(
     () => ({
       render: mocked.parserRender,
@@ -125,7 +125,7 @@ describe("wechatCopyService clipboard strategy", () => {
 
     mocked.parserRender.mockReturnValue("<p>段落A</p><p>段落B</p>");
     mocked.processHtmlMock.mockReturnValue(
-      '<section id="wemd"><p style="margin-top:18px;margin-bottom:18px;">段落A</p><p style="margin-top:18px;margin-bottom:18px;">段落B</p></section>',
+      '<section id="draftport"><p style="margin-top:18px;margin-bottom:18px;">段落A</p><p style="margin-top:18px;margin-bottom:18px;">段落B</p></section>',
     );
 
     Object.defineProperty(navigator, "clipboard", {
@@ -188,7 +188,7 @@ describe("wechatCopyService clipboard strategy", () => {
   it("prefers native execCommand copy", async () => {
     const execSpy = vi.spyOn(document, "execCommand").mockReturnValue(true);
 
-    await copyToWechat("test", "#wemd p { margin: 18px 0; }");
+    await copyToWechat("test", "#draftport p { margin: 18px 0; }");
 
     expect(execSpy).toHaveBeenCalledWith("copy");
     expect(mocked.clipboardWrite).not.toHaveBeenCalled();
@@ -211,7 +211,7 @@ describe("wechatCopyService clipboard strategy", () => {
     });
     const execSpy = vi.spyOn(document, "execCommand").mockReturnValue(true);
 
-    await copyToWechat("test", "#wemd p { margin: 18px 0; }");
+    await copyToWechat("test", "#draftport p { margin: 18px 0; }");
 
     expect(mocked.electronClipboardWrite).toHaveBeenCalledTimes(1);
     expect(execSpy).not.toHaveBeenCalled();
@@ -235,7 +235,7 @@ describe("wechatCopyService clipboard strategy", () => {
     });
     const execSpy = vi.spyOn(document, "execCommand").mockReturnValue(true);
 
-    await copyToWechat("test", "#wemd p { margin: 18px 0; }");
+    await copyToWechat("test", "#draftport p { margin: 18px 0; }");
 
     expect(execSpy).toHaveBeenCalledWith("copy");
     expect(mocked.electronClipboardWrite).not.toHaveBeenCalled();
@@ -260,7 +260,7 @@ describe("wechatCopyService clipboard strategy", () => {
     });
     const execSpy = vi.spyOn(document, "execCommand").mockReturnValue(true);
 
-    await copyToWechat("test", "#wemd p { margin: 18px 0; }");
+    await copyToWechat("test", "#draftport p { margin: 18px 0; }");
 
     expect(mocked.electronClipboardWrite).toHaveBeenCalledTimes(1);
     expect(execSpy).toHaveBeenCalledWith("copy");
@@ -285,7 +285,7 @@ describe("wechatCopyService clipboard strategy", () => {
     });
     const execSpy = vi.spyOn(document, "execCommand").mockReturnValue(false);
 
-    await copyToWechat("test", "#wemd p { margin: 18px 0; }");
+    await copyToWechat("test", "#draftport p { margin: 18px 0; }");
 
     expect(mocked.electronClipboardWrite).toHaveBeenCalledTimes(1);
     expect(execSpy).toHaveBeenCalledWith("copy");
@@ -309,7 +309,7 @@ describe("wechatCopyService clipboard strategy", () => {
     });
     const execSpy = vi.spyOn(document, "execCommand").mockReturnValue(false);
 
-    await copyToWechat("test", "#wemd p { margin: 18px 0; }");
+    await copyToWechat("test", "#draftport p { margin: 18px 0; }");
 
     expect(execSpy).toHaveBeenCalledWith("copy");
     expect(mocked.electronClipboardWrite).toHaveBeenCalledTimes(1);
@@ -321,7 +321,7 @@ describe("wechatCopyService clipboard strategy", () => {
   it("falls back to Clipboard API when native execCommand fails", async () => {
     const execSpy = vi.spyOn(document, "execCommand").mockReturnValue(false);
 
-    await copyToWechat("test", "#wemd p { margin: 18px 0; }");
+    await copyToWechat("test", "#draftport p { margin: 18px 0; }");
 
     expect(execSpy).toHaveBeenCalledWith("copy");
     expect(mocked.clipboardWrite).toHaveBeenCalledTimes(1);
@@ -332,7 +332,7 @@ describe("wechatCopyService clipboard strategy", () => {
   it("uses rendered plain text instead of raw markdown in Clipboard fallback", async () => {
     vi.spyOn(document, "execCommand").mockReturnValue(false);
 
-    await copyToWechat("# 标题", "#wemd p { margin: 18px 0; }");
+    await copyToWechat("# 标题", "#draftport p { margin: 18px 0; }");
 
     expect(mocked.clipboardWrite).toHaveBeenCalledTimes(1);
     const [[items]] = mocked.clipboardWrite.mock.calls;
@@ -373,7 +373,7 @@ describe("wechatCopyService clipboard strategy", () => {
       },
     });
 
-    await copyToWechat("test", "#wemd p { margin: 18px 0; }");
+    await copyToWechat("test", "#draftport p { margin: 18px 0; }");
 
     expect(mocked.electronClipboardWrite).toHaveBeenCalledTimes(1);
     const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
@@ -392,7 +392,7 @@ describe("wechatCopyService clipboard strategy", () => {
 
   it("converts mac-sign svg to img before clipboard write", async () => {
     mocked.processHtmlMock.mockReturnValue(
-      '<section id="wemd"><pre class="custom"><span class="mac-sign" style="padding: 10px 14px 0;"><svg xmlns="http://www.w3.org/2000/svg" width="45" height="13" viewBox="0 0 450 130"></svg></span><code class="hljs">const a = 1;</code></pre></section>',
+      '<section id="draftport"><pre class="custom"><span class="mac-sign" style="padding: 10px 14px 0;"><svg xmlns="http://www.w3.org/2000/svg" width="45" height="13" viewBox="0 0 450 130"></svg></span><code class="hljs">const a = 1;</code></pre></section>',
     );
 
     Object.defineProperty(window, "electron", {
@@ -410,7 +410,7 @@ describe("wechatCopyService clipboard strategy", () => {
 
     await copyToWechat(
       "test",
-      "#wemd pre.custom > .mac-sign { display: block; }",
+      "#draftport pre.custom > .mac-sign { display: block; }",
       { showMacBar: true },
     );
 
@@ -427,7 +427,7 @@ describe("wechatCopyService clipboard strategy", () => {
 
   it("falls back to original svg when mac-sign png conversion fails", async () => {
     mocked.processHtmlMock.mockReturnValue(
-      '<section id="wemd"><pre class="custom"><span class="mac-sign" style="padding: 10px 14px 0;"><svg xmlns="http://www.w3.org/2000/svg" width="45" height="13" viewBox="0 0 450 130"></svg></span><code class="hljs">const a = 1;</code></pre></section>',
+      '<section id="draftport"><pre class="custom"><span class="mac-sign" style="padding: 10px 14px 0;"><svg xmlns="http://www.w3.org/2000/svg" width="45" height="13" viewBox="0 0 450 130"></svg></span><code class="hljs">const a = 1;</code></pre></section>',
     );
 
     class BrokenImage {
@@ -465,7 +465,7 @@ describe("wechatCopyService clipboard strategy", () => {
 
     await copyToWechat(
       "test",
-      "#wemd pre.custom > .mac-sign { display: block; }",
+      "#draftport pre.custom > .mac-sign { display: block; }",
       { showMacBar: true },
     );
 

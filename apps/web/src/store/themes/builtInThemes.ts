@@ -17,7 +17,7 @@ import {
   receiptTheme,
   sunsetFilmTheme,
   templateTheme,
-} from "@wemd/core";
+} from "@draftport/core";
 
 // 从 ThemeDesigner 导入共享类型（解决类型重复定义问题）
 import type {

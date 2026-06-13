@@ -76,7 +76,7 @@ export class FileSystemAdapter implements StorageAdapter {
 
   private async openHandleDb() {
     const { openDB } = await import("idb");
-    return openDB("wemd-fs-handles", 1, {
+    return openDB("draftport-fs-handles", 1, {
       upgrade(db) {
         if (!db.objectStoreNames.contains("handles")) {
           db.createObjectStore("handles");

@@ -19,73 +19,73 @@ export function generateTypography(
 ): string {
   const { h1Preset, h2Preset, h3Preset, h4Preset } = presets;
 
-  return `#wemd p {
+  return `#draftport p {
   font-family: ${safeFontFamily};
-  font-size: var(--wemd-font-size);
-  line-height: var(--wemd-line-height);
-  margin: var(--wemd-paragraph-margin) 0;
-  padding: var(--wemd-paragraph-padding) 0;
-  letter-spacing: var(--wemd-letter-spacing);
+  font-size: var(--draftport-font-size);
+  line-height: var(--draftport-line-height);
+  margin: var(--draftport-paragraph-margin) 0;
+  padding: var(--draftport-paragraph-padding) 0;
+  letter-spacing: var(--draftport-letter-spacing);
   ${v.textIndent ? "text-indent: 2em;" : ""}
   ${v.textJustify ? "text-align: justify;" : ""}
 }
 
-#wemd li {
+#draftport li {
   font-family: ${safeFontFamily};
-  margin: var(--wemd-list-spacing) 0;
-  line-height: var(--wemd-line-height);
-  letter-spacing: var(--wemd-letter-spacing);
+  margin: var(--draftport-list-spacing) 0;
+  line-height: var(--draftport-line-height);
+  letter-spacing: var(--draftport-letter-spacing);
 }
 
-#wemd h1 .content {
-  font-size: var(--wemd-h1-font-size);
-  color: var(--wemd-h1-color);
+#draftport h1 .content {
+  font-size: var(--draftport-h1-font-size);
+  color: var(--draftport-h1-color);
   font-weight: ${v.h1.fontWeight || "bold"};
   letter-spacing: ${v.h1.letterSpacing || 0}px;
   ${h1Preset.content}
 }
-#wemd h1 { margin: var(--wemd-h1-margin-top) 0 var(--wemd-h1-margin-bottom); ${v.h1.centered ? "text-align: center;" : ""} }
+#draftport h1 { margin: var(--draftport-h1-margin-top) 0 var(--draftport-h1-margin-bottom); ${v.h1.centered ? "text-align: center;" : ""} }
 
-#wemd h2 .content {
-  font-size: var(--wemd-h2-font-size);
-  color: var(--wemd-h2-color);
+#draftport h2 .content {
+  font-size: var(--draftport-h2-font-size);
+  color: var(--draftport-h2-color);
   font-weight: ${v.h2.fontWeight || "bold"};
   letter-spacing: ${v.h2.letterSpacing || 0}px;
   ${h2Preset.content}
 }
-#wemd h2 { margin: var(--wemd-h2-margin-top) 0 var(--wemd-h2-margin-bottom); ${v.h2.centered ? "text-align: center;" : ""} }
+#draftport h2 { margin: var(--draftport-h2-margin-top) 0 var(--draftport-h2-margin-bottom); ${v.h2.centered ? "text-align: center;" : ""} }
 
-#wemd h3 .content {
-  font-size: var(--wemd-h3-font-size);
-  color: var(--wemd-h3-color);
+#draftport h3 .content {
+  font-size: var(--draftport-h3-font-size);
+  color: var(--draftport-h3-color);
   font-weight: ${v.h3.fontWeight || "bold"};
   letter-spacing: ${v.h3.letterSpacing || 0}px;
   ${h3Preset.content}
 }
-#wemd h3 { margin: var(--wemd-h3-margin-top) 0 var(--wemd-h3-margin-bottom); ${v.h3.centered ? "text-align: center;" : ""} }
+#draftport h3 { margin: var(--draftport-h3-margin-top) 0 var(--draftport-h3-margin-bottom); ${v.h3.centered ? "text-align: center;" : ""} }
 
-#wemd h4 .content {
-  font-size: var(--wemd-h4-font-size);
-  color: var(--wemd-h4-color);
+#draftport h4 .content {
+  font-size: var(--draftport-h4-font-size);
+  color: var(--draftport-h4-color);
   font-weight: ${v.h4.fontWeight || "bold"};
   letter-spacing: ${v.h4.letterSpacing || 0}px;
   ${h4Preset.content}
 }
-#wemd h4 { margin: var(--wemd-h4-margin-top) 0 var(--wemd-h4-margin-bottom); ${v.h4.centered ? "text-align: center;" : ""} }
+#draftport h4 { margin: var(--draftport-h4-margin-top) 0 var(--draftport-h4-margin-bottom); ${v.h4.centered ? "text-align: center;" : ""} }
 
-#wemd ul { list-style-type: ${v.ulStyle}; padding-left: 20px; margin: var(--wemd-paragraph-margin) 0; font-size: ${!v.ulFontSize || v.ulFontSize === "inherit" ? "var(--wemd-font-size)" : v.ulFontSize}; }
-#wemd ul ul { list-style-type: ${v.ulStyleL2}; margin: 4px 0; }
-#wemd ol { list-style-type: ${v.olStyle}; padding-left: 20px; margin: var(--wemd-paragraph-margin) 0; font-size: ${!v.olFontSize || v.olFontSize === "inherit" ? "var(--wemd-font-size)" : v.olFontSize}; }
-#wemd ol ol { list-style-type: ${v.olStyleL2}; margin: 4px 0; }
+#draftport ul { list-style-type: ${v.ulStyle}; padding-left: 20px; margin: var(--draftport-paragraph-margin) 0; font-size: ${!v.ulFontSize || v.ulFontSize === "inherit" ? "var(--draftport-font-size)" : v.ulFontSize}; }
+#draftport ul ul { list-style-type: ${v.ulStyleL2}; margin: 4px 0; }
+#draftport ol { list-style-type: ${v.olStyle}; padding-left: 20px; margin: var(--draftport-paragraph-margin) 0; font-size: ${!v.olFontSize || v.olFontSize === "inherit" ? "var(--draftport-font-size)" : v.olFontSize}; }
+#draftport ol ol { list-style-type: ${v.olStyleL2}; margin: 4px 0; }
 /* 列表符号颜色 */
-#wemd ul li::marker,
-  #wemd ol li::marker {
-  color: var(--wemd-list-marker-color);
+#draftport ul li::marker,
+  #draftport ol li::marker {
+  color: var(--draftport-list-marker-color);
 }
-#wemd ul ul li::marker,
-  #wemd ol ol li::marker,
-    #wemd ul ol li::marker,
-      #wemd ol ul li::marker {
-  color: var(--wemd-list-marker-color-l2);
+#draftport ul ul li::marker,
+  #draftport ol ol li::marker,
+    #draftport ul ol li::marker,
+      #draftport ol ul li::marker {
+  color: var(--draftport-list-marker-color-l2);
 }`;
 }

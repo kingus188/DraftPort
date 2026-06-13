@@ -4,7 +4,7 @@ import {
   createMarkdownParser,
   processHtml,
   convertCssToWeChatDarkMode,
-} from "@wemd/core";
+} from "@draftport/core";
 import { useUITheme } from "../../hooks/useUITheme";
 import { useEditorStore } from "../../store/editorStore";
 import type { DesignerVariables } from "./ThemeDesigner/types";
@@ -16,7 +16,7 @@ import {
 // 主题预览用的示例 Markdown 内容
 const PREVIEW_MARKDOWN = `# 一级标题示例
 
-这是一段**加粗文本**、*斜体文本*、++下划线文本++、~~删除线文本~~、==高亮文本==和 [链接示例](https://github.com/tenngoxars/WeMD)。
+这是一段**加粗文本**、*斜体文本*、++下划线文本++、~~删除线文本~~、==高亮文本==和 [链接示例](https://github.com/kingus188/DraftPort)。
 正文段落通常需要设置行高和间距，以保证阅读体验。
 
 ---
@@ -32,7 +32,7 @@ const PREVIEW_MARKDOWN = `# 一级标题示例
 
 ### 三级标题
 
-这里演示脚注的使用：[WeChat Markdown](https://github.com/tenngoxars/WeMD "WeMD 是一款专为公众号设计的编辑器") 可以极大提升排版效率。
+这里演示脚注的使用：[WeChat Markdown](https://github.com/kingus188/DraftPort "DraftPort 是一款专为公众号设计的编辑器") 可以极大提升排版效率。
 
 > [!TIP]
 > 这是一个提示块示例。支持切换"默认彩色"或"跟随主题色"风格，让排版更统一。
@@ -49,7 +49,7 @@ const PREVIEW_MARKDOWN = `# 一级标题示例
 
 #### 四级标题
 
-这里有 \`行内代码\` 样式，也可以用来表示 \`npm install wemd\` 等指令。
+这里有 \`行内代码\` 样式，也可以用来表示 \`npm install draftport\` 等指令。
 
 \`\`\`js
 // 代码块示例
@@ -69,7 +69,7 @@ flowchart TD
   Reject --> End
 \`\`\`
 
-![WeMD 示例图片：不仅支持常规排版，更可以深度定制每一个细节。](https://img.wemd.app/example.jpg)
+![DraftPort 示例图片：不仅支持常规排版，更可以深度定制每一个细节。](https://img.draftport.app/example.jpg)
 `;
 
 interface ThemeLivePreviewProps {
@@ -112,7 +112,7 @@ export const ThemeLivePreview = memo(function ThemeLivePreview({
       <meta charset="UTF-8">
       <style id="base-style">
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
+        body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           padding: 0;
           font-size: 14px;

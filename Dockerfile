@@ -12,7 +12,7 @@ COPY apps/web/ ./apps/web/
 RUN corepack enable && \
     corepack prepare pnpm@9.0.2 --activate && \
     pnpm install --frozen-lockfile && \
-    pnpm --filter @wemd/web run build
+    pnpm --filter @draftport/web run build
 
 # 运行阶段 - 使用 nginx 提供静态文件服务
 FROM nginx:alpine

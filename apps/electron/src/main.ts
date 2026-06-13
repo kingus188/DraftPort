@@ -8,8 +8,8 @@ import { extractFrontmatterMeta } from './utils/frontmatter';
 // 注意：app.isPackaged 只能在 app ready 之后使用，这里用延迟判断
 let isDev = !app.isPackaged || process.argv.includes('--dev') || !!process.env.ELECTRON_START_URL;
 
-app.setName('WeMD');
-app.setAppUserModelId('com.wemd.app');
+app.setName('DraftPort');
+app.setAppUserModelId('com.draftport.app');
 
 let mainWindow: BrowserWindow | null = null;
 let workspaceDir: string | null = null;
@@ -199,7 +199,7 @@ function createWindow() {
         height: 800,
         minWidth: 1024,
         minHeight: 640,
-        title: 'WeMD',
+        title: 'DraftPort',
         icon: windowIcon,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
@@ -223,9 +223,9 @@ function createWindow() {
             ? 'http://localhost:5173'
             : `file://${path.join(process.resourcesPath, 'web-dist', 'index.html')}`;
 
-    console.log('[WeMD] Loading URL:', startUrl);
-    console.log('[WeMD] isDev:', isDev);
-    console.log('[WeMD] resourcesPath:', process.resourcesPath);
+    console.log('[DraftPort] Loading URL:', startUrl);
+    console.log('[DraftPort] isDev:', isDev);
+    console.log('[DraftPort] resourcesPath:', process.resourcesPath);
 
     mainWindow.loadURL(startUrl);
 
@@ -258,7 +258,7 @@ ipcMain.handle('workspace:select', async () => {
     if (!mainWindow) return { success: false, error: 'Window not initialized' };
     const result = await dialog.showOpenDialog(mainWindow, {
         properties: ['openDirectory', 'createDirectory'],
-        message: '选择 WeMD 工作区文件夹'
+        message: '选择 DraftPort 工作区文件夹'
     });
     if (result.canceled || result.filePaths.length === 0) {
         return { success: false, canceled: true };
@@ -705,15 +705,15 @@ ipcMain.handle('update:openReleases', () => {
 function createMenu() {
     const template: Electron.MenuItemConstructorOptions[] = [
         {
-            label: 'WeMD',
+            label: 'DraftPort',
             submenu: [
-                { role: 'about', label: '关于 WeMD' },
+                { role: 'about', label: '关于 DraftPort' },
                 { type: 'separator' },
-                { role: 'hide', label: '隐藏 WeMD' },
+                { role: 'hide', label: '隐藏 DraftPort' },
                 { role: 'hideOthers', label: '隐藏其他' },
                 { role: 'unhide', label: '显示全部' },
                 { type: 'separator' },
-                { role: 'quit', label: '退出 WeMD' },
+                { role: 'quit', label: '退出 DraftPort' },
             ],
         },
         {
@@ -784,11 +784,11 @@ function createMenu() {
                 { type: 'separator' },
                 {
                     label: '访问官网',
-                    click: () => shell.openExternal('https://wemd.app'),
+                    click: () => shell.openExternal('https://draftport.app'),
                 },
                 {
                     label: 'GitHub 仓库',
-                    click: () => shell.openExternal('https://github.com/tenngoxars/WeMD'),
+                    click: () => shell.openExternal('https://github.com/kingus188/DraftPort'),
                 },
             ],
         },

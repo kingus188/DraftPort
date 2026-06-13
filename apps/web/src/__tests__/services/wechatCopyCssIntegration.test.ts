@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { processHtml } from "@wemd/core";
+import { processHtml } from "@draftport/core";
 import {
   applyLightRootVars,
   resolveInlineStyleVariablesForCopy,
@@ -12,15 +12,15 @@ describe("wechat copy css integration", () => {
   it("resolves inline var() values with scope-aware computed values", () => {
     const html = "<p>段落</p>";
     const css = `
-      #wemd {
-        --wemd-font-size: 14px;
-        --wemd-text-color: #123456;
-        --wemd-paragraph-margin: 18px;
+      #draftport {
+        --draftport-font-size: 14px;
+        --draftport-text-color: #123456;
+        --draftport-paragraph-margin: 18px;
       }
-      #wemd p {
-        font-size: var(--wemd-font-size);
-        color: var(--wemd-text-color);
-        margin: var(--wemd-paragraph-margin) 0;
+      #draftport p {
+        font-size: var(--draftport-font-size);
+        color: var(--draftport-text-color);
+        margin: var(--draftport-paragraph-margin) 0;
       }
     `;
 
@@ -39,17 +39,17 @@ describe("wechat copy css integration", () => {
     expect(paragraph!.style.marginBottom).toBe("18px");
     expect(output).toContain("margin-top: 18px;");
     expect(output).toContain("margin-bottom: 18px;");
-    expect(output).not.toContain("var(--wemd-font-size)");
-    expect(output).not.toContain("var(--wemd-text-color)");
-    expect(output).not.toContain("var(--wemd-paragraph-margin)");
+    expect(output).not.toContain("var(--draftport-font-size)");
+    expect(output).not.toContain("var(--draftport-text-color)");
+    expect(output).not.toContain("var(--draftport-paragraph-margin)");
   });
 
   it("keeps literal var() text inside quoted string values", () => {
     const html = "<p>段落</p>";
     const css = `
-      #wemd p {
+      #draftport p {
         font-family: "var(--fake-family)";
-        color: var(--wemd-text-color, #222222);
+        color: var(--draftport-text-color, #222222);
       }
     `;
 
@@ -68,13 +68,13 @@ describe("wechat copy css integration", () => {
   it("resolves same custom property name based on local scope", () => {
     const html = `<p>root</p><blockquote><p>quote</p></blockquote>`;
     const css = `
-      #wemd {
+      #draftport {
         --text-color: #111111;
       }
-      #wemd p {
+      #draftport p {
         color: var(--text-color);
       }
-      #wemd blockquote {
+      #draftport blockquote {
         --text-color: #222222;
       }
     `;
@@ -95,11 +95,11 @@ describe("wechat copy css integration", () => {
   it("falls back when circular custom properties cannot be resolved", () => {
     const html = "<p>段落</p>";
     const css = `
-      #wemd {
+      #draftport {
         --a: var(--b);
         --b: var(--a);
       }
-      #wemd p {
+      #draftport p {
         color: var(--a, #334455);
         background-color: var(--missing-bg, #fafafa);
       }
@@ -128,7 +128,7 @@ describe("wechat copy css integration", () => {
     try {
       const html = "<p>段落</p>";
       const css = `
-        #wemd p {
+        #draftport p {
           color: var(--external-text-color, #111111);
         }
       `;
@@ -183,8 +183,8 @@ describe("wechat copy css integration", () => {
     expect(paragraph!.style.fontSize).toBeTruthy();
     expect(paragraph!.style.lineHeight).toBeTruthy();
     expect(heading!.getAttribute("style")).toContain("font-size");
-    expect(output).not.toContain("var(--wemd-");
-    expect(output).not.toMatch(/--wemd-[\w-]+\s*:/);
+    expect(output).not.toContain("var(--draftport-");
+    expect(output).not.toMatch(/--draftport-[\w-]+\s*:/);
   });
 
   it("relocates horizontal page padding in full pipeline", () => {
@@ -237,13 +237,13 @@ describe("wechat copy css integration", () => {
     expect(hr!.style.paddingRight).not.toBe("48px");
   });
 
-  it("propagates #wemd background-color to child blocks after normalization (#52)", () => {
+  it("propagates #draftport background-color to child blocks after normalization (#52)", () => {
     const html = "<p>段落</p><blockquote><p>引用</p></blockquote>";
     const css = `
-      #wemd {
+      #draftport {
         background-color: #f5f3ef;
       }
-      #wemd p {
+      #draftport p {
         color: #333;
       }
     `;
@@ -272,7 +272,7 @@ describe("wechat copy css integration", () => {
   it("materializes inherited text color to avoid ui theme leakage", () => {
     const container = document.createElement("div");
     container.innerHTML = `
-      <section id="wemd" style="color: var(--text-primary);">
+      <section id="draftport" style="color: var(--text-primary);">
         <div class="callout">
           <p class="callout-title">需要注意的问题</p>
         </div>
@@ -292,7 +292,7 @@ describe("wechat copy css integration", () => {
     const html =
       '<pre class="custom"><span class="mac-sign" style="padding: 10px 14px 0;"><svg xmlns="http://www.w3.org/2000/svg" width="45" height="13" viewBox="0 0 450 130"></svg></span><code class="hljs language-ts">  const a = 1;\n    console.log(a);</code></pre>';
     const css = `
-      #wemd pre.custom > .mac-sign {
+      #draftport pre.custom > .mac-sign {
         display: block;
       }
     `;

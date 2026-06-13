@@ -54,91 +54,91 @@ export function generateVariables(
   const primaryColor50 = toAlphaColor(v.primaryColor, 0.5);
   const underlineStyle = v.underlineStyle || "solid";
   const underlineColor = v.underlineColor || "currentColor";
-  return `#wemd {
+  return `#draftport {
   /* CSS 变量 - 可在 CSS 编辑模式下覆盖 */
   /* 全局 */
-  --wemd-page-padding: ${v.pagePadding ?? 8}px;
-  --wemd-font-size: ${v.fontSize};
-  --wemd-line-height: ${v.lineHeight};
-  --wemd-paragraph-margin: ${v.paragraphMargin}px;
-  --wemd-paragraph-padding: ${v.paragraphPadding ?? 0}px;
-  --wemd-text-color: ${v.paragraphColor};
-  --wemd-primary-color: ${v.primaryColor};
-  --wemd-primary-color-20: ${primaryColor20};
-  --wemd-primary-color-30: ${primaryColor30};
-  --wemd-primary-color-50: ${primaryColor50};
-  --wemd-letter-spacing: ${v.baseLetterSpacing || 0}px;
-  --wemd-underline-style: ${underlineStyle};
-  --wemd-underline-color: ${underlineColor};
-  
+  --draftport-page-padding: ${v.pagePadding ?? 8}px;
+  --draftport-font-size: ${v.fontSize};
+  --draftport-line-height: ${v.lineHeight};
+  --draftport-paragraph-margin: ${v.paragraphMargin}px;
+  --draftport-paragraph-padding: ${v.paragraphPadding ?? 0}px;
+  --draftport-text-color: ${v.paragraphColor};
+  --draftport-primary-color: ${v.primaryColor};
+  --draftport-primary-color-20: ${primaryColor20};
+  --draftport-primary-color-30: ${primaryColor30};
+  --draftport-primary-color-50: ${primaryColor50};
+  --draftport-letter-spacing: ${v.baseLetterSpacing || 0}px;
+  --draftport-underline-style: ${underlineStyle};
+  --draftport-underline-color: ${underlineColor};
+
   /* 标题 */
-  --wemd-h1-font-size: ${v.h1.fontSize}px;
-  --wemd-h1-color: ${v.h1.color};
-  --wemd-h1-margin-top: ${v.h1.marginTop}px;
-  --wemd-h1-margin-bottom: ${v.h1.marginBottom}px;
-  --wemd-h2-font-size: ${v.h2.fontSize}px;
-  --wemd-h2-color: ${v.h2.color};
-  --wemd-h2-margin-top: ${v.h2.marginTop}px;
-  --wemd-h2-margin-bottom: ${v.h2.marginBottom}px;
-  --wemd-h3-font-size: ${v.h3.fontSize}px;
-  --wemd-h3-color: ${v.h3.color};
-  --wemd-h3-margin-top: ${v.h3.marginTop}px;
-  --wemd-h3-margin-bottom: ${v.h3.marginBottom}px;
-  --wemd-h4-font-size: ${v.h4.fontSize}px;
-  --wemd-h4-color: ${v.h4.color};
-  --wemd-h4-margin-top: ${v.h4.marginTop}px;
-  --wemd-h4-margin-bottom: ${v.h4.marginBottom}px;
-  
+  --draftport-h1-font-size: ${v.h1.fontSize}px;
+  --draftport-h1-color: ${v.h1.color};
+  --draftport-h1-margin-top: ${v.h1.marginTop}px;
+  --draftport-h1-margin-bottom: ${v.h1.marginBottom}px;
+  --draftport-h2-font-size: ${v.h2.fontSize}px;
+  --draftport-h2-color: ${v.h2.color};
+  --draftport-h2-margin-top: ${v.h2.marginTop}px;
+  --draftport-h2-margin-bottom: ${v.h2.marginBottom}px;
+  --draftport-h3-font-size: ${v.h3.fontSize}px;
+  --draftport-h3-color: ${v.h3.color};
+  --draftport-h3-margin-top: ${v.h3.marginTop}px;
+  --draftport-h3-margin-bottom: ${v.h3.marginBottom}px;
+  --draftport-h4-font-size: ${v.h4.fontSize}px;
+  --draftport-h4-color: ${v.h4.color};
+  --draftport-h4-margin-top: ${v.h4.marginTop}px;
+  --draftport-h4-margin-bottom: ${v.h4.marginBottom}px;
+
   /* 代码 */
-  --wemd-code-background: ${v.codeBackground};
-  --wemd-code-font-size: ${v.codeFontSize}px;
-  --wemd-inline-code-color: ${v.inlineCodeColor};
-  --wemd-inline-code-background: ${v.inlineCodeBackground};
-  
+  --draftport-code-background: ${v.codeBackground};
+  --draftport-code-font-size: ${v.codeFontSize}px;
+  --draftport-inline-code-color: ${v.inlineCodeColor};
+  --draftport-inline-code-background: ${v.inlineCodeBackground};
+
   /* 引用 */
-  --wemd-quote-background: ${v.quoteBackground};
-  --wemd-quote-border-color: ${v.quoteBorderColor};
-  --wemd-quote-border-width: ${v.quoteBorderWidth}px;
-  --wemd-quote-border-style: ${v.quoteBorderStyle};
-  --wemd-quote-text-color: ${v.quoteTextColor};
-  --wemd-quote-font-size: ${v.quoteFontSize}px;
-  --wemd-quote-line-height: ${v.quoteLineHeight};
-  --wemd-quote-padding-x: ${v.quotePaddingX}px;
-  --wemd-quote-padding-y: ${v.quotePaddingY}px;
-  
+  --draftport-quote-background: ${v.quoteBackground};
+  --draftport-quote-border-color: ${v.quoteBorderColor};
+  --draftport-quote-border-width: ${v.quoteBorderWidth}px;
+  --draftport-quote-border-style: ${v.quoteBorderStyle};
+  --draftport-quote-text-color: ${v.quoteTextColor};
+  --draftport-quote-font-size: ${v.quoteFontSize}px;
+  --draftport-quote-line-height: ${v.quoteLineHeight};
+  --draftport-quote-padding-x: ${v.quotePaddingX}px;
+  --draftport-quote-padding-y: ${v.quotePaddingY}px;
+
   /* 图片 */
-  --wemd-image-margin: ${v.imageMargin}px;
-  --wemd-image-border-radius: ${v.imageBorderRadius}px;
-  --wemd-image-shadow: ${v.imageShadow ? "0 4px 12px rgba(0, 0, 0, 0.12)" : "none"};
-  --wemd-image-caption-color: ${v.imageCaptionColor};
-  --wemd-image-caption-font-size: ${v.imageCaptionFontSize}px;
-  --wemd-image-caption-align: ${v.imageCaptionTextAlign};
-  
+  --draftport-image-margin: ${v.imageMargin}px;
+  --draftport-image-border-radius: ${v.imageBorderRadius}px;
+  --draftport-image-shadow: ${v.imageShadow ? "0 4px 12px rgba(0, 0, 0, 0.12)" : "none"};
+  --draftport-image-caption-color: ${v.imageCaptionColor};
+  --draftport-image-caption-font-size: ${v.imageCaptionFontSize}px;
+  --draftport-image-caption-align: ${v.imageCaptionTextAlign};
+
   /* 链接与文本 */
-  --wemd-link-color: ${v.linkColor || v.primaryColor};
-  --wemd-italic-color: ${v.italicColor};
-  --wemd-del-color: ${v.delColor};
-  --wemd-mark-background: ${v.markBackground};
-  --wemd-mark-color: ${v.markColor};
-  
+  --draftport-link-color: ${v.linkColor || v.primaryColor};
+  --draftport-italic-color: ${v.italicColor};
+  --draftport-del-color: ${v.delColor};
+  --draftport-mark-background: ${v.markBackground};
+  --draftport-mark-color: ${v.markColor};
+
   /* 表格 */
-  --wemd-table-header-background: ${v.tableHeaderBackground};
-  --wemd-table-header-color: ${v.tableHeaderColor};
-  --wemd-table-border-color: ${v.tableBorderColor};
-  
+  --draftport-table-header-background: ${v.tableHeaderBackground};
+  --draftport-table-header-color: ${v.tableHeaderColor};
+  --draftport-table-border-color: ${v.tableBorderColor};
+
   /* 分割线 */
-  --wemd-hr-color: ${v.hrColor};
-  --wemd-hr-height: ${v.hrHeight}px;
-  --wemd-hr-margin: ${v.hrMargin}px;
-  
+  --draftport-hr-color: ${v.hrColor};
+  --draftport-hr-height: ${v.hrHeight}px;
+  --draftport-hr-margin: ${v.hrMargin}px;
+
   /* 列表 */
-  --wemd-list-spacing: ${v.listSpacing}px;
-  --wemd-list-marker-color: ${v.listMarkerColor};
-  --wemd-list-marker-color-l2: ${v.listMarkerColorL2};
+  --draftport-list-spacing: ${v.listSpacing}px;
+  --draftport-list-marker-color: ${v.listMarkerColor};
+  --draftport-list-marker-color-l2: ${v.listMarkerColorL2};
 
   font-family: ${safeFontFamily};
-  padding: 0 var(--wemd-page-padding);
-  color: var(--wemd-text-color);
+  padding: 0 var(--draftport-page-padding);
+  color: var(--draftport-text-color);
   overflow-wrap: break-word;
 }`;
 }

@@ -1,6 +1,6 @@
 import type { FileItem, FolderItem, TreeItem } from "../../store/fileTypes";
 
-const SORT_MODE_KEY = "wemd-file-sort-mode";
+const SORT_MODE_KEY = "draftport-file-sort-mode";
 
 export type SortMode = "recent" | "name-asc" | "name-desc";
 
