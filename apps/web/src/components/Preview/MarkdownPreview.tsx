@@ -1,6 +1,13 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import mermaid from "mermaid";
-import { Maximize2, Minimize2, Monitor, Smartphone } from "lucide-react";
+import {
+  Maximize2,
+  Minimize2,
+  Monitor,
+  PanelRightClose,
+  PanelRightOpen,
+  Smartphone,
+} from "lucide-react";
 import { createMarkdownParser, processHtml } from "@draftport/core";
 import { useEditorStore } from "../../store/editorStore";
 import { useThemeStore } from "../../store/themeStore";
@@ -29,8 +36,12 @@ interface SyncScrollDetail {
 type PreviewMode = "mobile" | "desktop";
 
 interface MarkdownPreviewProps {
+  /** Current desktop workspace pane priority; mobile keeps its separate view switcher. */
   layoutMode?: WorkspacePreviewLayoutMode;
+  /** Toggles between balanced and preview-priority workspace layouts. */
   onToggleLayoutMode?: () => void;
+  /** Toggles the right preview pane between visible and editor-priority collapsed states. */
+  onTogglePreviewCollapsed?: () => void;
 }
 
 /**
@@ -40,6 +51,7 @@ interface MarkdownPreviewProps {
 export function MarkdownPreview({
   layoutMode = "balanced",
   onToggleLayoutMode,
+  onTogglePreviewCollapsed,
 }: MarkdownPreviewProps = {}) {
   const { markdown } = useEditorStore();
   const { themeId: theme, customCSS, getThemeCSS } = useThemeStore();
@@ -255,6 +267,30 @@ export function MarkdownPreview({
     };
   }, []);
 
+  const isPreviewCollapsed = layoutMode === "editor";
+  const previewCollapseLabel = isPreviewCollapsed ? "显示预览" : "收起预览";
+
+  if (isPreviewCollapsed) {
+    return (
+      <div
+        className="markdown-preview markdown-preview--collapsed"
+        data-preview-mode={previewMode}
+      >
+        {onTogglePreviewCollapsed && (
+          <button
+            type="button"
+            className="preview-layout-action preview-collapse-action"
+            aria-label={previewCollapseLabel}
+            title={previewCollapseLabel}
+            onClick={onTogglePreviewCollapsed}
+          >
+            <PanelRightOpen size={16} strokeWidth={2} />
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="markdown-preview" data-preview-mode={previewMode}>
       <div className="preview-header">
@@ -266,6 +302,17 @@ export function MarkdownPreview({
           </span>
         </div>
         <div className="preview-header-actions">
+          {onTogglePreviewCollapsed && (
+            <button
+              type="button"
+              className="preview-layout-action preview-collapse-action"
+              aria-label={previewCollapseLabel}
+              title={previewCollapseLabel}
+              onClick={onTogglePreviewCollapsed}
+            >
+              <PanelRightClose size={16} strokeWidth={2} />
+            </button>
+          )}
           {onToggleLayoutMode && (
             <button
               type="button"

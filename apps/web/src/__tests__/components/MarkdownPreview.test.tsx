@@ -112,4 +112,32 @@ describe("MarkdownPreview device modes", () => {
       screen.getByRole("button", { name: "恢复编辑布局" }),
     ).toBeInTheDocument();
   });
+
+  it("calls preview collapse toggle from the collapse action", () => {
+    const onTogglePreviewCollapsed = vi.fn();
+
+    render(
+      <MarkdownPreview
+        layoutMode="balanced"
+        onTogglePreviewCollapsed={onTogglePreviewCollapsed}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "收起预览" }));
+
+    expect(onTogglePreviewCollapsed).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows restore preview action in editor priority mode", () => {
+    render(
+      <MarkdownPreview
+        layoutMode="editor"
+        onTogglePreviewCollapsed={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "显示预览" }),
+    ).toBeInTheDocument();
+  });
 });

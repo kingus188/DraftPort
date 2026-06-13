@@ -73,4 +73,18 @@ describe("workspace preview layout persistence", () => {
       "balanced",
     );
   });
+
+  it("loads and saves the editor-priority preview layout mode", () => {
+    const storage = createStorage({
+      "draftport-preview-layout-mode": "editor",
+    });
+
+    expect(loadWorkspacePreviewLayoutMode(storage)).toBe("editor");
+    saveWorkspacePreviewLayoutMode("editor", storage);
+
+    expect(storage.setItem).toHaveBeenCalledWith(
+      "draftport-preview-layout-mode",
+      "editor",
+    );
+  });
 });

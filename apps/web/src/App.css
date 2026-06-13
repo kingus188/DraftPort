@@ -109,6 +109,20 @@
   flex: 1 1 auto;
 }
 
+.workspace[data-preview-layout="editor"] .editor-pane {
+  flex: 1 1 auto;
+}
+
+.workspace[data-preview-layout="editor"] .preview-pane {
+  flex: 0 0 var(--preview-pane-width, 48px);
+  min-width: 48px;
+  border-left: 1px solid #d8dee6;
+}
+
+.workspace[data-preview-layout="editor"] .workspace-preview-resizer {
+  display: none;
+}
+
 .workspace-preview-resizer {
   position: relative;
   z-index: 5;

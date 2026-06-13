@@ -68,6 +68,13 @@
   color: var(--accent-primary);
 }
 
+.markdown-preview--collapsed {
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 24px;
+  background: #ffffff;
+}
+
 .preview-device-actions {
   display: flex;
   align-items: center;

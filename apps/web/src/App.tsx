@@ -100,6 +100,7 @@ function App() {
     setPreviewPanePercent,
     toggleLayoutMode: togglePreviewLayoutMode,
   } = useWorkspacePreviewLayout();
+  const activePreviewLayoutMode = isMobile ? "balanced" : previewLayoutMode;
 
   // 全局保存快捷键（统一监听器）
   useEffect(() => {
@@ -207,11 +208,13 @@ function App() {
     () =>
       ({
         "--preview-pane-width":
-          previewLayoutMode === "preview"
-            ? "calc(100% - 360px)"
-            : `${previewPanePercent}%`,
+          activePreviewLayoutMode === "editor"
+            ? "48px"
+            : activePreviewLayoutMode === "preview"
+              ? "calc(100% - 360px)"
+              : `${previewPanePercent}%`,
       }) as CSSProperties,
-    [previewLayoutMode, previewPanePercent],
+    [activePreviewLayoutMode, previewPanePercent],
   );
   const updatePreviewPanePercentFromClientX = useCallback(
     (clientX: number) => {
@@ -258,6 +261,11 @@ function App() {
     },
     [isMobile, previewPanePercent, setPreviewLayoutMode, setPreviewPanePercent],
   );
+  const togglePreviewCollapsed = useCallback(() => {
+    setPreviewLayoutMode(
+      previewLayoutMode === "editor" ? "balanced" : "editor",
+    );
+  }, [previewLayoutMode, setPreviewLayoutMode]);
 
   // Electron 模式：强制选择工作区
   if (isElectron && !workspacePath) {
@@ -388,7 +396,7 @@ function App() {
           <div
             className="workspace"
             data-mobile-view={isMobile ? activeView : undefined}
-            data-preview-layout={previewLayoutMode}
+            data-preview-layout={activePreviewLayoutMode}
             ref={workspaceRef}
             style={workspaceStyle}
           >
@@ -427,8 +435,13 @@ function App() {
                 </div>
               ) : (
                 <MarkdownPreview
-                  layoutMode={previewLayoutMode}
-                  onToggleLayoutMode={togglePreviewLayoutMode}
+                  layoutMode={activePreviewLayoutMode}
+                  onToggleLayoutMode={
+                    isMobile ? undefined : togglePreviewLayoutMode
+                  }
+                  onTogglePreviewCollapsed={
+                    isMobile ? undefined : togglePreviewCollapsed
+                  }
                 />
               )}
             </div>

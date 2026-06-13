@@ -2,7 +2,10 @@
 // This hook is UI-shell scoped; it does not affect Markdown rendering or copy output.
 import { useCallback, useState } from "react";
 
-export type WorkspacePreviewLayoutMode = "balanced" | "preview";
+/**
+ * Describes which workspace pane should receive priority in desktop layout.
+ */
+export type WorkspacePreviewLayoutMode = "balanced" | "preview" | "editor";
 
 type PreviewLayoutStorage = Pick<Storage, "getItem" | "setItem">;
 
@@ -79,8 +82,9 @@ export function savePreviewPanePercent(
 export function loadWorkspacePreviewLayoutMode(
   storage: PreviewLayoutStorage | null = getBrowserStorage(),
 ): WorkspacePreviewLayoutMode {
-  return storage?.getItem(PREVIEW_LAYOUT_MODE_STORAGE_KEY) === "preview"
-    ? "preview"
+  const savedMode = storage?.getItem(PREVIEW_LAYOUT_MODE_STORAGE_KEY);
+  return savedMode === "preview" || savedMode === "editor"
+    ? savedMode
     : "balanced";
 }
 
