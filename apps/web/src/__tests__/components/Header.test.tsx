@@ -105,6 +105,8 @@ describe("Header", () => {
   it("renders logo and core elements", () => {
     render(<Header />);
 
+    const logo = screen.getByAltText("DraftPort Logo") as HTMLImageElement;
+    expect(logo.getAttribute("src")).toBe("/favicon-dark.svg");
     expect(screen.getByText("DraftPort")).toBeInTheDocument();
     expect(screen.getByText("公众号 Markdown 排版编辑器")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "图库" })).toBeInTheDocument();
