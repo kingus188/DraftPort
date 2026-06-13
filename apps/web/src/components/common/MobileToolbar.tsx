@@ -5,6 +5,8 @@ import {
   MoreHorizontal,
   Palette,
   Code,
+  BookOpenText,
+  Gem,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -15,6 +17,8 @@ interface MobileToolbarProps {
   activeView: MobileViewType;
   onViewChange: (view: MobileViewType) => void;
   onCopyToWechat: () => void;
+  onCopyToZhihu: () => void;
+  onCopyToJuejin: () => void;
   onCopyAsHtml: () => void;
   onOpenTheme: () => void;
 }
@@ -26,6 +30,8 @@ export function MobileToolbar({
   activeView,
   onViewChange,
   onCopyToWechat,
+  onCopyToZhihu,
+  onCopyToJuejin,
   onCopyAsHtml,
   onOpenTheme,
 }: MobileToolbarProps) {
@@ -59,6 +65,26 @@ export function MobileToolbar({
               >
                 <Code size={20} />
                 <span>复制 HTML</span>
+              </button>
+              <button
+                className="mobile-menu-item"
+                onClick={() => {
+                  onCopyToZhihu();
+                  setShowMenu(false);
+                }}
+              >
+                <BookOpenText size={20} />
+                <span>复制到知乎</span>
+              </button>
+              <button
+                className="mobile-menu-item"
+                onClick={() => {
+                  onCopyToJuejin();
+                  setShowMenu(false);
+                }}
+              >
+                <Gem size={20} />
+                <span>复制到掘金</span>
               </button>
               <button
                 className="mobile-menu-item"

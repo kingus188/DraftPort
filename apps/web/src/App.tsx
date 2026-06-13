@@ -88,6 +88,8 @@ function App() {
   } = useMobileView();
   const isMobile = isMobileScreen && !platform.isElectron;
   const copyToWechat = useEditorStore((state) => state.copyToWechat);
+  const copyToZhihu = useEditorStore((state) => state.copyToZhihu);
+  const copyToJuejin = useEditorStore((state) => state.copyToJuejin);
   const copyAsHtml = useEditorStore((state) => state.copyAsHtml);
   const [showThemePanel, setShowThemePanel] = useState(false);
   const workspaceRef = useRef<HTMLDivElement>(null);
@@ -438,6 +440,8 @@ function App() {
               activeView={activeView}
               onViewChange={setActiveView}
               onCopyToWechat={copyToWechat}
+              onCopyToZhihu={copyToZhihu}
+              onCopyToJuejin={copyToJuejin}
               onCopyAsHtml={copyAsHtml}
               onOpenTheme={() => setShowThemePanel(true)}
             />

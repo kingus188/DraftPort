@@ -21,6 +21,8 @@ import {
   Send,
   Code,
   ImageIcon,
+  BookOpenText,
+  Gem,
   Sun,
   Moon,
   ChevronsUp,
@@ -97,7 +99,8 @@ const WindowControls = ({ fixed = false }: { fixed?: boolean }) => {
  * preserving Electron window drag regions.
  */
 export function Header() {
-  const { copyToWechat, copyAsHtml } = useEditorStore();
+  const { copyToWechat, copyToZhihu, copyToJuejin, copyAsHtml } =
+    useEditorStore();
   const [showThemePanel, setShowThemePanel] = useState(false);
   const [showStorageModal, setShowStorageModal] = useState(false);
   const [showImageHostModal, setShowImageHostModal] = useState(false);
@@ -191,6 +194,16 @@ export function Header() {
             onClick={copyAsHtml}
           />
           <FloatingToolbarButton
+            icon={<BookOpenText size={18} strokeWidth={2} />}
+            label="复制到知乎"
+            onClick={copyToZhihu}
+          />
+          <FloatingToolbarButton
+            icon={<Gem size={18} strokeWidth={2} />}
+            label="复制到掘金"
+            onClick={copyToJuejin}
+          />
+          <FloatingToolbarButton
             icon={<Send size={18} strokeWidth={2} />}
             label="复制到公众号"
             onClick={copyToWechat}
@@ -262,6 +275,16 @@ export function Header() {
             >
               <Code size={18} strokeWidth={2} />
               <span>HTML</span>
+            </button>
+
+            <button className="btn-secondary" onClick={copyToZhihu}>
+              <BookOpenText size={18} strokeWidth={2} />
+              <span>复制到知乎</span>
+            </button>
+
+            <button className="btn-secondary" onClick={copyToJuejin}>
+              <Gem size={18} strokeWidth={2} />
+              <span>复制到掘金</span>
             </button>
 
             <button className="btn-primary" onClick={copyToWechat}>

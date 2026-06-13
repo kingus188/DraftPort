@@ -3,6 +3,8 @@ import { create } from "zustand";
 import { useThemeStore } from "./themeStore";
 import { copyToWechat as execCopyToWechat } from "../services/wechatCopyService";
 import { copyAsHtml as execCopyAsHtml } from "../services/htmlCopyService";
+import { copyToZhihu as execCopyToZhihu } from "../services/zhihuCopyService";
+import { copyToJuejin as execCopyToJuejin } from "../services/juejinCopyService";
 
 export interface ResetOptions {
   markdown?: string;
@@ -27,6 +29,8 @@ interface EditorStore {
 
   resetDocument: (options?: ResetOptions) => void;
   copyToWechat: () => void;
+  copyToZhihu: () => void;
+  copyToJuejin: () => void;
   copyAsHtml: () => void;
 }
 
@@ -192,6 +196,26 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       await execCopyToWechat(markdown, css, { showMacBar });
     } catch (error) {
       console.error("复制失败:", error);
+    }
+  },
+
+  copyToZhihu: async () => {
+    const { markdown } = get();
+
+    try {
+      await execCopyToZhihu(markdown);
+    } catch (error) {
+      console.error("复制到知乎失败:", error);
+    }
+  },
+
+  copyToJuejin: async () => {
+    const { markdown } = get();
+
+    try {
+      await execCopyToJuejin(markdown);
+    } catch (error) {
+      console.error("复制到掘金失败:", error);
     }
   },
 

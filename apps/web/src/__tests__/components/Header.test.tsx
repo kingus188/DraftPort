@@ -29,6 +29,8 @@ vi.mock("../../components/Settings/ImageHostSettings", () => ({
 describe("Header", () => {
   // Default mocks
   const mockCopyToWechat = vi.fn();
+  const mockCopyToZhihu = vi.fn();
+  const mockCopyToJuejin = vi.fn();
   const mockCopyAsHtml = vi.fn();
   const mockSetTheme = vi.fn();
   const mockMinimize = vi.fn();
@@ -77,6 +79,8 @@ describe("Header", () => {
     // Setup default hook returns
     vi.mocked(useEditorStore).mockReturnValue({
       copyToWechat: mockCopyToWechat,
+      copyToZhihu: mockCopyToZhihu,
+      copyToJuejin: mockCopyToJuejin,
       copyAsHtml: mockCopyAsHtml,
     });
 
@@ -112,6 +116,8 @@ describe("Header", () => {
     expect(screen.getByRole("button", { name: "图库" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "主题" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "HTML" })).toBeInTheDocument();
+    expect(screen.getByText("复制到知乎")).toBeInTheDocument();
+    expect(screen.getByText("复制到掘金")).toBeInTheDocument();
     expect(screen.getByText("复制到公众号")).toBeInTheDocument();
   });
 
@@ -128,6 +134,20 @@ describe("Header", () => {
 
     fireEvent.click(screen.getByText("复制到公众号"));
     expect(mockCopyToWechat).toHaveBeenCalled();
+  });
+
+  it("calls copyToZhihu action", () => {
+    render(<Header />);
+
+    fireEvent.click(screen.getByText("复制到知乎"));
+    expect(mockCopyToZhihu).toHaveBeenCalled();
+  });
+
+  it("calls copyToJuejin action", () => {
+    render(<Header />);
+
+    fireEvent.click(screen.getByText("复制到掘金"));
+    expect(mockCopyToJuejin).toHaveBeenCalled();
   });
 
   it("calls copyAsHtml action", () => {
@@ -197,6 +217,8 @@ describe("Header", () => {
     expect(screen.getByLabelText("显示标题栏")).toBeInTheDocument();
     expect(screen.getByLabelText("主题管理")).toBeInTheDocument();
     expect(screen.getByLabelText("图床设置")).toBeInTheDocument();
+    expect(screen.getByLabelText("复制到知乎")).toBeInTheDocument();
+    expect(screen.getByLabelText("复制到掘金")).toBeInTheDocument();
     expect(screen.getByLabelText("复制到公众号")).toBeInTheDocument();
   });
 
