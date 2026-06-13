@@ -1,22 +1,25 @@
 .md-toolbar {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
-  background: var(--bg-secondary);
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 28px;
+  background: #ffffff;
   border-bottom: var(--border-width) solid var(--border-light);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .md-toolbar-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 36px;
   padding: 0;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
