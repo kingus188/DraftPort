@@ -99,16 +99,16 @@ jobs:
           cache: pnpm
 
       - name: Install workspace dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build web frontend
         run: pnpm --filter @draftport/web run build
 
       - name: Install Electron deps
-        run: cd apps/electron && pnpm install --frozen-lockfile
+        run: cd apps/electron && npm ci
 
       - name: Build Electron (Windows)
-        run: cd apps/electron && pnpm run build:win
+        run: cd apps/electron && npm run build:win
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
