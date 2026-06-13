@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import mermaid from "mermaid";
+import { Monitor, Smartphone } from "lucide-react";
 import { createMarkdownParser, processHtml } from "@wemd/core";
 import { useEditorStore } from "../../store/editorStore";
 import { useThemeStore } from "../../store/themeStore";
@@ -24,6 +25,10 @@ interface SyncScrollDetail {
   ratio: number;
 }
 
+/**
+ * Renders the WeChat-styled live preview and coordinates math, Mermaid, table
+ * images, link handling, and synchronized scrolling with the editor.
+ */
 export function MarkdownPreview() {
   const { markdown } = useEditorStore();
   const { themeId: theme, customCSS, getThemeCSS } = useThemeStore();
@@ -242,7 +247,14 @@ export function MarkdownPreview() {
     <div className="markdown-preview">
       <div className="preview-header">
         <span className="preview-title">实时预览</span>
-        <span className="preview-subtitle">微信排版效果</span>
+        <div className="preview-device-actions" aria-label="预览设备">
+          <button type="button" aria-label="手机预览">
+            <Smartphone size={17} strokeWidth={2} />
+          </button>
+          <button type="button" aria-label="桌面预览">
+            <Monitor size={17} strokeWidth={2} />
+          </button>
+        </div>
       </div>
       <div
         className="preview-container"

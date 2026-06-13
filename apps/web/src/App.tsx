@@ -55,6 +55,10 @@ interface ElectronUpdateAPI {
   openReleases?: () => void;
 }
 
+/**
+ * Owns the top-level editor shell and keeps desktop, mobile, and Electron
+ * storage modes wired through the same workspace panes.
+ */
 function App() {
   const { workspacePath, saveFile } = useFileSystem({ enableEffects: true });
   const { type: storageType, ready } = useStorageContext();
@@ -142,7 +146,7 @@ function App() {
     return saved !== "false";
   });
   const [historyWidth, setHistoryWidth] = useState<string>(
-    showHistory ? "280px" : "0px",
+    showHistory ? "clamp(300px, 24vw, 392px)" : "0px",
   );
 
   useEffect(() => {
@@ -155,7 +159,7 @@ function App() {
 
   useEffect(() => {
     if (showHistory) {
-      setHistoryWidth("280px");
+      setHistoryWidth("clamp(300px, 24vw, 392px)");
       return;
     }
     const timer = window.setTimeout(() => setHistoryWidth("0px"), 350);
@@ -190,7 +194,11 @@ function App() {
   }
 
   return (
-    <div className="app" data-layout-mode={isMobile ? "mobile" : "desktop"}>
+    <div
+      className="app"
+      data-layout-mode={isMobile ? "mobile" : "desktop"}
+      style={mainStyle}
+    >
       {/* 更新提示 Modal */}
       {updateInfo && (
         <Suspense fallback={null}>

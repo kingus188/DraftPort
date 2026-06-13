@@ -14,6 +14,7 @@ import { countWords, countLines } from "../../utils/wordCount";
 import { Toolbar } from "./Toolbar";
 import { SearchPanel } from "./SearchPanel";
 import { SaveIndicator } from "./SaveIndicator";
+import { useFileStore } from "../../store/fileStore";
 import toast from "react-hot-toast";
 import "./MarkdownEditor.css";
 import { customKeymap } from "./editorShortcuts";
@@ -31,10 +32,15 @@ interface SyncScrollDetail {
   ratio: number;
 }
 
+/**
+ * Hosts the CodeMirror Markdown surface, toolbar inserts, upload paste flow,
+ * document metadata, and editor-to-preview scroll synchronization.
+ */
 export function MarkdownEditor() {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const { markdown: content, setMarkdown } = useEditorStore();
+  const currentFile = useFileStore((state) => state.currentFile);
   const uiTheme = useUITheme((state) => state.theme);
   const isSyncingRef = useRef(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -236,6 +242,10 @@ export function MarkdownEditor() {
 
   const wordCount = countWords(content);
   const lineCount = countLines(content);
+  const documentTitle =
+    currentFile?.title ||
+    currentFile?.name.replace(/\.md$/, "") ||
+    "未命名文档";
 
   const handleInsert = (
     prefix: string,
@@ -271,7 +281,17 @@ export function MarkdownEditor() {
   return (
     <div className="markdown-editor">
       <div className="editor-header">
-        <span className="editor-title">Markdown 编辑器</span>
+        <div className="editor-document-info">
+          <span className="editor-status-dot" aria-hidden="true" />
+          <div className="editor-title-stack">
+            <span className="editor-title">{documentTitle}</span>
+            <span className="editor-subtitle">Markdown 编辑器</span>
+          </div>
+        </div>
+        <div className="editor-header-stats" aria-label={`字数 ${wordCount}`}>
+          <span>W</span>
+          <strong>{wordCount}</strong>
+        </div>
       </div>
       <Toolbar onInsert={handleInsert} />
       {showSearch && viewRef.current && (

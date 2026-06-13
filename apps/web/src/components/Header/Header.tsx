@@ -110,6 +110,10 @@ const WindowControls = ({ fixed = false }: { fixed?: boolean }) => {
   );
 };
 
+/**
+ * Renders the desktop title bar, global actions, and modal entry points while
+ * preserving Electron window drag regions.
+ */
 export function Header() {
   const { copyToWechat, copyAsHtml } = useEditorStore();
   const [showThemePanel, setShowThemePanel] = useState(false);
@@ -254,21 +258,27 @@ export function Header() {
             <button
               className="btn-secondary"
               onClick={() => setShowImageHostModal(true)}
+              aria-label="图库"
             >
               <ImageIcon size={18} strokeWidth={2} />
-              <span>图床设置</span>
+              <span>图库</span>
             </button>
             <button
               className="btn-secondary"
               onClick={() => setShowThemePanel(true)}
+              aria-label="主题"
             >
               <Palette size={18} strokeWidth={2} />
-              <span>主题管理</span>
+              <span>主题</span>
             </button>
 
-            <button className="btn-secondary" onClick={copyAsHtml}>
+            <button
+              className="btn-secondary"
+              onClick={copyAsHtml}
+              aria-label="HTML"
+            >
               <Code size={18} strokeWidth={2} />
-              <span>复制 HTML</span>
+              <span>HTML</span>
             </button>
 
             <button className="btn-primary" onClick={copyToWechat}>

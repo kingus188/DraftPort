@@ -3,40 +3,72 @@
   flex-direction: column;
   height: 100%;
   background: var(--bg-primary);
-  /* 移除右边框，因为现在是悬浮卡片布局 */
   border-right: none;
 }
 
 .editor-header {
-  padding: 16px 24px;
+  min-height: 98px;
+  padding: 0 28px;
   border-bottom: 1px solid var(--border-light);
-  background: rgba(255, 255, 255, 0.5);
-  /* 半透明背景 */
-  backdrop-filter: blur(8px);
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
+.editor-document-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.editor-status-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.editor-title-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
 .editor-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.editor-subtitle {
+  width: fit-content;
+  font-size: 11px;
+  color: #687180;
+  background: #f0f2f5;
+  padding: 3px 7px;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.editor-header-stats {
   display: flex;
   align-items: center;
   gap: 8px;
+  color: #273244;
+  font-size: 15px;
+  flex-shrink: 0;
 }
 
-.editor-title::before {
-  content: "";
-  display: block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(7, 193, 96, 0.2);
+.editor-header-stats strong {
+  font-weight: 500;
 }
 
 .editor-container {
@@ -129,10 +161,9 @@
 }
 
 .editor-container .cm-content {
-  padding: 24px 32px !important;
-  /* 增加内边距 */
-  max-width: 900px;
-  margin: 0 auto;
+  padding: 30px 34px !important;
+  max-width: none;
+  margin: 0;
 }
 
 .editor-container .cm-line {
@@ -304,10 +335,10 @@
 
 /* === 编辑器底部状态栏 === */
 .editor-footer {
-  padding: 8px 24px;
+  min-height: 44px;
+  padding: 0 28px;
   border-top: 1px solid var(--border-light);
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(8px);
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -320,7 +351,7 @@
 }
 
 .editor-stat {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-secondary);
   font-weight: 500;
   letter-spacing: 0.3px;
@@ -328,7 +359,7 @@
 
 /* 保存状态指示器 */
 .save-indicator {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.3px;
   padding: 4px 10px;
@@ -358,11 +389,20 @@
    深色模式 - 编辑器样式覆盖
    ======================================== */
 [data-ui-theme="dark"] .editor-header {
-  background: rgba(37, 37, 38, 0.8);
+  background: #252526;
 }
 
 [data-ui-theme="dark"] .editor-footer {
-  background: rgba(37, 37, 38, 0.8);
+  background: #252526;
+}
+
+[data-ui-theme="dark"] .editor-title {
+  color: #f1f5f9;
+}
+
+[data-ui-theme="dark"] .editor-subtitle {
+  color: #9d9d9d;
+  background: #333333;
 }
 
 [data-ui-theme="dark"] .workspace-guard {
