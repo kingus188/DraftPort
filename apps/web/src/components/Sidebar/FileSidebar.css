@@ -610,22 +610,13 @@
 }
 
 /* ========================================
-   文件树结构线 (Tree View Guides)
+   文件树层级缩进
    ======================================== */
 .file-sidebar {
   --tree-indent: 24px;
-  --tree-line-x: 10px;
-  --tree-line-color: color-mix(in srgb, var(--text-tertiary) 26%, transparent);
-  --tree-line-dot: color-mix(in srgb, var(--text-tertiary) 45%, transparent);
-  --tree-line-active: color-mix(
-    in srgb,
-    var(--accent-primary) 55%,
-    transparent
-  );
 }
 
 .fs-folder-children {
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -633,61 +624,6 @@
   padding-top: 6px;
   margin: 0;
   overflow: visible;
-}
-
-.fs-folder-children::before {
-  content: "";
-  position: absolute;
-  left: var(--tree-line-x);
-  top: 6px;
-  bottom: 6px;
-  width: 1px;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    var(--tree-line-color) 10px,
-    var(--tree-line-color) calc(100% - 10px),
-    transparent
-  );
-  border-radius: 999px;
-}
-
-.fs-folder-children .fs-item,
-.fs-folder-children .fs-folder {
-  position: relative;
-}
-
-.fs-folder-children .fs-item::before,
-.fs-folder-children .fs-folder::before {
-  content: "";
-  position: absolute;
-  left: calc(var(--tree-line-x) - var(--tree-indent));
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background-color: var(--tree-line-dot);
-  transition:
-    background-color 0.2s,
-    box-shadow 0.2s,
-    transform 0.2s;
-  transform: translateX(-50%);
-}
-
-.fs-folder-children .fs-item::before {
-  top: 20px;
-  transform: translate(-50%, -50%);
-}
-
-.fs-folder-children .fs-folder::before {
-  top: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.fs-folder-children .fs-item:hover::before,
-.fs-folder-children .fs-folder:hover::before {
-  background-color: var(--tree-line-active);
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--tree-line-active) 25%, transparent);
 }
 
 /* 修复 Item 样式，去除多余的 border/margin */
