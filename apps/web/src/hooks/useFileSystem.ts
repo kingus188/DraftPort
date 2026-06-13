@@ -28,6 +28,9 @@ interface UseFileSystemOptions {
   enableEffects?: boolean;
 }
 
+/**
+ * Coordinates the active storage backend with editor state and file-tree mutations.
+ */
 export function useFileSystem(options: UseFileSystemOptions = {}) {
   const { enableEffects = false } = options;
   const {
@@ -496,6 +499,7 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
     currentFile,
     isLoading,
     isSaving,
+    refreshFiles,
     selectWorkspace,
     openFile,
     createFile,

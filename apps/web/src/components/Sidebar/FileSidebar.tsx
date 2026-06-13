@@ -9,6 +9,7 @@ import {
   ChevronRight,
   ArrowUpDown,
   Check,
+  RefreshCw,
 } from "lucide-react";
 import { SidebarFooter } from "./SidebarFooter";
 import {
@@ -37,6 +38,9 @@ const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: "name-desc", label: "名称降序" },
 ];
 
+/**
+ * Renders the workspace file tree, folder controls, and file actions for local content navigation.
+ */
 export function FileSidebar() {
   const state = useSidebarState();
   const currentThemeName = useThemeStore((s) => s.themeName);
@@ -219,6 +223,18 @@ export function FileSidebar() {
           </span>
         </div>
         <div className="fs-actions">
+          <button
+            className="fs-btn-secondary fs-btn-icon-only"
+            onClick={() => void state.refreshFiles()}
+            aria-label="刷新文件夹"
+            data-tooltip="刷新文件夹"
+            onMouseEnter={(e) => state.showTooltip(e, "刷新文件夹")}
+            onMouseLeave={state.hideTooltip}
+            onFocus={(e) => state.showTooltip(e, "刷新文件夹")}
+            onBlur={state.hideTooltip}
+          >
+            <RefreshCw size={16} />
+          </button>
           <button
             className="fs-btn-secondary fs-btn-icon-only"
             onClick={() => state.setShowNewFolderModal(true)}

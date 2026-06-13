@@ -23,6 +23,9 @@ import {
 
 export { ROOT_DROP_TARGET, FILE_DRAG_TYPE, FOLDER_DRAG_TYPE, getBaseName };
 
+/**
+ * Builds the interaction state and file-system actions needed by the file tree sidebar.
+ */
 export function useSidebarState() {
   const {
     files,
@@ -39,6 +42,7 @@ export function useSidebarState() {
     moveFolder,
     deleteFolder,
     inspectFolder,
+    refreshFiles,
     flattenFiles,
   } = useFileSystem();
 
@@ -411,6 +415,7 @@ export function useSidebarState() {
     createFile,
     deleteFile,
     deleteFolder,
+    refreshFiles,
     selectWorkspace,
     workspacePath,
     flattenFiles,
