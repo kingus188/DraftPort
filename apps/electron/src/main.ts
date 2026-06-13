@@ -5,6 +5,8 @@ import * as fs from 'fs';
 import { checkForUpdates, openReleasesPage } from './updater';
 import { applyDockIcon, createAppIconImage, resolveAppIconPath } from './utils/appIcon';
 import { extractFrontmatterMeta } from './utils/frontmatter';
+import { createRecentItemsStore, type RecentItemsStore, type RecentItemType } from './recentItemsStore';
+import { buildRecentOpenSubmenu } from './utils/recentMenu';
 
 // 判断是否为开发模式 - 使用 app.isPackaged 是最可靠的方式
 // 注意：app.isPackaged 只能在 app ready 之后使用，这里用延迟判断
@@ -17,6 +19,7 @@ let mainWindow: BrowserWindow | null = null;
 let workspaceDir: string | null = null;
 let fileWatcher: fs.FSWatcher | null = null;
 let watcherDebounceTimer: NodeJS.Timeout | null = null;
+let recentItemsStore: RecentItemsStore | null = null;
 
 // --- 文件监听器 ---
 function startWatching(dir: string) {
@@ -106,6 +109,74 @@ function isPathInsideWorkspace(targetPath: string): boolean {
         : normalizedWorkspace + path.sep;
 
     return normalizedTarget === normalizedWorkspace || normalizedTarget.startsWith(workspacePrefix);
+}
+
+/** Lazily opens the desktop SQLite database used for recent navigation items. */
+function getRecentItemsStore(): RecentItemsStore {
+    if (!recentItemsStore) {
+        recentItemsStore = createRecentItemsStore(path.join(app.getPath('userData'), 'draftport.sqlite'));
+    }
+    return recentItemsStore;
+}
+
+/** Returns whether a path can be recorded as the requested recent item type. */
+function canRecordRecentItem(itemPath: string, itemType: RecentItemType): { success: boolean; error?: string } {
+    if (!workspaceDir) return { success: false, error: 'No workspace' };
+    if (itemType !== 'file' && itemType !== 'folder') {
+        return { success: false, error: 'Invalid item type' };
+    }
+    if (!itemPath || !isPathInsideWorkspace(itemPath)) {
+        return { success: false, error: '非法路径' };
+    }
+    if (!fs.existsSync(itemPath)) {
+        return { success: false, error: 'Path not found' };
+    }
+    const stats = fs.statSync(itemPath);
+    if (itemType === 'file') {
+        if (!stats.isFile() || !itemPath.endsWith('.md')) {
+            return { success: false, error: '不是 Markdown 文件' };
+        }
+        return { success: true };
+    }
+    if (!stats.isDirectory()) {
+        return { success: false, error: '不是文件夹' };
+    }
+    return { success: true };
+}
+
+/** Records a recent item after the caller has completed the related user action. */
+function recordRecentItem(itemPath: string, itemType: RecentItemType, meta?: { title?: string; themeName?: string }) {
+    if (!workspaceDir) return;
+    const allowed = canRecordRecentItem(itemPath, itemType);
+    if (!allowed.success) return;
+    getRecentItemsStore().recordOpen({
+        workspacePath: workspaceDir,
+        itemPath,
+        itemType,
+        title: meta?.title ?? null,
+        themeName: meta?.themeName ?? null,
+    });
+    refreshApplicationMenu();
+}
+
+/** Removes all recent item entries for a path when local content is deleted. */
+function removeRecentPath(itemPath: string) {
+    if (!workspaceDir || !isPathInsideWorkspace(itemPath)) return;
+    getRecentItemsStore().remove(workspaceDir, itemPath);
+    refreshApplicationMenu();
+}
+
+/** Moves recent item entries to a new path after filesystem rename or move succeeds. */
+function renameRecentPath(oldPath: string, newPath: string) {
+    if (!workspaceDir || !isPathInsideWorkspace(oldPath) || !isPathInsideWorkspace(newPath)) return;
+    getRecentItemsStore().renamePath(workspaceDir, oldPath, newPath);
+    refreshApplicationMenu();
+}
+
+/** Rebuilds the native menu after recent navigation metadata changes. */
+function refreshApplicationMenu() {
+    if (!app.isReady()) return;
+    createMenu();
 }
 
 interface FileEntry {
@@ -265,6 +336,7 @@ ipcMain.handle('workspace:select', async () => {
     const dir = result.filePaths[0];
     workspaceDir = dir;
     startWatching(dir);
+    recordRecentItem(dir, 'folder');
     return { success: true, path: dir };
 });
 
@@ -279,6 +351,7 @@ ipcMain.handle('workspace:set', async (_event: IpcMainInvokeEvent, dir: string) 
     }
     workspaceDir = dir;
     startWatching(dir);
+    recordRecentItem(dir, 'folder');
     return { success: true, path: dir };
 });
 
@@ -301,6 +374,26 @@ ipcMain.handle('file:read', async (_event: IpcMainInvokeEvent, filePath: string)
             return { success: false, error: 'File not found' };
         }
         const content = fs.readFileSync(filePath, 'utf-8');
+        return { success: true, content, filePath };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('file:open', async (_event: IpcMainInvokeEvent, filePath: string) => {
+    try {
+        if (!isPathInsideWorkspace(filePath)) {
+            return { success: false, error: '非法路径' };
+        }
+        if (!fs.existsSync(filePath)) {
+            return { success: false, error: 'File not found' };
+        }
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const parsed = extractFrontmatterMeta(content);
+        recordRecentItem(filePath, 'file', {
+            title: parsed.title,
+            themeName: parsed.themeName,
+        });
         return { success: true, content, filePath };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -397,6 +490,7 @@ ipcMain.handle('file:rename', async (_event: IpcMainInvokeEvent, payload: { oldP
             return { success: false, error: '文件名已存在' };
         }
         fs.renameSync(oldPath, finalPath);
+        renameRecentPath(oldPath, finalPath);
         return { success: true, filePath: finalPath };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -413,11 +507,13 @@ ipcMain.handle('file:delete', async (_event: IpcMainInvokeEvent, filePath: strin
             // 尝试移动到回收站
             await shell.trashItem(filePath);
         }
+        removeRecentPath(filePath);
         return { success: true };
     } catch (error) {
         // 如果回收站失败，尝试物理删除
         try {
             if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            removeRecentPath(filePath);
             return { success: true };
         } catch (e: any) {
             return { success: false, error: e.message };
@@ -431,6 +527,82 @@ ipcMain.handle('file:reveal', async (_event: IpcMainInvokeEvent, filePath: strin
         shell.showItemInFolder(filePath);
     }
 });
+
+ipcMain.handle('recent-items:list', async (_event: IpcMainInvokeEvent, limit?: number) => {
+    try {
+        const store = getRecentItemsStore();
+        return {
+            success: true,
+            items: workspaceDir ? store.list(workspaceDir, limit) : store.listAll(limit),
+        };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle(
+    'recent-items:record-open',
+    async (
+        _event: IpcMainInvokeEvent,
+        payload: { itemPath: string; itemType: RecentItemType; title?: string; themeName?: string }
+    ) => {
+        if (!workspaceDir) return { success: false, error: 'No workspace' };
+        const allowed = canRecordRecentItem(payload?.itemPath, payload?.itemType);
+        if (!allowed.success) return { success: false, error: allowed.error };
+        try {
+            const item = getRecentItemsStore().recordOpen({
+                workspacePath: workspaceDir,
+                itemPath: payload.itemPath,
+                itemType: payload.itemType,
+                title: payload.title ?? null,
+                themeName: payload.themeName ?? null,
+            });
+            refreshApplicationMenu();
+            return { success: true, item };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    }
+);
+
+ipcMain.handle('recent-items:remove', async (_event: IpcMainInvokeEvent, itemPath: string) => {
+    if (!workspaceDir) return { success: false, error: 'No workspace' };
+    if (!itemPath || !isPathInsideWorkspace(itemPath)) return { success: false, error: '非法路径' };
+    try {
+        getRecentItemsStore().remove(workspaceDir, itemPath);
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('recent-items:clear', async () => {
+    if (!workspaceDir) return { success: false, error: 'No workspace' };
+    try {
+        getRecentItemsStore().clear(workspaceDir);
+        refreshApplicationMenu();
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle(
+    'recent-items:rename-path',
+    async (_event: IpcMainInvokeEvent, payload: { oldPath: string; newPath: string }) => {
+        if (!workspaceDir) return { success: false, error: 'No workspace' };
+        if (!payload?.oldPath || !payload?.newPath) return { success: false, error: 'Invalid arguments' };
+        if (!isPathInsideWorkspace(payload.oldPath) || !isPathInsideWorkspace(payload.newPath)) {
+            return { success: false, error: '非法路径' };
+        }
+        try {
+            getRecentItemsStore().renamePath(workspaceDir, payload.oldPath, payload.newPath);
+            return { success: true };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    }
+);
 
 // --- 文件夹管理 ---
 ipcMain.handle('folder:create', async (_event: IpcMainInvokeEvent, folderPathArg: string) => {
@@ -495,6 +667,7 @@ ipcMain.handle('folder:rename', async (_event: IpcMainInvokeEvent, payload: { fo
 
     try {
         fs.renameSync(folderPath, newPath);
+        renameRecentPath(folderPath, newPath);
         return { success: true, newPath };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -546,6 +719,7 @@ ipcMain.handle('folder:move-folder', async (_event: IpcMainInvokeEvent, payload:
 
     try {
         fs.renameSync(folderPath, newPath);
+        renameRecentPath(folderPath, newPath);
         return { success: true, newPath };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -575,6 +749,7 @@ ipcMain.handle('folder:move', async (_event: IpcMainInvokeEvent, payload: { file
 
     try {
         fs.renameSync(filePath, newPath);
+        renameRecentPath(filePath, newPath);
         return { success: true, newPath };
     } catch (error: any) {
         return { success: false, error: error.message };
@@ -635,9 +810,11 @@ ipcMain.handle(
             if (recursive) {
                 try {
                     await shell.trashItem(folderPath);
+                    removeRecentPath(folderPath);
                     return { success: true };
                 } catch {
                     fs.rmSync(folderPath, { recursive: true, force: true });
+                    removeRecentPath(folderPath);
                     return { success: true };
                 }
             }
@@ -649,6 +826,7 @@ ipcMain.handle(
             }
 
             fs.rmdirSync(folderPath);
+            removeRecentPath(folderPath);
             return { success: true };
         } catch (error: any) {
             return { success: false, error: error.message };
@@ -702,6 +880,8 @@ ipcMain.handle('update:openReleases', () => {
 
 // 创建应用菜单
 function createMenu() {
+    const store = getRecentItemsStore();
+    const recentItems = workspaceDir ? store.list(workspaceDir, 10) : store.listAll(10);
     const template: Electron.MenuItemConstructorOptions[] = [
         {
             label: 'DraftPort',
@@ -729,6 +909,18 @@ function createMenu() {
                     accelerator: 'CmdOrCtrl+S',
                     click: () => mainWindow && mainWindow.webContents.send('menu:save')
                 },
+                { type: 'separator' },
+                buildRecentOpenSubmenu(recentItems, (item) => {
+                    if (!workspaceDir) {
+                        workspaceDir = item.workspacePath;
+                        startWatching(item.workspacePath);
+                    }
+                    recordRecentItem(item.itemPath, item.itemType, {
+                        title: item.title ?? undefined,
+                        themeName: item.themeName ?? undefined,
+                    });
+                    mainWindow?.webContents.send('menu:open-recent-item', item);
+                }),
                 { type: 'separator' },
                 {
                     label: '切换工作区...',
@@ -819,4 +1011,9 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit();
     }
+});
+
+app.on('before-quit', () => {
+    recentItemsStore?.close();
+    recentItemsStore = null;
 });

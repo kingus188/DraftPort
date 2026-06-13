@@ -12,6 +12,7 @@ import {
   LAST_FILE_KEY,
   WORKSPACE_KEY,
   type ElectronAPI,
+  type RecentItemRecord,
 } from "./useFileSystemHelpers";
 
 interface UseFileSystemEffectsParams {
@@ -61,6 +62,27 @@ const getBrowserStorage = (): Storage | null => {
   }
 };
 
+const RECENT_FOLDER_EVENT = "draftport:open-recent-folder";
+
+function getBaseName(rawPath: string) {
+  const last = Math.max(rawPath.lastIndexOf("/"), rawPath.lastIndexOf("\\"));
+  return last >= 0 ? rawPath.slice(last + 1) : rawPath;
+}
+
+function toFileItem(item: RecentItemRecord) {
+  const updatedAt = item.mtime ? new Date(item.mtime) : new Date();
+  return {
+    name: getBaseName(item.itemPath),
+    path: item.itemPath,
+    createdAt: updatedAt,
+    updatedAt,
+    size: item.size ?? 0,
+    title: item.title ?? undefined,
+    themeName: item.themeName ?? undefined,
+    isDirectory: false as const,
+  };
+}
+
 export function useFileSystemEffects({
   enabled,
   electron,
@@ -90,6 +112,8 @@ export function useFileSystemEffects({
   const createFileRef = useRef(createFile);
   const saveFileRef = useRef(saveFile);
   const selectWorkspaceRef = useRef(selectWorkspace);
+  const openFileRef = useRef(openFile);
+  const loadWorkspaceRef = useRef(loadWorkspace);
 
   useEffect(() => {
     createFileRef.current = createFile;
@@ -102,6 +126,14 @@ export function useFileSystemEffects({
   useEffect(() => {
     selectWorkspaceRef.current = selectWorkspace;
   }, [selectWorkspace]);
+
+  useEffect(() => {
+    openFileRef.current = openFile;
+  }, [openFile]);
+
+  useEffect(() => {
+    loadWorkspaceRef.current = loadWorkspace;
+  }, [loadWorkspace]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -178,6 +210,18 @@ export function useFileSystemEffects({
     });
     electron.fs.onMenuSwitchWorkspace(() => {
       void selectWorkspaceRef.current();
+    });
+    electron.fs.onMenuOpenRecentItem((item) => {
+      void (async () => {
+        await loadWorkspaceRef.current(item.workspacePath);
+        if (item.itemType === "file") {
+          await openFileRef.current(toFileItem(item));
+          return;
+        }
+        window.dispatchEvent(
+          new CustomEvent(RECENT_FOLDER_EVENT, { detail: item }),
+        );
+      })();
     });
 
     return () => {

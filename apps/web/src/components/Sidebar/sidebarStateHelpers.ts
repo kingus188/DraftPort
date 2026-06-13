@@ -1,5 +1,5 @@
 import type { FileItem, FolderItem, TreeItem } from "../../store/fileTypes";
-import type { SortMode } from "./sortUtils";
+import type { RecentItemMap, SortMode } from "./sortUtils";
 import { compareFiles, sortTreeItems } from "./sortUtils";
 
 const COLLAPSED_KEY = "draftport-folder-collapsed";
@@ -71,14 +71,15 @@ export function buildFilteredItems(
   filter: string,
   flattenFiles: (items: TreeItem[]) => FileItem[],
   sortMode: SortMode,
+  recentItems?: RecentItemMap,
 ) {
-  if (!filter) return sortTreeItems(files, sortMode);
+  if (!filter) return sortTreeItems(files, sortMode, recentItems);
 
   const keyword = filter.toLowerCase();
   const matched = flattenFiles(files).filter((f) =>
     (f.title || f.name).toLowerCase().includes(keyword),
   );
-  matched.sort((a, b) => compareFiles(a, b, sortMode));
+  matched.sort((a, b) => compareFiles(a, b, sortMode, recentItems));
   return matched;
 }
 

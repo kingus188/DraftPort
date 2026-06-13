@@ -1,6 +1,7 @@
 import type { SyntheticEvent } from "react";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useFileSystem } from "../../hooks/useFileSystem";
+import { getElectron } from "../../hooks/useFileSystemHelpers";
 import toast from "react-hot-toast";
 import type { FileItem, FolderItem } from "../../store/fileTypes";
 import { type SortMode, getSortMode, saveSortMode } from "./sortUtils";
@@ -27,6 +28,7 @@ export { ROOT_DROP_TARGET, FILE_DRAG_TYPE, FOLDER_DRAG_TYPE, getBaseName };
  * Builds the interaction state and file-system actions needed by the file tree sidebar.
  */
 export function useSidebarState() {
+  const electron = getElectron();
   const {
     files,
     currentFile,
@@ -81,14 +83,83 @@ export function useSidebarState() {
   const [renameFolderValue, setRenameFolderValue] = useState("");
   const [showRenameFolderModal, setShowRenameFolderModal] = useState(false);
   const [sortMode, setSortModeState] = useState<SortMode>(getSortMode);
+  const [recentItems, setRecentItems] = useState<Map<string, string>>(
+    () => new Map(),
+  );
 
   const isDragEnabled = !filter;
 
   const allFolders = useMemo(() => collectAllFolders(files), [files]);
 
+  const refreshRecentItems = useCallback(async () => {
+    if (!electron?.recentItems) {
+      setRecentItems(new Map());
+      return;
+    }
+    try {
+      const result = await electron.recentItems.list();
+      if (!result.success || !result.items) {
+        setRecentItems(new Map());
+        return;
+      }
+      setRecentItems(
+        new Map(result.items.map((item) => [item.itemPath, item.openedAt])),
+      );
+    } catch (error) {
+      console.error("[RecentItems] load failed", error);
+      setRecentItems(new Map());
+    }
+  }, [electron]);
+
+  useEffect(() => {
+    void refreshRecentItems();
+  }, [refreshRecentItems, workspacePath]);
+
+  useEffect(() => {
+    const handleRecentFolder = (event: Event) => {
+      const detail = (event as CustomEvent<{ itemPath?: string }>).detail;
+      if (!detail?.itemPath) return;
+      const folderPath = detail.itemPath;
+      setActiveFolder(folderPath === workspacePath ? null : folderPath);
+      setCollapsedFolders((prev) => {
+        const next = expandAncestorFolders(prev, folderPath, workspacePath);
+        saveCollapsedState(next);
+        return next;
+      });
+      void refreshRecentItems();
+    };
+    window.addEventListener("draftport:open-recent-folder", handleRecentFolder);
+    return () => {
+      window.removeEventListener(
+        "draftport:open-recent-folder",
+        handleRecentFolder,
+      );
+    };
+  }, [refreshRecentItems, workspacePath]);
+
+  const recordFolderOpen = useCallback(
+    async (folderPath: string | null) => {
+      if (!electron?.recentItems || !workspacePath) return;
+      const targetPath = folderPath ?? workspacePath;
+      try {
+        const result = await electron.recentItems.recordOpen({
+          itemPath: targetPath,
+          itemType: "folder",
+        });
+        if (result.success) {
+          await refreshRecentItems();
+        }
+      } catch (error) {
+        console.error("[RecentItems] record folder failed", error);
+      }
+    },
+    [electron, refreshRecentItems, workspacePath],
+  );
+
   const filteredItems = useMemo(
-    () => buildFilteredItems(files, filter, flattenFiles, sortMode),
-    [files, filter, flattenFiles, sortMode],
+    () =>
+      buildFilteredItems(files, filter, flattenFiles, sortMode, recentItems),
+    [files, filter, flattenFiles, sortMode, recentItems],
   );
 
   const handleSetSortMode = useCallback((mode: SortMode) => {
@@ -101,20 +172,26 @@ export function useSidebarState() {
     [],
   );
 
-  const toggleFolder = useCallback((folderPath: string) => {
-    setCollapsedFolders((prev) => {
-      const next = new Set(prev);
-      if (next.has(folderPath)) {
-        next.delete(folderPath);
-        setActiveFolder(folderPath);
-      } else {
-        next.add(folderPath);
-        setActiveFolder((current) => (current === folderPath ? null : current));
-      }
-      saveCollapsedState(next);
-      return next;
-    });
-  }, []);
+  const toggleFolder = useCallback(
+    (folderPath: string) => {
+      void recordFolderOpen(folderPath);
+      setCollapsedFolders((prev) => {
+        const next = new Set(prev);
+        if (next.has(folderPath)) {
+          next.delete(folderPath);
+          setActiveFolder(folderPath);
+        } else {
+          next.add(folderPath);
+          setActiveFolder((current) =>
+            current === folderPath ? null : current,
+          );
+        }
+        saveCollapsedState(next);
+        return next;
+      });
+    },
+    [recordFolderOpen],
+  );
 
   const updateFolderPathState = useCallback(
     (oldPath: string, newPath: string) => {
@@ -391,8 +468,9 @@ export function useSidebarState() {
   );
 
   const handleFileClick = useCallback(
-    (file: FileItem) => {
-      openFile(file);
+    async (file: FileItem) => {
+      await openFile(file);
+      await refreshRecentItems();
       const parentPath = resolveParentFolderPath(file.path, workspacePath);
       setActiveFolder(parentPath);
 
@@ -404,8 +482,13 @@ export function useSidebarState() {
         });
       }
     },
-    [openFile, workspacePath],
+    [openFile, refreshRecentItems, workspacePath],
   );
+
+  const handleRootFolderClick = useCallback(() => {
+    setActiveFolder(null);
+    void recordFolderOpen(null);
+  }, [recordFolderOpen]);
 
   const formatTime = useCallback((date: Date) => formatRelativeTime(date), []);
 
@@ -488,6 +571,7 @@ export function useSidebarState() {
     handleDropToRoot,
     handleDragLeave,
     handleFileClick,
+    handleRootFolderClick,
     formatTime,
   };
 }

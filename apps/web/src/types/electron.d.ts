@@ -16,6 +16,9 @@ interface ElectronAPI {
     readFile: (
       filePath: string,
     ) => Promise<{ success: boolean; content?: string; error?: string }>;
+    openFile: (
+      filePath: string,
+    ) => Promise<{ success: boolean; content?: string; error?: string }>;
     createFile: (payload: { filename?: string; content?: string }) => Promise<{
       success: boolean;
       filePath?: string;
@@ -63,7 +66,33 @@ interface ElectronAPI {
     onMenuNewFile: (callback: () => void) => unknown;
     onMenuSave: (callback: () => void) => unknown;
     onMenuSwitchWorkspace: (callback: () => void) => unknown;
+    onMenuOpenRecentItem: (
+      callback: (item: RecentItemRecord) => void,
+    ) => unknown;
     removeAllListeners: () => void;
+  };
+  recentItems?: {
+    list: (limit?: number) => Promise<{
+      success: boolean;
+      items?: RecentItemRecord[];
+      error?: string;
+    }>;
+    recordOpen: (payload: {
+      itemPath: string;
+      itemType: "file" | "folder";
+      title?: string;
+      themeName?: string;
+    }) => Promise<{
+      success: boolean;
+      item?: RecentItemRecord;
+      error?: string;
+    }>;
+    remove: (itemPath: string) => Promise<{ success: boolean; error?: string }>;
+    clear: () => Promise<{ success: boolean; error?: string }>;
+    renamePath: (payload: {
+      oldPath: string;
+      newPath: string;
+    }) => Promise<{ success: boolean; error?: string }>;
   };
   window?: {
     minimize: () => Promise<void>;
@@ -81,6 +110,18 @@ interface ElectronAPI {
     }) => Promise<{ success: boolean; error?: string }>;
     writeText: (text: string) => Promise<{ success: boolean; error?: string }>;
   };
+}
+
+interface RecentItemRecord {
+  workspacePath: string;
+  itemPath: string;
+  itemType: "file" | "folder";
+  title: string | null;
+  themeName: string | null;
+  openedAt: string;
+  mtime: number | null;
+  size: number | null;
+  missing: boolean;
 }
 
 declare global {

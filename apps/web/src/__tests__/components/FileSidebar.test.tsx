@@ -76,7 +76,7 @@ describe("FileSidebar", () => {
       setRenameFolderValue: vi.fn(),
       showRenameFolderModal: false,
       setShowRenameFolderModal: vi.fn(),
-      sortMode: "recent",
+      sortMode: "updated-desc",
       handleSetSortMode: vi.fn(),
       toggleFolder: vi.fn(),
       getFolderMoveTargets: vi.fn(() => []),
@@ -99,6 +99,7 @@ describe("FileSidebar", () => {
       handleDropToRoot: vi.fn(),
       handleDragLeave: vi.fn(),
       handleFileClick: vi.fn(),
+      handleRootFolderClick: vi.fn(),
       formatTime: vi.fn(() => "刚刚"),
     });
   });

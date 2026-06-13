@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('electron', {
         setWorkspace: (dir: string) => ipcRenderer.invoke('workspace:set', dir),
         listFiles: (dir?: string) => ipcRenderer.invoke('file:list', dir),
         readFile: (filePath: string) => ipcRenderer.invoke('file:read', filePath),
+        openFile: (filePath: string) => ipcRenderer.invoke('file:open', filePath),
         createFile: (payload: { filename?: string; content?: string }) => ipcRenderer.invoke('file:create', payload),
         saveFile: (payload: { filePath: string; content: string }) => ipcRenderer.invoke('file:save', payload),
         renameFile: (payload: { oldPath: string; newName: string }) => ipcRenderer.invoke('file:rename', payload),
@@ -48,13 +49,29 @@ contextBridge.exposeInMainWorld('electron', {
             ipcRenderer.on('menu:switch-workspace', handler);
             return handler;
         },
+        onMenuOpenRecentItem: (callback: (item: unknown) => void) => {
+            const handler = (_event: IpcRendererEvent, item: unknown) => callback(item);
+            ipcRenderer.on('menu:open-recent-item', handler);
+            return handler;
+        },
 
         removeAllListeners: () => {
             ipcRenderer.removeAllListeners('file:refresh');
             ipcRenderer.removeAllListeners('menu:new-file');
             ipcRenderer.removeAllListeners('menu:save');
             ipcRenderer.removeAllListeners('menu:switch-workspace');
+            ipcRenderer.removeAllListeners('menu:open-recent-item');
         }
+    },
+
+    recentItems: {
+        list: (limit?: number) => ipcRenderer.invoke('recent-items:list', limit),
+        recordOpen: (payload: { itemPath: string; itemType: 'file' | 'folder'; title?: string; themeName?: string }) =>
+            ipcRenderer.invoke('recent-items:record-open', payload),
+        remove: (itemPath: string) => ipcRenderer.invoke('recent-items:remove', itemPath),
+        clear: () => ipcRenderer.invoke('recent-items:clear'),
+        renamePath: (payload: { oldPath: string; newPath: string }) =>
+            ipcRenderer.invoke('recent-items:rename-path', payload),
     },
 
     // 窗口控制 (用于 Windows 自定义标题栏)

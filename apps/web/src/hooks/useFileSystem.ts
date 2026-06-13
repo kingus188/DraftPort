@@ -182,7 +182,9 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       let success = false;
 
       if (electron) {
-        const res = await electron.fs.readFile(file.path);
+        const res = electron.fs.openFile
+          ? await electron.fs.openFile(file.path)
+          : await electron.fs.readFile(file.path);
         if (res.success && typeof res.content === "string") {
           content = res.content;
           success = true;
@@ -500,6 +502,7 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
     isLoading,
     isSaving,
     refreshFiles,
+    loadWorkspace,
     selectWorkspace,
     openFile,
     createFile,

@@ -6,6 +6,17 @@ import { useFileSystemEffects } from "../../hooks/useFileSystemEffects";
 const buildElectronMock = () => {
   let refreshCallback: (() => void) | undefined;
   let menuNewFileCallback: (() => void) | undefined;
+  let menuOpenRecentItemCallback:
+    | ((item: {
+        workspacePath: string;
+        itemPath: string;
+        itemType: "file" | "folder";
+        title: string | null;
+        themeName: string | null;
+        mtime: number | null;
+        size: number | null;
+      }) => void)
+    | undefined;
 
   const onRefresh = vi.fn((callback: () => void) => {
     refreshCallback = callback;
@@ -38,6 +49,10 @@ const buildElectronMock = () => {
     onMenuNewFile,
     onMenuSave: vi.fn(() => "menu-save-handler"),
     onMenuSwitchWorkspace: vi.fn(() => "menu-switch-workspace-handler"),
+    onMenuOpenRecentItem: vi.fn((callback) => {
+      menuOpenRecentItemCallback = callback;
+      return "menu-open-recent-handler";
+    }),
     removeAllListeners: vi.fn(),
   };
 
@@ -46,6 +61,7 @@ const buildElectronMock = () => {
     fs,
     getRefreshCallback: () => refreshCallback,
     getMenuNewFileCallback: () => menuNewFileCallback,
+    getMenuOpenRecentItemCallback: () => menuOpenRecentItemCallback,
   };
 };
 
@@ -62,11 +78,17 @@ describe("useFileSystemEffects", () => {
   });
 
   it("单实例下正确注册并清理 Electron 监听器", async () => {
-    const { electron, fs, getRefreshCallback, getMenuNewFileCallback } =
-      buildElectronMock();
+    const {
+      electron,
+      fs,
+      getRefreshCallback,
+      getMenuNewFileCallback,
+      getMenuOpenRecentItemCallback,
+    } = buildElectronMock();
 
     const refreshFiles = vi.fn(async () => {});
     const createFile = vi.fn(async () => {});
+    const openFile = vi.fn(async () => {});
 
     const params = {
       enabled: true,
@@ -83,7 +105,7 @@ describe("useFileSystemEffects", () => {
       lastSavedContent: "",
       loadWorkspace: vi.fn(async () => {}),
       refreshFiles,
-      openFile: vi.fn(async () => {}),
+      openFile,
       createFile,
       saveFile: vi.fn(async () => {}),
       selectWorkspace: vi.fn(async () => {}),
@@ -102,6 +124,7 @@ describe("useFileSystemEffects", () => {
       expect(fs.onMenuNewFile).toHaveBeenCalledTimes(1);
       expect(fs.onMenuSave).toHaveBeenCalledTimes(1);
       expect(fs.onMenuSwitchWorkspace).toHaveBeenCalledTimes(1);
+      expect(fs.onMenuOpenRecentItem).toHaveBeenCalledTimes(1);
     });
 
     getRefreshCallback()?.();
@@ -112,6 +135,28 @@ describe("useFileSystemEffects", () => {
     getMenuNewFileCallback()?.();
     await waitFor(() => {
       expect(createFile).toHaveBeenCalledTimes(1);
+    });
+
+    getMenuOpenRecentItemCallback()?.({
+      workspacePath: "/workspace",
+      itemPath: "/workspace/article.md",
+      itemType: "file",
+      title: "Article",
+      themeName: "默认主题",
+      mtime: 1760000000000,
+      size: 12,
+    });
+    await waitFor(() => {
+      expect(params.loadWorkspace).toHaveBeenCalledWith("/workspace");
+      expect(openFile).toHaveBeenCalledWith(
+        expect.objectContaining({
+          path: "/workspace/article.md",
+          name: "article.md",
+          title: "Article",
+          themeName: "默认主题",
+          size: 12,
+        }),
+      );
     });
 
     mounted.unmount();

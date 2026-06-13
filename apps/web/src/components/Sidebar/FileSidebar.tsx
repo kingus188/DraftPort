@@ -33,7 +33,8 @@ import "./FileSidebar.css";
 import type { FileItem, FolderItem, TreeItem } from "../../store/fileTypes";
 
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
-  { value: "recent", label: "最近编辑" },
+  { value: "opened-desc", label: "最近打开" },
+  { value: "updated-desc", label: "最近编辑" },
   { value: "name-asc", label: "名称升序" },
   { value: "name-desc", label: "名称降序" },
 ];
@@ -336,7 +337,7 @@ export function FileSidebar() {
           {!state.filter && (
             <div
               className={`fs-folder ${state.activeFolder === null ? "active" : ""} ${state.dragOverTarget === ROOT_DROP_TARGET ? "drop-target" : ""}`}
-              onClick={() => state.setActiveFolder(null)}
+              onClick={state.handleRootFolderClick}
               onDragOver={(e) => {
                 if (!state.isDragEnabled) return;
                 e.preventDefault();

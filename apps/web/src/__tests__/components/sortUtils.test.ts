@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { sortTreeItems } from "../../components/Sidebar/sortUtils";
+import { getSortMode, sortTreeItems } from "../../components/Sidebar/sortUtils";
+import type { RecentItemMap } from "../../components/Sidebar/sortUtils";
 import type { SortMode } from "../../components/Sidebar/sortUtils";
 import type { FileItem, FolderItem, TreeItem } from "../../store/fileTypes";
 
@@ -37,7 +38,7 @@ describe("sortTreeItems", () => {
   ];
 
   it("按最近编辑排序（降序）", () => {
-    const sorted = sortTreeItems(files, "recent");
+    const sorted = sortTreeItems(files, "updated-desc");
     expect(names(sorted)).toEqual(["b.md", "c.md", "a.md"]);
   });
 
@@ -58,7 +59,11 @@ describe("sortTreeItems", () => {
       makeFile("a.md", "2024-01-01"),
       makeFolder("beta", []),
     ];
-    for (const mode of ["recent", "name-asc", "name-desc"] as SortMode[]) {
+    for (const mode of [
+      "updated-desc",
+      "name-asc",
+      "name-desc",
+    ] as SortMode[]) {
       const sorted = sortTreeItems(items, mode);
       expect(sorted[0].isDirectory).toBe(true);
       expect(sorted[1].isDirectory).toBe(true);
@@ -137,6 +142,40 @@ describe("sortTreeItems", () => {
   });
 });
 
+describe("recent-open sorting", () => {
+  it("默认使用最近打开排序", () => {
+    localStorage.removeItem("draftport-file-sort-mode");
+    expect(getSortMode()).toBe("opened-desc");
+  });
+
+  it("兼容旧 recent 存储值为最近编辑", () => {
+    localStorage.setItem("draftport-file-sort-mode", "recent");
+    expect(getSortMode()).toBe("updated-desc");
+  });
+
+  it("按最近打开混排文件夹和文件，未打开项目排后", () => {
+    const items: TreeItem[] = [
+      makeFile("old.md", "2024-01-01"),
+      makeFolder("docs", [makeFile("nested.md", "2024-01-03")]),
+      makeFile("fresh.md", "2024-03-01"),
+      makeFolder("ideas", []),
+    ];
+    const recentItems: RecentItemMap = new Map([
+      ["/docs", "2026-01-02T00:00:00.000Z"],
+      ["/fresh.md", "2026-01-03T00:00:00.000Z"],
+    ]);
+
+    const sorted = sortTreeItems(items, "opened-desc", recentItems);
+
+    expect(sorted.map((entry) => entry.name)).toEqual([
+      "fresh.md",
+      "docs",
+      "ideas",
+      "old.md",
+    ]);
+  });
+});
+
 describe("切换排序模式后列表顺序变化", () => {
   const items: TreeItem[] = [
     makeFile("beta.md", "2024-01-01"),
@@ -144,8 +183,8 @@ describe("切换排序模式后列表顺序变化", () => {
     makeFile("charlie.md", "2024-02-01"),
   ];
 
-  it("从 recent 切换到 name-asc", () => {
-    const byRecent = sortTreeItems(items, "recent");
+  it("从 updated-desc 切换到 name-asc", () => {
+    const byRecent = sortTreeItems(items, "updated-desc");
     expect(byRecent[0].name).toBe("alpha.md");
 
     const byName = sortTreeItems(items, "name-asc");
@@ -167,7 +206,11 @@ describe("切换排序模式后列表顺序变化", () => {
       makeFile("a.md", "2024-01-01"),
     ];
 
-    for (const mode of ["recent", "name-asc", "name-desc"] as SortMode[]) {
+    for (const mode of [
+      "updated-desc",
+      "name-asc",
+      "name-desc",
+    ] as SortMode[]) {
       const sorted = sortTreeItems(mixed, mode);
       expect(sorted[0].name).toBe("folder");
       expect(sorted[0].isDirectory).toBe(true);
