@@ -107,6 +107,9 @@ describe("Header", () => {
 
     expect(screen.getByText("WeMD")).toBeInTheDocument();
     expect(screen.getByText("公众号 Markdown 排版编辑器")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "图库" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "主题" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "HTML" })).toBeInTheDocument();
     expect(screen.getByText("复制到公众号")).toBeInTheDocument();
   });
 
@@ -128,7 +131,7 @@ describe("Header", () => {
   it("calls copyAsHtml action", () => {
     render(<Header />);
 
-    fireEvent.click(screen.getByText("复制 HTML"));
+    fireEvent.click(screen.getByRole("button", { name: "HTML" }));
     expect(mockCopyAsHtml).toHaveBeenCalled();
   });
 
