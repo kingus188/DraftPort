@@ -16,7 +16,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 52px 24px 18px;
+  padding: 44px 24px 8px;
   border-bottom: none;
 }
 
@@ -91,7 +91,7 @@
 }
 
 .fs-search {
-  padding: 12px 24px 18px;
+  padding: 6px 24px 8px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -194,7 +194,7 @@
 .fs-list {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 24px 16px;
+  padding: 4px 24px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -220,9 +220,13 @@
 }
 
 .fs-item.active {
-  background: #e5f7ec;
+  background: #e8f7ee;
   border-color: transparent;
   box-shadow: none;
+}
+
+.fs-item.active .fs-title {
+  color: #0b7f45;
 }
 
 .fs-item.dragging {
@@ -278,9 +282,13 @@
 
 .fs-theme-info {
   font-size: 12px;
-  color: var(--accent-primary);
+  color: #6b8f7a;
   font-weight: 600;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
+}
+
+.fs-item.active .fs-theme-info {
+  color: var(--accent-primary);
 }
 
 /* Rename UI - Web Style */
@@ -576,7 +584,7 @@
 }
 
 .fs-folder.active {
-  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+  background: color-mix(in srgb, var(--accent-primary) 11%, transparent);
   color: var(--accent-primary);
 }
 
@@ -603,10 +611,15 @@
 
 .fs-folder-count {
   font-size: 13px;
-  color: var(--text-tertiary);
-  background: #e4e9ef;
+  color: #7b8794;
+  background: #edf1f5;
   padding: 2px 8px;
   border-radius: var(--radius-pill);
+}
+
+.fs-folder.active .fs-folder-count {
+  color: #0b7f45;
+  background: color-mix(in srgb, var(--accent-primary) 16%, #ffffff);
 }
 
 /* ========================================

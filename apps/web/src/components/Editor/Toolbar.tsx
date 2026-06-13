@@ -191,199 +191,197 @@ export function Toolbar({ onInsert }: ToolbarProps) {
 
   return (
     <div className="md-toolbar">
-      {/* 文本格式工具 */}
-      {textFormatTools.map((tool, index) => (
-        <button
-          key={index}
-          className="md-toolbar-btn"
-          onClick={() => onInsert(tool.prefix, tool.suffix, tool.placeholder)}
-          data-tooltip={tool.label}
-        >
-          <tool.icon size={16} />
-        </button>
-      ))}
-
-      {/* 标题下拉菜单 */}
-      <div className="md-toolbar-dropdown-container" ref={headingMenuRef}>
-        <button
-          className={`md-toolbar-btn ${showHeadingMenu ? "active" : ""}`}
-          onClick={() => {
-            setShowHeadingMenu((prev) => !prev);
-            setShowListMenu(false);
-            setShowMermaidMenu(false);
-          }}
-          data-tooltip="标题"
-        >
-          <Heading size={16} />
-        </button>
-        {showHeadingMenu && (
-          <div className="md-toolbar-dropdown-menu">
-            {headingOptions.map((option, idx) => (
-              <button
-                key={idx}
-                className="md-toolbar-dropdown-item"
-                onClick={() => {
-                  onInsert(option.prefix, option.suffix, option.placeholder);
-                  setShowHeadingMenu(false);
-                }}
-              >
-                <option.icon size={14} className="mr-2" />
-                <span>{option.label}</span>
-              </button>
-            ))}
-          </div>
-        )}
+      <div className="md-toolbar-group" aria-label="文本样式">
+        {textFormatTools.map((tool, index) => (
+          <button
+            key={index}
+            className="md-toolbar-btn"
+            onClick={() => onInsert(tool.prefix, tool.suffix, tool.placeholder)}
+            data-tooltip={tool.label}
+          >
+            <tool.icon size={16} />
+          </button>
+        ))}
       </div>
 
-      {/* 列表下拉菜单 */}
-      <div className="md-toolbar-dropdown-container" ref={listMenuRef}>
-        <button
-          className={`md-toolbar-btn ${showListMenu ? "active" : ""}`}
-          onClick={() => {
-            setShowListMenu((prev) => !prev);
-            setShowHeadingMenu(false);
-            setShowMermaidMenu(false);
-          }}
-          data-tooltip="列表"
-        >
-          <List size={16} />
-        </button>
-        {showListMenu && (
-          <div className="md-toolbar-dropdown-menu">
-            {listOptions.map((option, idx) => (
-              <button
-                key={idx}
-                className="md-toolbar-dropdown-item"
-                onClick={() => {
-                  onInsert(option.prefix, option.suffix, option.placeholder);
-                  setShowListMenu(false);
-                }}
-              >
-                <option.icon size={14} className="mr-2" />
-                <span>{option.label}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* 块级工具 */}
-      {blockTools.map((tool, index) => (
-        <button
-          key={index}
-          className="md-toolbar-btn"
-          onClick={() => onInsert(tool.prefix, tool.suffix, tool.placeholder)}
-          data-tooltip={tool.label}
-        >
-          <tool.icon size={16} />
-        </button>
-      ))}
-
-      {/* Mermaid 下拉菜单 */}
-      <div className="md-toolbar-dropdown-container" ref={mermaidMenuRef}>
-        <button
-          className={`md-toolbar-btn ${showMermaidMenu ? "active" : ""}`}
-          onClick={toggleMermaidMenu}
-          data-tooltip="插入图表"
-        >
-          <Workflow size={16} />
-        </button>
-
-        {showMermaidMenu && (
-          <div className="md-toolbar-dropdown-menu">
-            {mermaidPrimaryTemplates.map((template, idx) => (
-              <button
-                key={idx}
-                className="md-toolbar-dropdown-item"
-                onClick={() => handleMermaidInsert(template.code)}
-              >
-                <template.icon size={14} className="mr-2" />
-                <span>{template.label}</span>
-              </button>
-            ))}
-            <div className="md-toolbar-dropdown-more" ref={mermaidMoreRef}>
-              <button
-                type="button"
-                className={`md-toolbar-dropdown-item md-toolbar-dropdown-more-btn ${
-                  showMermaidMore ? "active" : ""
-                }`}
-                onClick={() => setShowMermaidMore((prev) => !prev)}
-                aria-expanded={showMermaidMore}
-              >
-                <span>查看更多</span>
-                {mermaidSubmenuSide === "left" ? (
-                  <ChevronLeft
-                    size={12}
-                    className="md-toolbar-dropdown-chevron"
-                  />
-                ) : (
-                  <ChevronRight
-                    size={12}
-                    className="md-toolbar-dropdown-chevron"
-                  />
-                )}
-              </button>
-              {showMermaidMore && (
-                <div
-                  ref={mermaidSubmenuRef}
-                  className={`md-toolbar-dropdown-submenu ${
-                    mermaidSubmenuSide === "left" ? "is-left" : ""
-                  }`}
+      <div className="md-toolbar-group" aria-label="段落结构">
+        <div className="md-toolbar-dropdown-container" ref={headingMenuRef}>
+          <button
+            className={`md-toolbar-btn ${showHeadingMenu ? "active" : ""}`}
+            onClick={() => {
+              setShowHeadingMenu((prev) => !prev);
+              setShowListMenu(false);
+              setShowMermaidMenu(false);
+            }}
+            data-tooltip="标题"
+          >
+            <Heading size={16} />
+          </button>
+          {showHeadingMenu && (
+            <div className="md-toolbar-dropdown-menu">
+              {headingOptions.map((option, idx) => (
+                <button
+                  key={idx}
+                  className="md-toolbar-dropdown-item"
+                  onClick={() => {
+                    onInsert(option.prefix, option.suffix, option.placeholder);
+                    setShowHeadingMenu(false);
+                  }}
                 >
-                  {mermaidMoreTemplates.map((template, idx) => (
-                    <button
-                      key={idx}
-                      className="md-toolbar-dropdown-item"
-                      onClick={() => handleMermaidInsert(template.code)}
-                    >
-                      <template.icon size={14} className="mr-2" />
-                      <span>{template.label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+                  <option.icon size={14} className="mr-2" />
+                  <span>{option.label}</span>
+                </button>
+              ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+
+        <div className="md-toolbar-dropdown-container" ref={listMenuRef}>
+          <button
+            className={`md-toolbar-btn ${showListMenu ? "active" : ""}`}
+            onClick={() => {
+              setShowListMenu((prev) => !prev);
+              setShowHeadingMenu(false);
+              setShowMermaidMenu(false);
+            }}
+            data-tooltip="列表"
+          >
+            <List size={16} />
+          </button>
+          {showListMenu && (
+            <div className="md-toolbar-dropdown-menu">
+              {listOptions.map((option, idx) => (
+                <button
+                  key={idx}
+                  className="md-toolbar-dropdown-item"
+                  onClick={() => {
+                    onInsert(option.prefix, option.suffix, option.placeholder);
+                    setShowListMenu(false);
+                  }}
+                >
+                  <option.icon size={14} className="mr-2" />
+                  <span>{option.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {blockTools.map((tool, index) => (
+          <button
+            key={index}
+            className="md-toolbar-btn"
+            onClick={() => onInsert(tool.prefix, tool.suffix, tool.placeholder)}
+            data-tooltip={tool.label}
+          >
+            <tool.icon size={16} />
+          </button>
+        ))}
       </div>
 
-      {/* 图片上传按钮 */}
-      <button
-        className="md-toolbar-btn"
-        onClick={handleImageClick}
-        disabled={uploading}
-        data-tooltip="上传图片"
-      >
-        {uploading ? (
-          <Loader2 size={16} className="spinning" />
-        ) : (
-          <Image size={16} />
-        )}
-      </button>
+      <div className="md-toolbar-group" aria-label="插入内容">
+        <div className="md-toolbar-dropdown-container" ref={mermaidMenuRef}>
+          <button
+            className={`md-toolbar-btn ${showMermaidMenu ? "active" : ""}`}
+            onClick={toggleMermaidMenu}
+            data-tooltip="插入图表"
+          >
+            <Workflow size={16} />
+          </button>
 
-      {/* 分隔符 */}
-      <div className="md-toolbar-divider" />
+          {showMermaidMenu && (
+            <div className="md-toolbar-dropdown-menu">
+              {mermaidPrimaryTemplates.map((template, idx) => (
+                <button
+                  key={idx}
+                  className="md-toolbar-dropdown-item"
+                  onClick={() => handleMermaidInsert(template.code)}
+                >
+                  <template.icon size={14} className="mr-2" />
+                  <span>{template.label}</span>
+                </button>
+              ))}
+              <div className="md-toolbar-dropdown-more" ref={mermaidMoreRef}>
+                <button
+                  type="button"
+                  className={`md-toolbar-dropdown-item md-toolbar-dropdown-more-btn ${
+                    showMermaidMore ? "active" : ""
+                  }`}
+                  onClick={() => setShowMermaidMore((prev) => !prev)}
+                  aria-expanded={showMermaidMore}
+                >
+                  <span>查看更多</span>
+                  {mermaidSubmenuSide === "left" ? (
+                    <ChevronLeft
+                      size={12}
+                      className="md-toolbar-dropdown-chevron"
+                    />
+                  ) : (
+                    <ChevronRight
+                      size={12}
+                      className="md-toolbar-dropdown-chevron"
+                    />
+                  )}
+                </button>
+                {showMermaidMore && (
+                  <div
+                    ref={mermaidSubmenuRef}
+                    className={`md-toolbar-dropdown-submenu ${
+                      mermaidSubmenuSide === "left" ? "is-left" : ""
+                    }`}
+                  >
+                    {mermaidMoreTemplates.map((template, idx) => (
+                      <button
+                        key={idx}
+                        className="md-toolbar-dropdown-item"
+                        onClick={() => handleMermaidInsert(template.code)}
+                      >
+                        <template.icon size={14} className="mr-2" />
+                        <span>{template.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
-      {/* 外链转脚注开关 */}
-      <button
-        className={`md-toolbar-btn md-toolbar-toggle ${linkToFootnote ? "active" : ""}`}
-        onClick={toggleLinkToFootnote}
-        data-tooltip={linkToFootnote ? "外链转脚注：开启" : "外链转脚注：关闭"}
-      >
-        <ListEnd size={16} />
-      </button>
+        <button
+          className="md-toolbar-btn"
+          onClick={handleImageClick}
+          disabled={uploading}
+          data-tooltip="上传图片"
+        >
+          {uploading ? (
+            <Loader2 size={16} className="spinning" />
+          ) : (
+            <Image size={16} />
+          )}
+        </button>
 
-      {/* 语法帮助 */}
-      <SyntaxHelpPopover />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          style={{ display: "none" }}
+        />
+      </div>
 
-      {/* 隐藏的文件输入 */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-        style={{ display: "none" }}
-      />
+      <div className="md-toolbar-group" aria-label="发布辅助">
+        <button
+          className={`md-toolbar-btn md-toolbar-toggle ${linkToFootnote ? "active" : ""}`}
+          onClick={toggleLinkToFootnote}
+          data-tooltip={
+            linkToFootnote ? "外链转脚注：开启" : "外链转脚注：关闭"
+          }
+        >
+          <ListEnd size={16} />
+        </button>
+
+        <SyntaxHelpPopover />
+      </div>
     </div>
   );
 }

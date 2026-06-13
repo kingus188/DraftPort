@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import mermaid from "mermaid";
-import { Monitor, Smartphone } from "lucide-react";
+import { Maximize2, Minimize2, Monitor, Smartphone } from "lucide-react";
 import { createMarkdownParser, processHtml } from "@draftport/core";
 import { useEditorStore } from "../../store/editorStore";
 import { useThemeStore } from "../../store/themeStore";
@@ -16,6 +16,7 @@ import {
   getThemedMermaidDiagram,
 } from "../../utils/mermaidConfig";
 import { renderTableBlocksForPreview } from "../../services/wechatTableRenderer";
+import type { WorkspacePreviewLayoutMode } from "../../hooks/useWorkspacePreviewLayout";
 import "./MarkdownPreview.css";
 
 const SYNC_SCROLL_EVENT = "draftport-sync-scroll";
@@ -25,11 +26,21 @@ interface SyncScrollDetail {
   ratio: number;
 }
 
+type PreviewMode = "mobile" | "desktop";
+
+interface MarkdownPreviewProps {
+  layoutMode?: WorkspacePreviewLayoutMode;
+  onToggleLayoutMode?: () => void;
+}
+
 /**
  * Renders the WeChat-styled live preview and coordinates math, Mermaid, table
  * images, link handling, and synchronized scrolling with the editor.
  */
-export function MarkdownPreview() {
+export function MarkdownPreview({
+  layoutMode = "balanced",
+  onToggleLayoutMode,
+}: MarkdownPreviewProps = {}) {
   const { markdown } = useEditorStore();
   const { themeId: theme, customCSS, getThemeCSS } = useThemeStore();
   const uiTheme = useUITheme((state) => state.theme);
@@ -41,6 +52,7 @@ export function MarkdownPreview() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isSyncingRef = useRef(false);
   const mermaidRenderIdRef = useRef(0);
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("mobile");
 
   // 获取当前主题对象（注意与 line 25 的 themeId 区分）
   const currentTheme = useThemeStore(
@@ -244,16 +256,53 @@ export function MarkdownPreview() {
   }, []);
 
   return (
-    <div className="markdown-preview">
+    <div className="markdown-preview" data-preview-mode={previewMode}>
       <div className="preview-header">
-        <span className="preview-title">实时预览</span>
-        <div className="preview-device-actions" aria-label="预览设备">
-          <button type="button" aria-label="手机预览">
-            <Smartphone size={17} strokeWidth={2} />
-          </button>
-          <button type="button" aria-label="桌面预览">
-            <Monitor size={17} strokeWidth={2} />
-          </button>
+        <div className="preview-title-stack">
+          <span className="preview-title">实时预览</span>
+          <span className="preview-subtitle">
+            公众号预览 · 同步滚动 ·{" "}
+            {previewMode === "mobile" ? "手机宽度" : "桌面宽度"}
+          </span>
+        </div>
+        <div className="preview-header-actions">
+          {onToggleLayoutMode && (
+            <button
+              type="button"
+              className="preview-layout-action"
+              aria-label={
+                layoutMode === "preview" ? "恢复编辑布局" : "预览优先"
+              }
+              title={layoutMode === "preview" ? "恢复编辑布局" : "预览优先"}
+              onClick={onToggleLayoutMode}
+            >
+              {layoutMode === "preview" ? (
+                <Minimize2 size={16} strokeWidth={2} />
+              ) : (
+                <Maximize2 size={16} strokeWidth={2} />
+              )}
+            </button>
+          )}
+          <div className="preview-device-actions" aria-label="预览设备">
+            <button
+              type="button"
+              aria-label="手机预览"
+              aria-pressed={previewMode === "mobile"}
+              className={previewMode === "mobile" ? "active" : undefined}
+              onClick={() => setPreviewMode("mobile")}
+            >
+              <Smartphone size={17} strokeWidth={2} />
+            </button>
+            <button
+              type="button"
+              aria-label="桌面预览"
+              aria-pressed={previewMode === "desktop"}
+              className={previewMode === "desktop" ? "active" : undefined}
+              onClick={() => setPreviewMode("desktop")}
+            >
+              <Monitor size={17} strokeWidth={2} />
+            </button>
+          </div>
         </div>
       </div>
       <div

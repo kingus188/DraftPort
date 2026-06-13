@@ -1,0 +1,115 @@
+// Verifies the live preview device mode contract without exercising Markdown rendering internals.
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { MarkdownPreview } from "../../components/Preview/MarkdownPreview";
+
+const mocks = vi.hoisted(() => {
+  const themeState = {
+    themeId: "default",
+    customCSS: "",
+    customThemes: [],
+    getAllThemes: vi.fn(() => [{ id: "default", designerVariables: {} }]),
+    getThemeCSS: vi.fn(() => "#draftport { color: #111827; }"),
+  };
+
+  return { themeState };
+});
+
+vi.mock("mermaid", () => ({
+  default: {
+    initialize: vi.fn(),
+    render: vi.fn(async () => ({ svg: "<svg />" })),
+  },
+}));
+
+vi.mock("@draftport/core", () => ({
+  createMarkdownParser: () => ({
+    render: (markdown: string) => `<p>${markdown}</p>`,
+  }),
+  processHtml: (html: string) => `<section id="draftport">${html}</section>`,
+}));
+
+vi.mock("../../store/editorStore", () => ({
+  useEditorStore: () => ({ markdown: "Preview body" }),
+}));
+
+vi.mock("../../store/themeStore", () => ({
+  useThemeStore: (selector?: (state: typeof mocks.themeState) => unknown) =>
+    selector ? selector(mocks.themeState) : mocks.themeState,
+}));
+
+vi.mock("../../hooks/useUITheme", () => ({
+  useUITheme: (selector: (state: { theme: string }) => unknown) =>
+    selector({ theme: "default" }),
+}));
+
+describe("MarkdownPreview device modes", () => {
+  it("renders mobile preview mode by default", () => {
+    const { container } = render(<MarkdownPreview />);
+    const subtitle = container.querySelector(".preview-subtitle");
+
+    expect(container.querySelector(".markdown-preview")).toHaveAttribute(
+      "data-preview-mode",
+      "mobile",
+    );
+    expect(screen.getByRole("button", { name: "手机预览" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(subtitle).toHaveTextContent("手机宽度");
+  });
+
+  it("switches between desktop and mobile preview modes", () => {
+    const { container } = render(<MarkdownPreview />);
+    const subtitle = () => container.querySelector(".preview-subtitle");
+
+    fireEvent.click(screen.getByRole("button", { name: "桌面预览" }));
+
+    expect(container.querySelector(".markdown-preview")).toHaveAttribute(
+      "data-preview-mode",
+      "desktop",
+    );
+    expect(screen.getByRole("button", { name: "桌面预览" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(subtitle()).toHaveTextContent("桌面宽度");
+
+    fireEvent.click(screen.getByRole("button", { name: "手机预览" }));
+
+    expect(container.querySelector(".markdown-preview")).toHaveAttribute(
+      "data-preview-mode",
+      "mobile",
+    );
+    expect(screen.getByRole("button", { name: "手机预览" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(subtitle()).toHaveTextContent("手机宽度");
+  });
+
+  it("calls layout toggle from the preview priority button", () => {
+    const onToggleLayoutMode = vi.fn();
+
+    render(
+      <MarkdownPreview
+        layoutMode="balanced"
+        onToggleLayoutMode={onToggleLayoutMode}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "预览优先" }));
+
+    expect(onToggleLayoutMode).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows restore layout action in preview priority mode", () => {
+    render(
+      <MarkdownPreview layoutMode="preview" onToggleLayoutMode={vi.fn()} />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "恢复编辑布局" }),
+    ).toBeInTheDocument();
+  });
+});

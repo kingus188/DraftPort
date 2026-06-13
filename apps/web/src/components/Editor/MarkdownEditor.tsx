@@ -41,6 +41,9 @@ export function MarkdownEditor() {
   const viewRef = useRef<EditorView | null>(null);
   const { markdown: content, setMarkdown } = useEditorStore();
   const currentFile = useFileStore((state) => state.currentFile);
+  const fileIsDirty = useFileStore((state) => state.isDirty);
+  const fileIsSaving = useFileStore((state) => state.isSaving);
+  const editorIsEditing = useEditorStore((state) => state.isEditing);
   const uiTheme = useUITheme((state) => state.theme);
   const isSyncingRef = useRef(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -246,6 +249,15 @@ export function MarkdownEditor() {
     currentFile?.title ||
     currentFile?.name.replace(/\.md$/, "") ||
     "未命名文档";
+  const isFileMode = Boolean(currentFile);
+  const isDirty = isFileMode ? fileIsDirty : editorIsEditing;
+  const saveStatus = fileIsSaving ? "saving" : isDirty ? "dirty" : "saved";
+  const saveStatusLabel =
+    saveStatus === "saving"
+      ? "保存中"
+      : saveStatus === "dirty"
+        ? "有未保存更改"
+        : "已同步";
 
   const handleInsert = (
     prefix: string,
@@ -282,10 +294,15 @@ export function MarkdownEditor() {
     <div className="markdown-editor">
       <div className="editor-header">
         <div className="editor-document-info">
-          <span className="editor-status-dot" aria-hidden="true" />
+          <span
+            className={`editor-status-dot ${saveStatus}`}
+            aria-hidden="true"
+          />
           <div className="editor-title-stack">
             <span className="editor-title">{documentTitle}</span>
-            <span className="editor-subtitle">Markdown 编辑器</span>
+            <span className="editor-subtitle">
+              Markdown 编辑器 · {saveStatusLabel}
+            </span>
           </div>
         </div>
         <div className="editor-header-stats" aria-label={`字数 ${wordCount}`}>
@@ -305,6 +322,7 @@ export function MarkdownEditor() {
       </div>
       <div className="editor-footer">
         <div className="editor-stats">
+          <span className="editor-stat editor-stat-label">发布准备</span>
           <span className="editor-stat">行数: {lineCount}</span>
           <span className="editor-stat">字数: {wordCount}</span>
         </div>

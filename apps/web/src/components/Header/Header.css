@@ -404,7 +404,7 @@
 .header-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 /* 主按钮 - 更加精致 */
@@ -412,14 +412,14 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 216px;
-  height: 46px;
-  padding: 0 28px;
+  min-width: 196px;
+  height: 44px;
+  padding: 0 24px;
   background: var(--accent-gradient) !important;
   color: #ffffff !important;
   border: none;
   border-radius: 8px;
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 800;
   box-shadow: 0 10px 20px rgba(7, 193, 96, 0.22);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -446,14 +446,14 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 46px;
-  min-width: 112px;
-  padding: 0 20px;
+  height: 44px;
+  min-width: 104px;
+  padding: 0 18px;
   background: #ffffff;
   color: #111827;
   border: var(--border-width) solid var(--border-light);
   border-radius: 9px;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   transition: all 0.2s ease;
   cursor: pointer;

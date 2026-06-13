@@ -23,18 +23,67 @@
   letter-spacing: 0;
 }
 
+.preview-title-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.preview-subtitle {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.preview-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.preview-layout-action {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.preview-layout-action:hover {
+  background: #eef4f7;
+  border-color: color-mix(in srgb, var(--accent-primary) 45%, transparent);
+  color: var(--accent-primary);
+}
+
 .preview-device-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 6px;
+  padding: 3px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: #f7fafc;
 }
 
 .preview-device-actions button {
-  width: 28px;
-  height: 34px;
+  width: 32px;
+  height: 30px;
   border: none;
   background: transparent;
-  color: #111827;
+  color: var(--text-secondary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -50,23 +99,34 @@
   color: var(--accent-primary);
 }
 
+.preview-device-actions button.active,
+.preview-device-actions button[aria-pressed="true"] {
+  background: #ffffff;
+  color: var(--accent-primary);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+
 .preview-container {
   flex: 1;
   overflow-y: auto;
   overflow-x: auto;
-  padding: 28px 12px 36px;
+  padding: 12px 8px 28px;
 }
 
 .preview-content {
-  width: min(452px, calc(100% - 24px));
+  width: min(560px, calc(100% - 32px));
   flex-shrink: 0;
   margin: 0 auto;
   background: var(--bg-primary);
-  padding: 48px 48px;
+  padding: 36px 40px;
   border-radius: 2px;
   box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
   border: 1px solid #e7ebf0;
-  min-height: calc(100% - 56px);
+  min-height: calc(100% - 40px);
+}
+
+.markdown-preview[data-preview-mode="desktop"] .preview-content {
+  width: min(760px, calc(100% - 32px));
 }
 
 /* 响应式 */

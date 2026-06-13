@@ -112,13 +112,13 @@ describe("FileSidebar", () => {
     expect(mockRefreshFiles).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps the workspace title below the collapsed macOS titlebar area", () => {
+  it("uses compact workspace header spacing", () => {
     const sidebarStyles = readFileSync(
       "src/components/Sidebar/FileSidebar.css",
       "utf8",
     );
     const headerRule = sidebarStyles.match(/\.fs-header\s*{[^}]+}/)?.[0] ?? "";
 
-    expect(headerRule).toContain("padding: 52px 24px 18px;");
+    expect(headerRule).toContain("padding: 44px 24px 8px;");
   });
 });

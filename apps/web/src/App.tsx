@@ -1,5 +1,17 @@
-import type { CSSProperties } from "react";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import type {
+  CSSProperties,
+  KeyboardEvent as ReactKeyboardEvent,
+  PointerEvent as ReactPointerEvent,
+} from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Toaster } from "react-hot-toast";
 import { Header } from "./components/Header/Header";
 import { FileSidebar } from "./components/Sidebar/FileSidebar";
@@ -17,6 +29,11 @@ import { Loader2 } from "lucide-react";
 import { useHistoryStore } from "./store/historyStore";
 import { useFileStore } from "./store/fileStore";
 import { platform } from "./lib/platformAdapter";
+import {
+  MAX_PREVIEW_PANE_PERCENT,
+  MIN_PREVIEW_PANE_PERCENT,
+  useWorkspacePreviewLayout,
+} from "./hooks/useWorkspacePreviewLayout";
 
 const HistoryPanel = lazy(() =>
   import("./components/History/HistoryPanel").then((m) => ({
@@ -73,6 +90,14 @@ function App() {
   const copyToWechat = useEditorStore((state) => state.copyToWechat);
   const copyAsHtml = useEditorStore((state) => state.copyAsHtml);
   const [showThemePanel, setShowThemePanel] = useState(false);
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const {
+    layoutMode: previewLayoutMode,
+    previewPanePercent,
+    setLayoutMode: setPreviewLayoutMode,
+    setPreviewPanePercent,
+    toggleLayoutMode: togglePreviewLayoutMode,
+  } = useWorkspacePreviewLayout();
 
   // 全局保存快捷键（统一监听器）
   useEffect(() => {
@@ -175,6 +200,61 @@ function App() {
         "--history-width": historyWidth,
       }) as CSSProperties,
     [historyWidth],
+  );
+  const workspaceStyle = useMemo(
+    () =>
+      ({
+        "--preview-pane-width":
+          previewLayoutMode === "preview"
+            ? "calc(100% - 360px)"
+            : `${previewPanePercent}%`,
+      }) as CSSProperties,
+    [previewLayoutMode, previewPanePercent],
+  );
+  const updatePreviewPanePercentFromClientX = useCallback(
+    (clientX: number) => {
+      const workspace = workspaceRef.current;
+      if (!workspace) return;
+      const rect = workspace.getBoundingClientRect();
+      if (rect.width <= 0) return;
+      const nextPercent = ((rect.right - clientX) / rect.width) * 100;
+      setPreviewLayoutMode("balanced");
+      setPreviewPanePercent(nextPercent);
+    },
+    [setPreviewLayoutMode, setPreviewPanePercent],
+  );
+  const handlePreviewResizerPointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (isMobile) return;
+      event.preventDefault();
+      updatePreviewPanePercentFromClientX(event.clientX);
+
+      const handlePointerMove = (moveEvent: PointerEvent) => {
+        updatePreviewPanePercentFromClientX(moveEvent.clientX);
+      };
+      const handlePointerUp = () => {
+        document.body.classList.remove("is-resizing-preview-pane");
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerUp);
+      };
+
+      document.body.classList.add("is-resizing-preview-pane");
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
+    },
+    [isMobile, updatePreviewPanePercentFromClientX],
+  );
+  const handlePreviewResizerKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLDivElement>) => {
+      if (isMobile) return;
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      event.preventDefault();
+      setPreviewLayoutMode("balanced");
+      setPreviewPanePercent(
+        previewPanePercent + (event.key === "ArrowLeft" ? 2 : -2),
+      );
+    },
+    [isMobile, previewPanePercent, setPreviewLayoutMode, setPreviewPanePercent],
   );
 
   // Electron 模式：强制选择工作区
@@ -306,6 +386,9 @@ function App() {
           <div
             className="workspace"
             data-mobile-view={isMobile ? activeView : undefined}
+            data-preview-layout={previewLayoutMode}
+            ref={workspaceRef}
+            style={workspaceStyle}
           >
             <div className="editor-pane">
               {/* 存储未就绪或文件/历史加载中显示 loading */}
@@ -320,6 +403,18 @@ function App() {
                 <MarkdownEditor />
               )}
             </div>
+            <div
+              className="workspace-preview-resizer"
+              role="separator"
+              aria-label="调整预览面板宽度"
+              aria-orientation="vertical"
+              aria-valuemin={MIN_PREVIEW_PANE_PERCENT}
+              aria-valuemax={MAX_PREVIEW_PANE_PERCENT}
+              aria-valuenow={previewPanePercent}
+              tabIndex={0}
+              onPointerDown={handlePreviewResizerPointerDown}
+              onKeyDown={handlePreviewResizerKeyDown}
+            />
             <div className="preview-pane">
               {!ready ||
               fileLoading ||
@@ -329,7 +424,10 @@ function App() {
                   <p>正在加载文章</p>
                 </div>
               ) : (
-                <MarkdownPreview />
+                <MarkdownPreview
+                  layoutMode={previewLayoutMode}
+                  onToggleLayoutMode={togglePreviewLayoutMode}
+                />
               )}
             </div>
           </div>
