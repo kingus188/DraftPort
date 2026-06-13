@@ -1,5 +1,5 @@
 export const knowledgeBaseTheme = `/* 知识库风格 */
-#wemd {
+#draftport {
     padding: 5px 24px;
     max-width: 677px;
     margin: 0 auto;
@@ -13,7 +13,7 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
 }
 
 /* 段落 - 紧凑但舒适 */
-#wemd p {
+#draftport p {
     margin-top: 16px;
     margin-bottom: 16px;
     line-height: 1.75;
@@ -23,11 +23,11 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
     font-size: 16px;
 }
 
-/* 
+/*
  * 一级标题 - 页面标题感
  * 就像笔记页面的最顶端标题
  */
-#wemd h1 {
+#draftport h1 {
     margin-top: 50px;
     margin-bottom: 40px;
     text-align: left;
@@ -36,7 +36,7 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
     padding-bottom: 20px;
 }
 
-#wemd h1 .content {
+#draftport h1 .content {
     font-size: 28px;
     font-weight: 700;
     color: #37352F;
@@ -44,22 +44,22 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
     line-height: 1.2;
 }
 
-#wemd h1 .prefix,
-#wemd h1 .suffix {
+#draftport h1 .prefix,
+#draftport h1 .suffix {
     display: none;
 }
 
-/* 
+/*
  * 二级标题 - 区块分割
  * 带有浅灰色背景条，类似 Notion 的 H1 block
  */
-#wemd h2 {
+#draftport h2 {
     margin-top: 40px;
     margin-bottom: 20px;
     text-align: left;
 }
 
-#wemd h2 .content {
+#draftport h2 .content {
     display: block;
     /* 占满整行 */
     font-size: 22px;
@@ -72,21 +72,21 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
     line-height: 1.3;
 }
 
-#wemd h2 .prefix,
-#wemd h2 .suffix {
+#draftport h2 .prefix,
+#draftport h2 .suffix {
     display: none;
 }
 
-/* 
+/*
  * 三级标题 - 重点标记
  * 像是给文字加了颜色标记
  */
-#wemd h3 {
+#draftport h3 {
     margin-top: 30px;
     margin-bottom: 12px;
 }
 
-#wemd h3 .content {
+#draftport h3 .content {
     font-size: 18px;
     font-weight: 600;
     color: #37352F;
@@ -97,19 +97,19 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
     padding-bottom: 2px;
 }
 
-#wemd h3 .prefix,
-#wemd h3 .suffix {
+#draftport h3 .prefix,
+#draftport h3 .suffix {
     display: none;
 }
 
 /* 四级标题 - 小节 */
-#wemd h4 {
+#draftport h4 {
     margin-top: 24px;
     margin-bottom: 8px;
     text-align: left;
 }
 
-#wemd h4 .content {
+#draftport h4 .content {
     display: inline-block;
     font-size: 16px;
     font-weight: 600;
@@ -118,33 +118,33 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
     line-height: 1.4;
 }
 
-#wemd h4 .prefix,
-#wemd h4 .suffix {
+#draftport h4 .prefix,
+#draftport h4 .suffix {
     display: none;
 }
 
-/* 
+/*
  * 列表 - 结构化缩进
  */
-#wemd ul {
+#draftport ul {
     list-style-type: disc;
     padding-left: 24px;
     margin: 16px 0;
     color: #37352F;
 }
 
-#wemd ul li {
+#draftport ul li {
     margin-bottom: 8px;
     line-height: 1.7;
 }
 
-#wemd li section {
+#draftport li section {
     color: #37352F;
     font-size: 16px;
 }
 
 /* 有序列表 */
-#wemd ol {
+#draftport ol {
     list-style-type: decimal;
     padding-left: 24px;
     margin: 16px 0;
@@ -152,33 +152,33 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
     font-weight: 600;
 }
 
-#wemd ul ul {
+#draftport ul ul {
     list-style-type: circle;
     margin-top: 6px;
 }
 
-#wemd ol ol {
+#draftport ol ol {
     list-style-type: lower-alpha;
 }
 
-#wemd ol li {
+#draftport ol li {
     margin-bottom: 8px;
     line-height: 1.7;
 }
 
-#wemd ol li section {
+#draftport ol li section {
     color: #37352F;
     font-weight: normal;
     font-size: 16px;
 }
 
-/* 
+/*
  * 引用 - Callout 提示框风格
  * 这是这款主题的灵魂
  */
-#wemd .multiquote-1,
-#wemd .multiquote-2,
-#wemd .multiquote-3 {
+#draftport .multiquote-1,
+#draftport .multiquote-2,
+#draftport .multiquote-3 {
     margin: 24px 0;
     padding: 16px 16px 16px 20px;
     background-color: #F1F1EF;
@@ -192,21 +192,21 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
 }
 
 /* 针对不同层级引用，给予不同颜色，模拟 Info/Warning */
-#wemd .multiquote-2 {
+#draftport .multiquote-2 {
     background-color: #E7F3F8;
     /* 浅蓝背景 (Info) */
     border-left-color: #2D9CDB;
 }
 
-#wemd .multiquote-3 {
+#draftport .multiquote-3 {
     background-color: #FDF5F2;
     /* 浅橙背景 (Warning) */
     border-left-color: #F2994A;
 }
 
-#wemd .multiquote-1 p,
-#wemd .multiquote-2 p,
-#wemd .multiquote-3 p {
+#draftport .multiquote-1 p,
+#draftport .multiquote-2 p,
+#draftport .multiquote-3 p {
     margin: 0;
     color: #37352F;
     font-size: 15px;
@@ -214,7 +214,7 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
 }
 
 /* 链接 - 简洁下划线 */
-#wemd a {
+#draftport a {
     color: #37352F;
     text-decoration: none;
     border-bottom: 1px solid #999;
@@ -223,11 +223,11 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
     transition: border-color 0.2s;
 }
 
-/* 
+/*
  * 加粗 - 黄色高光笔
  * 完全复刻 Notion 的 Highlight 效果
  */
-#wemd strong {
+#draftport strong {
     color: #37352F;
     font-weight: 600;
     background-color: #FDECC8;
@@ -238,19 +238,19 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
 }
 
 /* 斜体 */
-#wemd em {
+#draftport em {
     color: #37352F;
     font-style: italic;
     opacity: 0.7;
 }
 
-#wemd em strong {
+#draftport em strong {
     color: #37352F;
     opacity: 1;
 }
 
 /* 高亮 - 黄色标记 */
-#wemd mark {
+#draftport mark {
     background: #FDECC8;
     color: #37352F;
     padding: 2px 4px;
@@ -258,13 +258,13 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
 }
 
 /* 删除线 */
-#wemd del {
+#draftport del {
     text-decoration: line-through;
     color: #999;
 }
 
 /* 分隔线 */
-#wemd hr {
+#draftport hr {
     margin: 40px auto;
     border: 0;
     height: 1px;
@@ -274,7 +274,7 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
 }
 
 /* 图片 - 干净无阴影 */
-#wemd img {
+#draftport img {
     display: block;
     margin: 30px auto;
     width: 100%;
@@ -285,18 +285,18 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
     /* 只有一圈细线 */
 }
 
-#wemd figcaption {
+#draftport figcaption {
     margin-top: 8px;
     text-align: center;
     color: #999;
     font-size: 14px;
 }
 
-/* 
+/*
  * 行内代码 - 经典的红字灰底
  */
-#wemd p code,
-#wemd li code {
+#draftport p code,
+#draftport li code {
     color: #EB5757;
     /* 红色文字 */
     background: rgba(135, 131, 120, 0.15);
@@ -311,7 +311,7 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
 
 /* 代码块 - 极简灰 */
 /* 代码块 - 注意：不要设置 color，让语法高亮主题控制文字颜色 */
-#wemd pre code.hljs {
+#draftport pre code.hljs {
     display: block;
     padding: 20px;
     background: #F7F6F3;
@@ -327,13 +327,13 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
 }
 
 /* 如果没有语法高亮，设置默认深灰色 */
-#wemd pre code:not(.hljs) {
+#draftport pre code:not(.hljs) {
     color: #37352F;
     background: #F7F6F3;
 }
 
 /* 表格 - 数据库风格 (Database) */
-#wemd table {
+#draftport table {
     width: 100%;
     border-collapse: collapse;
     margin: 30px 0;
@@ -342,7 +342,7 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
     border-radius: 0;
 }
 
-#wemd table tr th {
+#draftport table tr th {
     background: #F7F6F3;
     color: #37352F;
     font-weight: 600;
@@ -351,7 +351,7 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
     text-align: left;
 }
 
-#wemd table tr td {
+#draftport table tr td {
     border: 1px solid #E3E2E0;
     padding: 10px 12px;
     color: #37352F;
@@ -359,13 +359,13 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
 }
 
 /* 脚注 */
-#wemd .footnote-word,
-#wemd .footnote-ref {
+#draftport .footnote-word,
+#draftport .footnote-ref {
     color: #37352F;
     text-decoration: underline;
 }
 
-#wemd .footnotes-sep {
+#draftport .footnotes-sep {
     border-top: 1px solid #E3E2E0;
     padding-top: 20px;
     margin-top: 50px;
@@ -373,75 +373,75 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
     color: #999;
 }
 
-#wemd .footnote-num {
+#draftport .footnote-num {
     font-weight: bold;
     color: #37352F;
     margin-right: 4px;
 }
 
-#wemd .footnote-item p {
+#draftport .footnote-item p {
     color: #666;
     font-size: 12px;
     margin: 4px 0;
 }
 
 /* 公式 */
-#wemd .block-equation svg {
+#draftport .block-equation svg {
     max-width: 100% !important;
 }
 
-#wemd .inline-equation svg {
+#draftport .inline-equation svg {
     max-width: 100%;
     vertical-align: middle;
 }
 
 
 /* 提示块 - 知识库风格 */
-#wemd .callout {
+#draftport .callout {
     margin: 24px 0;
     padding: 16px 16px 16px 20px;
     border-radius: 4px;
     border-left: 4px solid #37352F;
 }
 
-#wemd .callout-title {
+#draftport .callout-title {
     font-weight: 600;
     margin-bottom: 8px;
     color: #37352F;
     font-size: 15px;
 }
 
-#wemd .callout-icon { margin-right: 8px;
+#draftport .callout-icon { margin-right: 8px;
     margin-right: 6px;
 }
 
-#wemd .callout-note { 
+#draftport .callout-note {
     background: #F1F1EF;
     border-left-color: #37352F;
 }
 
-#wemd .callout-tip { 
+#draftport .callout-tip {
     background: #FDF5F2;
     border-left-color: #F2994A;
 }
 
-#wemd .callout-important { 
+#draftport .callout-important {
     background: #E7F3F8;
     border-left-color: #2D9CDB;
 }
 
-#wemd .callout-warning { 
+#draftport .callout-warning {
     background: #FFF4E5;
     border-left-color: #FF9800;
 }
 
-#wemd .callout-caution { 
+#draftport .callout-caution {
     background: #FFEBEE;
     border-left-color: #F44336;
 }
 
 /* Imageflow CSS */
-#wemd .imageflow-layer1 {
+#draftport .imageflow-layer1 {
   margin-top: 1em;
   margin-bottom: 0.5em;
   /* white-space: normal; */
@@ -450,13 +450,13 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
   overflow: hidden;
 }
 
-#wemd .imageflow-layer2 {
+#draftport .imageflow-layer2 {
   white-space: nowrap;
   width: 100%;
   overflow-x: scroll;
 }
 
-#wemd .imageflow-layer3 {
+#draftport .imageflow-layer3 {
   display: inline-block;
   word-wrap: break-word;
   white-space: normal;
@@ -466,7 +466,7 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
   flex-shrink: 0;
 }
 
-#wemd .imageflow-img {
+#draftport .imageflow-img {
   display: block;
   width: 100%;
   height: auto;
@@ -475,7 +475,7 @@ export const knowledgeBaseTheme = `/* 知识库风格 */
   border-radius: 4px;
 }
 
-#wemd .imageflow-caption {
+#draftport .imageflow-caption {
   text-align: center;
   margin-top: 0px;
   padding-top: 0px;

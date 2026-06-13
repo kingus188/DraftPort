@@ -7,7 +7,7 @@
     "module": "ESNext",
     "baseUrl": ".",
     "paths": {
-      "@wemd/core": ["../../packages/core/src/index.ts"]
+      "@draftport/core": ["../../packages/core/src/index.ts"]
     },
     "types": ["vite/client", "@testing-library/jest-dom"],
     "skipLibCheck": true,

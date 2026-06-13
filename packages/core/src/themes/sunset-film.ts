@@ -1,5 +1,5 @@
 export const sunsetFilmTheme = `/* 落日胶片风格 */
-#wemd {
+#draftport {
     padding: 5px 22px;
     max-width: 677px;
     margin: 0 auto;
@@ -13,7 +13,7 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
 }
 
 /* 段落 - 像是在读一封旧信 */
-#wemd p {
+#draftport p {
     margin-top: 26px;
     margin-bottom: 26px;
     line-height: 1.9;
@@ -24,11 +24,11 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     font-size: 16px;
 }
 
-/* 
+/*
  * 一级标题 - 电影片名风格
  * 上下双线装饰
  */
-#wemd h1 {
+#draftport h1 {
     margin-top: 60px;
     margin-bottom: 50px;
     text-align: center;
@@ -38,7 +38,7 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     padding: 20px 0;
 }
 
-#wemd h1 .content {
+#draftport h1 .content {
     font-size: 26px;
     font-weight: 900;
     color: #B33D25;
@@ -47,22 +47,22 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     letter-spacing: 3px;
 }
 
-#wemd h1 .prefix,
-#wemd h1 .suffix {
+#draftport h1 .prefix,
+#draftport h1 .suffix {
     display: none;
 }
 
-/* 
+/*
  * 二级标题 - 邮票/标签风格
  * 实心背景 + 白字
  */
-#wemd h2 {
+#draftport h2 {
     margin-top: 50px;
     margin-bottom: 30px;
     text-align: left;
 }
 
-#wemd h2 .content {
+#draftport h2 .content {
     display: inline-block;
     font-size: 19px;
     font-weight: bold;
@@ -77,21 +77,21 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     line-height: 1.2;
 }
 
-#wemd h2 .prefix,
-#wemd h2 .suffix {
+#draftport h2 .prefix,
+#draftport h2 .suffix {
     display: none;
 }
 
-/* 
+/*
  * 三级标题 - 像书本的小节
  * 咖啡色文字 + 左侧装饰
  */
-#wemd h3 {
+#draftport h3 {
     margin-top: 40px;
     margin-bottom: 20px;
 }
 
-#wemd h3 .content {
+#draftport h3 .content {
     font-size: 18px;
     font-weight: bold;
     color: #8D5B4C;
@@ -101,21 +101,21 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     /* 琥珀黄 */
 }
 
-#wemd h3 .prefix,
-#wemd h3 .suffix {
+#draftport h3 .prefix,
+#draftport h3 .suffix {
     display: none;
 }
 
-/* 
+/*
  * 四级标题 - 极简下划线
  */
-#wemd h4 {
+#draftport h4 {
     margin-top: 30px;
     margin-bottom: 15px;
     text-align: left;
 }
 
-#wemd h4 .content {
+#draftport h4 .content {
     display: inline-block;
     font-size: 16px;
     font-weight: bold;
@@ -125,31 +125,31 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     padding-bottom: 2px;
 }
 
-#wemd h4 .prefix,
-#wemd h4 .suffix {
+#draftport h4 .prefix,
+#draftport h4 .suffix {
     display: none;
 }
 
 /* 列表 - 经典的实心方点 */
-#wemd ul {
+#draftport ul {
     list-style-type: square;
     padding-left: 20px;
     margin: 20px 0;
     color: #D98C45;
 }
 
-#wemd ul li {
+#draftport ul li {
     margin-bottom: 12px;
     line-height: 1.8;
 }
 
-#wemd li section {
+#draftport li section {
     color: #5D4037;
     font-size: 16px;
 }
 
 /* 有序列表 */
-#wemd ol {
+#draftport ol {
     list-style-type: decimal;
     padding-left: 20px;
     margin: 20px 0;
@@ -159,35 +159,35 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     /* 数字也用衬线体，很有味道 */
 }
 
-#wemd ol li {
+#draftport ol li {
     margin-bottom: 12px;
     line-height: 1.8;
 }
 
-#wemd ol li section {
+#draftport ol li section {
     color: #5D4037;
     font-weight: normal;
     font-size: 16px;
 }
 
-#wemd ul ul {
+#draftport ul ul {
     list-style-type: circle;
     color: #8D5B4C;
     margin-top: 8px;
 }
 
-#wemd ol ol {
+#draftport ol ol {
     list-style-type: lower-roman;
     color: #B33D25;
 }
 
-/* 
+/*
  * 引用 - 泛黄的旧报纸
  * 深米色背景 + 棕色边框
  */
-#wemd .multiquote-1,
-#wemd .multiquote-2,
-#wemd .multiquote-3 {
+#draftport .multiquote-1,
+#draftport .multiquote-2,
+#draftport .multiquote-3 {
     margin: 36px 0;
     padding: 24px;
     background-color: #F7EED6;
@@ -198,9 +198,9 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     overflow: visible !important;
 }
 
-#wemd .multiquote-1 p,
-#wemd .multiquote-2 p,
-#wemd .multiquote-3 p {
+#draftport .multiquote-1 p,
+#draftport .multiquote-2 p,
+#draftport .multiquote-3 p {
     margin: 0;
     color: #6D4C41;
     font-size: 15px;
@@ -208,7 +208,7 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     font-style: italic;
 }
 
-#wemd .multiquote-2 {
+#draftport .multiquote-2 {
     margin: 34px 0;
     padding: 22px;
     background: #FFF8E7;
@@ -216,7 +216,7 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     border-radius: 2px;
 }
 
-#wemd .multiquote-3 {
+#draftport .multiquote-3 {
     margin: 32px 0;
     padding: 20px;
     background: #FFFBF0;
@@ -225,7 +225,7 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
 }
 
 /* 链接 - 像是手写的下划线 */
-#wemd a {
+#draftport a {
     color: #B33D25;
     text-decoration: none;
     border-bottom: 1px solid #B33D25;
@@ -233,29 +233,29 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     transition: opacity 0.2s;
 }
 
-/* 
+/*
  * 加粗 - 重点标记
  * 像是用深色马克笔划过
  */
-#wemd strong {
+#draftport strong {
     color: #B33D25;
     font-weight: 900;
     margin: 0 2px;
 }
 
 /* 斜体 */
-#wemd em {
+#draftport em {
     color: #D98C45;
     font-style: italic;
     font-weight: bold;
 }
 
-#wemd em strong {
+#draftport em strong {
     color: #B33D25;
 }
 
 /* 高亮 - 暖黄背景 */
-#wemd mark {
+#draftport mark {
     background: rgba(242, 201, 76, 0.3);
     color: #B33D25;
     padding: 2px 4px;
@@ -263,13 +263,13 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
 }
 
 /* 删除线 */
-#wemd del {
+#draftport del {
     text-decoration: line-through;
     color: #8D5B4C;
 }
 
 /* 分隔线 - 虚线剪裁线 */
-#wemd hr {
+#draftport hr {
     margin: 60px auto;
     border: 0;
     height: 1px;
@@ -278,11 +278,11 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     width: 100%;
 }
 
-/* 
+/*
  * 图片 - 老照片风格
  * 加上白色边框和阴影
  */
-#wemd img {
+#draftport img {
     display: block;
     margin: 40px auto;
     width: 95%;
@@ -293,7 +293,7 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     background: #fff;
 }
 
-#wemd figcaption {
+#draftport figcaption {
     font-size: 13px;
     color: #8D5B4C;
     margin-top: 15px;
@@ -302,8 +302,8 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
 }
 
 /* 行内代码 - 咖啡色块 */
-#wemd p code,
-#wemd li code {
+#draftport p code,
+#draftport li code {
     color: #5D4037;
     background: #EFE6D5;
     border: none;
@@ -317,7 +317,7 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
 
 /* 代码块 - 复古打字机配色 */
 /* 代码块 - 注意：不要设置 color，让语法高亮主题控制文字颜色 */
-#wemd pre code.hljs {
+#draftport pre code.hljs {
     display: block;
     padding: 20px;
     background: #4A3B32;
@@ -336,48 +336,48 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
 }
 
 /* 优化深色背景下的语法高亮颜色 - 使用暖色调高对比度颜色 */
-#wemd pre code.hljs .hljs-comment,
-#wemd pre code.hljs .hljs-quote {
+#draftport pre code.hljs .hljs-comment,
+#draftport pre code.hljs .hljs-quote {
     color: #A68B7A;
 }
 
-#wemd pre code.hljs .hljs-keyword,
-#wemd pre code.hljs .hljs-selector-tag {
+#draftport pre code.hljs .hljs-keyword,
+#draftport pre code.hljs .hljs-selector-tag {
     color: #FFB84D;
     font-weight: bold;
 }
 
-#wemd pre code.hljs .hljs-string,
-#wemd pre code.hljs .hljs-doctag {
+#draftport pre code.hljs .hljs-string,
+#draftport pre code.hljs .hljs-doctag {
     color: #FFD4A3;
 }
 
-#wemd pre code.hljs .hljs-number,
-#wemd pre code.hljs .hljs-literal {
+#draftport pre code.hljs .hljs-number,
+#draftport pre code.hljs .hljs-literal {
     color: #C9A961;
 }
 
-#wemd pre code.hljs .hljs-title,
-#wemd pre code.hljs .hljs-section {
+#draftport pre code.hljs .hljs-title,
+#draftport pre code.hljs .hljs-section {
     color: #F7EED6;
     font-weight: bold;
 }
 
-#wemd pre code.hljs .hljs-built_in,
-#wemd pre code.hljs .hljs-builtin-name {
+#draftport pre code.hljs .hljs-built_in,
+#draftport pre code.hljs .hljs-builtin-name {
     color: #E6CBB5;
     font-weight: bold;
 }
 
 /* 如果没有语法高亮，设置默认奶茶色 */
-#wemd pre code:not(.hljs) {
+#draftport pre code:not(.hljs) {
     color: #E6CBB5;
     background: #4A3B32;
     border: 4px solid #F7EED6;
 }
 
 /* 表格 - 复古账单 */
-#wemd table {
+#draftport table {
     width: 100%;
     border-collapse: collapse;
     margin: 40px 0;
@@ -385,7 +385,7 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     border: 2px solid #8D5B4C;
 }
 
-#wemd table tr th {
+#draftport table tr th {
     background: #EFE6D5;
     color: #4A3B32;
     font-weight: bold;
@@ -394,7 +394,7 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     text-align: center;
 }
 
-#wemd table tr td {
+#draftport table tr td {
     border: 1px solid #8D5B4C;
     padding: 12px 10px;
     color: #5D4037;
@@ -402,12 +402,12 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
 }
 
 /* 脚注 */
-#wemd .footnote-word,
-#wemd .footnote-ref {
+#draftport .footnote-word,
+#draftport .footnote-ref {
     color: #B33D25;
 }
 
-#wemd .footnotes-sep {
+#draftport .footnotes-sep {
     border-top: 1px solid #D98C45;
     padding-top: 20px;
     margin-top: 60px;
@@ -417,7 +417,7 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     font-family: serif;
 }
 
-#wemd .footnote-num {
+#draftport .footnote-num {
     font-weight: bold;
     color: #FFFBF0;
     background-color: #D98C45;
@@ -431,24 +431,24 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     margin-right: 4px;
 }
 
-#wemd .footnote-item p {
+#draftport .footnote-item p {
     color: #8D5B4C;
     font-size: 12px;
     margin: 4px 0;
 }
 
 /* 公式 */
-#wemd .block-equation svg {
+#draftport .block-equation svg {
     max-width: 100% !important;
 }
 
-#wemd .inline-equation svg {
+#draftport .inline-equation svg {
     max-width: 100%;
     vertical-align: middle;
 }
 
 /* 提示块 - 落日胶片风格 */
-#wemd .callout {
+#draftport .callout {
     margin: 36px 0;
     padding: 24px;
     background: #F7EED6;
@@ -456,7 +456,7 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     border-radius: 2px;
 }
 
-#wemd .callout-title {
+#draftport .callout-title {
     font-weight: bold;
     margin-bottom: 10px;
     color: #B33D25;
@@ -464,18 +464,18 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
     font-size: 15px;
 }
 
-#wemd .callout-icon { margin-right: 8px;
+#draftport .callout-icon { margin-right: 8px;
     margin-right: 6px;
 }
 
-#wemd .callout-note { border-left-color: #8D5B4C; }
-#wemd .callout-tip { border-left-color: #D98C45; }
-#wemd .callout-important { border-left-color: #8D5B4C; }
-#wemd .callout-warning { border-left-color: #D98C45; }
-#wemd .callout-caution { border-left-color: #B33D25; }
+#draftport .callout-note { border-left-color: #8D5B4C; }
+#draftport .callout-tip { border-left-color: #D98C45; }
+#draftport .callout-important { border-left-color: #8D5B4C; }
+#draftport .callout-warning { border-left-color: #D98C45; }
+#draftport .callout-caution { border-left-color: #B33D25; }
 
 /* Imageflow CSS */
-#wemd .imageflow-layer1 {
+#draftport .imageflow-layer1 {
   margin-top: 1em;
   margin-bottom: 0.5em;
   /* white-space: normal; */
@@ -484,13 +484,13 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
   overflow: hidden;
 }
 
-#wemd .imageflow-layer2 {
+#draftport .imageflow-layer2 {
   white-space: nowrap;
   width: 100%;
   overflow-x: scroll;
 }
 
-#wemd .imageflow-layer3 {
+#draftport .imageflow-layer3 {
   display: inline-block;
   word-wrap: break-word;
   white-space: normal;
@@ -500,7 +500,7 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
   flex-shrink: 0;
 }
 
-#wemd .imageflow-img {
+#draftport .imageflow-img {
   display: block;
   width: 100%;
   height: auto;
@@ -509,7 +509,7 @@ export const sunsetFilmTheme = `/* 落日胶片风格 */
   border-radius: 4px;
 }
 
-#wemd .imageflow-caption {
+#draftport .imageflow-caption {
   text-align: center;
   margin-top: 0px;
   padding-top: 0px;

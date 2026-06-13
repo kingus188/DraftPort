@@ -207,7 +207,7 @@ const transformWemdRootSectionToDiv = (container: HTMLElement): void => {
   if (
     !(root instanceof HTMLElement) ||
     root.tagName !== "SECTION" ||
-    root.id !== "wemd" ||
+    root.id !== "draftport" ||
     container.childElementCount !== 1
   ) {
     return;
@@ -225,7 +225,7 @@ const transformWemdRootSectionToDiv = (container: HTMLElement): void => {
 
 export const stripCopyMetadata = (container: HTMLElement): void => {
   const root = container.firstElementChild;
-  if (root instanceof HTMLElement && root.id === "wemd") {
+  if (root instanceof HTMLElement && root.id === "draftport") {
     root.removeAttribute("id");
   }
 
@@ -234,9 +234,9 @@ export const stripCopyMetadata = (container: HTMLElement): void => {
   });
 
   container
-    .querySelectorAll<HTMLElement>("[data-wemd-counter-generated]")
+    .querySelectorAll<HTMLElement>("[data-draftport-counter-generated]")
     .forEach((node) => {
-      node.removeAttribute("data-wemd-counter-generated");
+      node.removeAttribute("data-draftport-counter-generated");
     });
 };
 

@@ -8,22 +8,24 @@ describe("wechatCopyNormalizer", () => {
   it("strips only copy metadata from copied container", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd"><p data-tool="WeMD编辑器" data-source="x">A<span id="wemd">inner</span></p><h1 data-tool="WeMD编辑器" data-kind="title">B</h1><code data-any="1" data-wemd-counter-generated="before">C</code></section>';
+      '<section id="draftport"><p data-tool="DraftPort编辑器" data-source="x">A<span id="draftport">inner</span></p><h1 data-tool="DraftPort编辑器" data-kind="title">B</h1><code data-any="1" data-draftport-counter-generated="before">C</code></section>';
 
     stripCopyMetadata(container);
 
-    expect(container.querySelectorAll("#wemd")).toHaveLength(1);
+    expect(container.querySelectorAll("#draftport")).toHaveLength(1);
     expect(container.innerHTML).not.toContain("data-tool=");
-    expect(container.innerHTML).not.toContain("data-wemd-counter-generated=");
+    expect(container.innerHTML).not.toContain(
+      "data-draftport-counter-generated=",
+    );
     expect(container.innerHTML).toContain('data-source="x"');
     expect(container.innerHTML).toContain('data-kind="title"');
     expect(container.innerHTML).toContain('data-any="1"');
   });
 
-  it("converts #wemd root section to div and strips only transparent root background styles", () => {
+  it("converts #draftport root section to div and strips only transparent root background styles", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd" style="background: transparent; background-color: transparent; color: rgb(9, 9, 9);"><p style="margin-top:18px; background-color: transparent;">A</p><p style="background: rgb(1, 2, 3);">B</p></section>';
+      '<section id="draftport" style="background: transparent; background-color: transparent; color: rgb(9, 9, 9);"><p style="margin-top:18px; background-color: transparent;">A</p><p style="background: rgb(1, 2, 3);">B</p></section>';
 
     normalizeCopyContainer(container);
 
@@ -48,7 +50,7 @@ describe("wechatCopyNormalizer", () => {
   it("relocates root horizontal padding to direct children", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd" style="padding: 0px 16px; color: rgb(9, 9, 9);"><p>A</p><p>B</p></section>';
+      '<section id="draftport" style="padding: 0px 16px; color: rgb(9, 9, 9);"><p>A</p><p>B</p></section>';
 
     normalizeCopyContainer(container);
 
@@ -70,7 +72,7 @@ describe("wechatCopyNormalizer", () => {
   it("keeps blockquote inner padding and relocates root horizontal padding via margin", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd" style="padding: 0px 16px;"><blockquote style="padding: 12px 10px;"><p>A</p></blockquote></section>';
+      '<section id="draftport" style="padding: 0px 16px;"><blockquote style="padding: 12px 10px;"><p>A</p></blockquote></section>';
 
     normalizeCopyContainer(container);
 
@@ -85,7 +87,7 @@ describe("wechatCopyNormalizer", () => {
   it("keeps callout inner padding and relocates root horizontal padding via margin", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd" style="padding: 0px 16px;"><section class="callout callout-note" style="padding: 12px 16px;"><div class="callout-title">Note</div><p>内容</p></section></section>';
+      '<section id="draftport" style="padding: 0px 16px;"><section class="callout callout-note" style="padding: 12px 16px;"><div class="callout-title">Note</div><p>内容</p></section></section>';
 
     normalizeCopyContainer(container);
 
@@ -100,7 +102,7 @@ describe("wechatCopyNormalizer", () => {
   it("keeps pre inner padding and relocates root horizontal padding via margin", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd" style="padding: 0px 16px;"><pre style="padding: 10px 12px; background: rgb(30,30,30);"><code>console.log(1)</code></pre></section>';
+      '<section id="draftport" style="padding: 0px 16px;"><pre style="padding: 10px 12px; background: rgb(30,30,30);"><code>console.log(1)</code></pre></section>';
 
     normalizeCopyContainer(container);
 
@@ -115,7 +117,7 @@ describe("wechatCopyNormalizer", () => {
   it("keeps heading inner padding and relocates root horizontal padding via margin", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd" style="padding: 0px 16px;"><h3 style="padding-left: 8px; border-left: 4px solid rgb(0, 87, 255);"><span class="content">标题</span></h3></section>';
+      '<section id="draftport" style="padding: 0px 16px;"><h3 style="padding-left: 8px; border-left: 4px solid rgb(0, 87, 255);"><span class="content">标题</span></h3></section>';
 
     normalizeCopyContainer(container);
 
@@ -129,7 +131,7 @@ describe("wechatCopyNormalizer", () => {
   it("relocates root horizontal padding to hr via margin", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd" style="padding: 0px 16px;"><hr style="border-top: 1px solid rgb(238, 238, 238);" /></section>';
+      '<section id="draftport" style="padding: 0px 16px;"><hr style="border-top: 1px solid rgb(238, 238, 238);" /></section>';
 
     normalizeCopyContainer(container);
 
@@ -144,7 +146,7 @@ describe("wechatCopyNormalizer", () => {
   it("keeps hr auto margins when relocating root horizontal padding", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd" style="padding: 0px 16px;"><hr style="width: 20%; margin-left: auto; margin-right: auto; border-top: 1px solid rgb(238, 238, 238);" /></section>';
+      '<section id="draftport" style="padding: 0px 16px;"><hr style="width: 20%; margin-left: auto; margin-right: auto; border-top: 1px solid rgb(238, 238, 238);" /></section>';
 
     normalizeCopyContainer(container);
 
@@ -157,7 +159,7 @@ describe("wechatCopyNormalizer", () => {
   it("falls back to root padding when heading margin uses auto keyword", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd" style="padding: 0px 16px;"><h3 style="margin-left: auto; margin-right: auto; padding-left: 8px;"><span class="content">标题</span></h3></section>';
+      '<section id="draftport" style="padding: 0px 16px;"><h3 style="margin-left: auto; margin-right: auto; padding-left: 8px;"><span class="content">标题</span></h3></section>';
 
     normalizeCopyContainer(container);
 
@@ -170,7 +172,7 @@ describe("wechatCopyNormalizer", () => {
   it("normalizes figure background without overriding explicit figure background", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd"><figure><img src="x.png" alt="x" /><figcaption>cap</figcaption></figure><figure style="background:#f5f5f5;"><img src="y.png" alt="y" /></figure></section>';
+      '<section id="draftport"><figure><img src="x.png" alt="x" /><figcaption>cap</figcaption></figure><figure style="background:#f5f5f5;"><img src="y.png" alt="y" /></figure></section>';
 
     normalizeCopyContainer(container);
 
@@ -184,7 +186,7 @@ describe("wechatCopyNormalizer", () => {
   it("normalizes list item section background without overriding explicit section background", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd"><ul><li><section>A</section></li><li><section style="background-color:#f5f5f5;">B</section></li></ul></section>';
+      '<section id="draftport"><ul><li><section>A</section></li><li><section style="background-color:#f5f5f5;">B</section></li></ul></section>';
 
     normalizeCopyContainer(container);
 
@@ -202,7 +204,7 @@ describe("wechatCopyNormalizer", () => {
   it("normalizes list container background without overriding explicit list background", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd"><ul><li><section>A</section></li></ul><ol style="background-color:#f5f5f5;"><li><section>B</section></li></ol></section>';
+      '<section id="draftport"><ul><li><section>A</section></li></ul><ol style="background-color:#f5f5f5;"><li><section>B</section></li></ol></section>';
 
     normalizeCopyContainer(container);
 
@@ -218,7 +220,7 @@ describe("wechatCopyNormalizer", () => {
   it("keeps explicit list background-image untouched", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd"><ul style="background-image:linear-gradient(#111,#222);"><li><section>A</section></li></ul></section>';
+      '<section id="draftport"><ul style="background-image:linear-gradient(#111,#222);"><li><section>A</section></li></ul></section>';
 
     normalizeCopyContainer(container);
 
@@ -231,7 +233,7 @@ describe("wechatCopyNormalizer", () => {
   it("strips root transparent background written in modern color syntax", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd" style="background: #0000; background-color: rgb(0 0 0 / 0); color: rgb(1, 1, 1);"><p>A</p></section>';
+      '<section id="draftport" style="background: #0000; background-color: rgb(0 0 0 / 0); color: rgb(1, 1, 1);"><p>A</p></section>';
 
     normalizeCopyContainer(container);
 
@@ -245,7 +247,7 @@ describe("wechatCopyNormalizer", () => {
   it("does not override background of elements inside blockquote with explicit background", () => {
     const container = document.createElement("div");
     container.innerHTML =
-      '<section id="wemd" style="background-color: rgb(255, 255, 255);"><blockquote style="background-color: rgb(200, 200, 200);"><p>引用文字</p></blockquote><p>普通文字</p></section>';
+      '<section id="draftport" style="background-color: rgb(255, 255, 255);"><blockquote style="background-color: rgb(200, 200, 200);"><p>引用文字</p></blockquote><p>普通文字</p></section>';
 
     normalizeCopyContainer(container);
 

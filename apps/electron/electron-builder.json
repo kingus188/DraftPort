@@ -1,6 +1,6 @@
 {
-  "appId": "com.wemd.app",
-  "productName": "WeMD",
+  "appId": "com.draftport.app",
+  "productName": "DraftPort",
   "directories": {
     "output": "release"
   },
@@ -27,7 +27,7 @@
     "icon": "assets/icon.icns"
   },
   "dmg": {
-    "title": "WeMD ${version}",
+    "title": "DraftPort ${version}",
     "backgroundColor": "#ffffff",
     "icon": "assets/icon.icns",
     "contents": [
@@ -63,6 +63,6 @@
     "target": ["AppImage", "deb"],
     "category": "Office",
     "icon": "assets/icon.png",
-    "maintainer": "WeMD Team"
+    "maintainer": "DraftPort Team"
   }
 }

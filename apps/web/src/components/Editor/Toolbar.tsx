@@ -48,14 +48,14 @@ export function Toolbar({ onInsert }: ToolbarProps) {
     "left" | "right"
   >("right");
   const [linkToFootnote, setLinkToFootnote] = useState(() => {
-    const saved = localStorage.getItem("wemd-link-to-footnote");
+    const saved = localStorage.getItem("draftport-link-to-footnote");
     return saved === "true";
   });
 
   // 同步状态到全局变量和 localStorage
   useEffect(() => {
     setLinkToFootnoteEnabled(linkToFootnote);
-    localStorage.setItem("wemd-link-to-footnote", String(linkToFootnote));
+    localStorage.setItem("draftport-link-to-footnote", String(linkToFootnote));
   }, [linkToFootnote]);
 
   // 点击外部关闭所有菜单

@@ -15,27 +15,27 @@ const headingPresetTemplates: Record<
   simple: () => ({ content: "" }),
   "left-border": () => ({
     content: `
-            border-left: 4px solid var(--wemd-primary-color);
+            border-left: 4px solid var(--draftport-primary-color);
             padding-left: 10px;
         `,
   }),
   "bottom-border": () => ({
     content: `
-            border-bottom: 2px solid var(--wemd-primary-color);
+            border-bottom: 2px solid var(--draftport-primary-color);
             padding-bottom: 8px;
         `,
   }),
   "double-line": () => ({
     content: `
-            border-top: 2px solid var(--wemd-primary-color);
-            border-bottom: 2px solid var(--wemd-primary-color);
+            border-top: 2px solid var(--draftport-primary-color);
+            border-bottom: 2px solid var(--draftport-primary-color);
             padding: 8px 0;
         `,
   }),
   boxed: () => ({
     content: `
-            background: var(--wemd-primary-color-20);
-            border-left: 4px solid var(--wemd-primary-color);
+            background: var(--draftport-primary-color-20);
+            border-left: 4px solid var(--draftport-primary-color);
             padding: 8px 12px;
             border-radius: 4px;
         `,
@@ -43,13 +43,13 @@ const headingPresetTemplates: Record<
   "bottom-highlight": () => ({
     content: `
             display: inline-block;
-            background: linear-gradient(to bottom, transparent 60%, var(--wemd-primary-color-30) 60%);
+            background: linear-gradient(to bottom, transparent 60%, var(--draftport-primary-color-30) 60%);
             padding: 0 4px;
         `,
   }),
   pill: () => ({
     content: `
-            background: var(--wemd-primary-color);
+            background: var(--draftport-primary-color);
             color: #fff;
             padding: 4px 16px;
             border-radius: 20px;
@@ -63,16 +63,16 @@ const headingPresetTemplates: Record<
             padding: 0 10px;
         `,
     extra: `
-        #wemd ${tag} .content::before {
+        #draftport ${tag} .content::before {
             content: '[';
             margin-right: 5px;
-            color: var(--wemd-primary-color);
+            color: var(--draftport-primary-color);
             font-weight: bold;
         }
-        #wemd ${tag} .content::after {
+        #draftport ${tag} .content::after {
             content: ']';
             margin-left: 5px;
-            color: var(--wemd-primary-color);
+            color: var(--draftport-primary-color);
             font-weight: bold;
         }
         `,
@@ -82,38 +82,38 @@ const headingPresetTemplates: Record<
 const quotePresetTemplates: Record<string, () => QuotePresetCss> = {
   "left-border": () => ({
     base: `
-            background: var(--wemd-quote-background);
-            border-left-style: var(--wemd-quote-border-style);
-            border-left-width: var(--wemd-quote-border-width);
-            border-left-color: var(--wemd-quote-border-color);
+            background: var(--draftport-quote-background);
+            border-left-style: var(--draftport-quote-border-style);
+            border-left-width: var(--draftport-quote-border-width);
+            border-left-color: var(--draftport-quote-border-color);
         `,
   }),
   "top-bottom-border": () => ({
     base: `
-            border-top: var(--wemd-quote-border-width) var(--wemd-quote-border-style) var(--wemd-quote-border-color);
-            border-bottom: var(--wemd-quote-border-width) var(--wemd-quote-border-style) var(--wemd-quote-border-color);
+            border-top: var(--draftport-quote-border-width) var(--draftport-quote-border-style) var(--draftport-quote-border-color);
+            border-bottom: var(--draftport-quote-border-width) var(--draftport-quote-border-style) var(--draftport-quote-border-color);
             border-left: none;
-            background: var(--wemd-quote-background);
+            background: var(--draftport-quote-background);
             text-align: center;
         `,
     extra: `
-        #wemd blockquote p { text-align: center; }
+        #draftport blockquote p { text-align: center; }
         `,
   }),
   "quotation-marks": () => ({
     base: `
-            background: var(--wemd-quote-background);
+            background: var(--draftport-quote-background);
             border-left: none;
             border-radius: 4px;
-            padding-left: calc(var(--wemd-quote-padding-x) + 40px);
+            padding-left: calc(var(--draftport-quote-padding-x) + 40px);
         `,
     extra: `
-        #wemd blockquote::before {
+        #draftport blockquote::before {
             content: "“";
             display: block;
             height: 0;
             font-size: 60px;
-            color: var(--wemd-quote-border-color);
+            color: var(--draftport-quote-border-color);
             font-family: Georgia, serif;
             line-height: 1;
             margin-left: -40px;
@@ -121,7 +121,7 @@ const quotePresetTemplates: Record<string, () => QuotePresetCss> = {
             opacity: 0.3;
             pointer-events: none;
         }
-        #wemd blockquote p {
+        #draftport blockquote p {
             position: relative;
             z-index: 1;
         }
@@ -129,8 +129,8 @@ const quotePresetTemplates: Record<string, () => QuotePresetCss> = {
   }),
   boxed: () => ({
     base: `
-            border: var(--wemd-quote-border-width) var(--wemd-quote-border-style) var(--wemd-quote-border-color);
-            background: var(--wemd-quote-background);
+            border: var(--draftport-quote-border-width) var(--draftport-quote-border-style) var(--draftport-quote-border-color);
+            background: var(--draftport-quote-background);
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         `,
@@ -143,22 +143,22 @@ const quotePresetTemplates: Record<string, () => QuotePresetCss> = {
             position: relative;
         `,
     extra: `
-        #wemd blockquote p { text-align: center; }
-        #wemd blockquote::before {
+        #draftport blockquote p { text-align: center; }
+        #draftport blockquote::before {
             content: "";
             display: block;
             width: 40px;
-            height: var(--wemd-quote-border-width);
-            background: var(--wemd-quote-border-color);
+            height: var(--draftport-quote-border-width);
+            background: var(--draftport-quote-border-color);
             margin: 0 auto 15px;
             opacity: 0.8;
         }
-        #wemd blockquote::after {
+        #draftport blockquote::after {
             content: "";
             display: block;
             width: 40px;
-            height: var(--wemd-quote-border-width);
-            background: var(--wemd-quote-border-color);
+            height: var(--draftport-quote-border-width);
+            background: var(--draftport-quote-border-color);
             margin: 15px auto 0;
             opacity: 0.8;
         }
@@ -166,30 +166,30 @@ const quotePresetTemplates: Record<string, () => QuotePresetCss> = {
   }),
   "corner-frame": () => ({
     base: `
-            background: var(--wemd-quote-background);
+            background: var(--draftport-quote-background);
             border-left: none;
             position: relative;
         `,
     extra: `
-        #wemd blockquote::before {
+        #draftport blockquote::before {
             content: "";
             position: absolute;
             top: 0;
             left: 0;
             width: 20px;
             height: 20px;
-            border-top: var(--wemd-quote-border-width) var(--wemd-quote-border-style) var(--wemd-quote-border-color);
-            border-left: var(--wemd-quote-border-width) var(--wemd-quote-border-style) var(--wemd-quote-border-color);
+            border-top: var(--draftport-quote-border-width) var(--draftport-quote-border-style) var(--draftport-quote-border-color);
+            border-left: var(--draftport-quote-border-width) var(--draftport-quote-border-style) var(--draftport-quote-border-color);
         }
-        #wemd blockquote::after {
+        #draftport blockquote::after {
             content: "";
             position: absolute;
             bottom: 0;
             right: 0;
             width: 20px;
             height: 20px;
-            border-bottom: var(--wemd-quote-border-width) var(--wemd-quote-border-style) var(--wemd-quote-border-color);
-            border-right: var(--wemd-quote-border-width) var(--wemd-quote-border-style) var(--wemd-quote-border-color);
+            border-bottom: var(--draftport-quote-border-width) var(--draftport-quote-border-style) var(--draftport-quote-border-color);
+            border-right: var(--draftport-quote-border-width) var(--draftport-quote-border-style) var(--draftport-quote-border-color);
         }
         `,
   }),

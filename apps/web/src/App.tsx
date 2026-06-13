@@ -104,7 +104,9 @@ function App() {
     const availableHandler = electron.update.onUpdateAvailable(
       (data: UpdateEventData) => {
         // 检查是否跳过了此版本（除非是强制检查）
-        const skippedVersion = localStorage.getItem("wemd-skipped-version");
+        const skippedVersion = localStorage.getItem(
+          "draftport-skipped-version",
+        );
         if (!data.force && skippedVersion === data.latestVersion) {
           return; // 用户之前选择跳过此版本
         }
@@ -142,7 +144,7 @@ function App() {
 
   const [showHistory, setShowHistory] = useState(() => {
     if (typeof window === "undefined") return true;
-    const saved = localStorage.getItem("wemd-show-history");
+    const saved = localStorage.getItem("draftport-show-history");
     return saved !== "false";
   });
   const [historyWidth, setHistoryWidth] = useState<string>(
@@ -151,7 +153,7 @@ function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem("wemd-show-history", String(showHistory));
+      localStorage.setItem("draftport-show-history", String(showHistory));
     } catch {
       /* 忽略持久化错误 */
     }
@@ -215,7 +217,7 @@ function App() {
             }}
             onSkipVersion={() => {
               localStorage.setItem(
-                "wemd-skipped-version",
+                "draftport-skipped-version",
                 updateInfo.latestVersion,
               );
               setUpdateInfo(null);

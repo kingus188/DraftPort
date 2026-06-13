@@ -1,13 +1,20 @@
-<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <!-- 1. 背景：极淡的冷灰色块 (Premium Light Grey) -->
-  <!-- 这种灰色比纯白更有质感，在白色网页背景上也能看清轮廓 -->
-  <path d="M40 20 H160 C171 20 180 29 180 40 V140 C180 151 171 160 160 160 H140 L140 185 L110 160 H40 C29 160 20 151 20 140 V40 C20 29 29 20 40 20 Z" fill="#F2F4F7"/>
-  
-  <!-- 2. 内部装饰：顶部的绿色状态条 -->
-  <!-- 在浅色背景上，这个绿色会显得非常清脆 -->
-  <rect x="50" y="50" width="100" height="12" rx="6" fill="#07C160"/>
-  
-  <!-- 3. 核心符号：Markdown 的 "M" -->
-  <!-- 使用深黑色，形成“纸上墨迹”的高级阅读感 -->
-  <path d="M60 85 L60 130 H80 L80 110 L100 130 L120 110 L120 130 H140 L140 85 L120 85 L100 105 L80 85 Z" fill="#1A1A1A"/>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DraftPort icon">
+  <defs>
+    <linearGradient id="tile" x1="36" y1="20" x2="164" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8FAFC"/>
+      <stop offset="1" stop-color="#DDE7F2"/>
+    </linearGradient>
+    <linearGradient id="needle" x1="71" y1="139" x2="145" y2="61" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0284C7"/>
+      <stop offset="1" stop-color="#06B6D4"/>
+    </linearGradient>
+  </defs>
+  <rect x="14" y="14" width="172" height="172" rx="42" fill="url(#tile)" stroke="#CBD5E1" stroke-width="4"/>
+  <path d="M62 42H122L150 70V154C150 162 144 168 136 168H62C54 168 48 162 48 154V56C48 48 54 42 62 42Z" fill="#FFFFFF"/>
+  <path d="M122 42V66C122 70 126 74 130 74H150L122 42Z" fill="#E2E8F0"/>
+  <path d="M73 128L145 55L124 132L103 111L73 128Z" fill="url(#needle)"/>
+  <path d="M73 128L103 111L124 132L85 141C78 143 70 135 73 128Z" fill="#0E7490"/>
+  <circle cx="104" cy="112" r="8" fill="#111827"/>
+  <path d="M66 78H106" stroke="#64748B" stroke-width="8" stroke-linecap="round"/>
+  <path d="M66 98H91" stroke="#CBD5E1" stroke-width="8" stroke-linecap="round"/>
 </svg>

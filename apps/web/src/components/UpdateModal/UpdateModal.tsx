@@ -42,11 +42,11 @@ export function UpdateModal({
         </button>
 
         <div className="update-modal-icon">
-          <img src={iconSrc} alt="WeMD" width={64} height={64} />
+          <img src={iconSrc} alt="DraftPort" width={64} height={64} />
         </div>
 
         <h2 className="update-modal-title">发现新版本</h2>
-        <p className="update-modal-version">WeMD {latestVersion} 已发布</p>
+        <p className="update-modal-version">DraftPort {latestVersion} 已发布</p>
 
         {releaseNotes && (
           <button

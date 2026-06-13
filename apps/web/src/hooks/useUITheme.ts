@@ -8,7 +8,7 @@ interface UIThemeStore {
   setTheme: (theme: UITheme) => void;
 }
 
-const THEME_STORAGE_KEY = "wemd-ui-theme";
+const THEME_STORAGE_KEY = "draftport-ui-theme";
 
 const FAVICON_MAP: Record<UITheme, string> = {
   default: "favicon-dark.svg",

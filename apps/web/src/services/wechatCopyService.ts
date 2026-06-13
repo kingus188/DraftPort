@@ -4,7 +4,7 @@
  */
 
 import toast from "react-hot-toast";
-import { processHtml, createMarkdownParser } from "@wemd/core";
+import { processHtml, createMarkdownParser } from "@draftport/core";
 import katexCss from "katex/dist/katex.min.css?raw";
 import { loadMathJax } from "../utils/mathJaxLoader";
 import { hasMathFormula } from "../utils/katexRenderer";
@@ -234,7 +234,7 @@ export async function copyToWechat(
           copied = electronResult.success;
           if (!electronResult.success) {
             console.warn(
-              "[WeMD] Electron clipboard bridge unavailable, fallback to browser copy chain",
+              "[DraftPort] Electron clipboard bridge unavailable, fallback to browser copy chain",
               electronResult.error || "unknown error",
             );
           }
@@ -251,7 +251,7 @@ export async function copyToWechat(
     // 最后回退到 Clipboard API
     if (!copied && navigator.clipboard && window.ClipboardItem) {
       console.warn(
-        "[WeMD] native execCommand copy unavailable, fallback to Clipboard API",
+        "[DraftPort] native execCommand copy unavailable, fallback to Clipboard API",
       );
       try {
         const blob = new Blob([container.innerHTML], { type: "text/html" });

@@ -25,7 +25,7 @@ export interface COSConfig {
   secretKey: string;
   bucket: string;
   region: string;
-  customDomain?: string; // 自定义域名，如 https://img.wemd.top
+  customDomain?: string; // 自定义域名，如 https://img.draftport.top
 }
 
 export class COSService {

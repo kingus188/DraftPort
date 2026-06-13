@@ -15,7 +15,7 @@ vi.mock("react-hot-toast", () => ({
   },
 }));
 
-vi.mock("@wemd/core", () => ({
+vi.mock("@draftport/core", () => ({
   createMarkdownParser: mocked.createMarkdownParserMock.mockImplementation(
     () => ({ render: mocked.parserRender }),
   ),

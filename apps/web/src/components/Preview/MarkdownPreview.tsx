@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import mermaid from "mermaid";
 import { Monitor, Smartphone } from "lucide-react";
-import { createMarkdownParser, processHtml } from "@wemd/core";
+import { createMarkdownParser, processHtml } from "@draftport/core";
 import { useEditorStore } from "../../store/editorStore";
 import { useThemeStore } from "../../store/themeStore";
 import { useUITheme } from "../../hooks/useUITheme";
@@ -18,7 +18,7 @@ import {
 import { renderTableBlocksForPreview } from "../../services/wechatTableRenderer";
 import "./MarkdownPreview.css";
 
-const SYNC_SCROLL_EVENT = "wemd-sync-scroll";
+const SYNC_SCROLL_EVENT = "draftport-sync-scroll";
 
 interface SyncScrollDetail {
   source: "editor" | "preview";

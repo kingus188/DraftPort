@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createMarkdownParser } from "@wemd/core";
+import { createMarkdownParser } from "@draftport/core";
 
 describe("MarkdownParser", () => {
   const parser = createMarkdownParser();

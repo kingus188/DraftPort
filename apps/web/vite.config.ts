@@ -12,7 +12,10 @@ export default defineConfig({
   base: "./",
   resolve: {
     alias: {
-      "@wemd/core": path.resolve(__dirname, "../../packages/core/src/index.ts"),
+      "@draftport/core": path.resolve(
+        __dirname,
+        "../../packages/core/src/index.ts",
+      ),
     },
   },
   plugins: [react()],
