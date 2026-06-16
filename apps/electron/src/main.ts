@@ -8,6 +8,7 @@ import { extractFrontmatterMeta } from './utils/frontmatter';
 import { createRecentItemsStore, type RecentItemsStore, type RecentItemType } from './recentItemsStore';
 import { buildRecentOpenSubmenu } from './utils/recentMenu';
 import { registerWorkspaceAssetProtocol } from './utils/workspaceAssetProtocol';
+import { installStartupWindowVisibility } from './utils/startupWindowVisibility';
 
 // 判断是否为开发模式 - 使用 app.isPackaged 是最可靠的方式
 // 注意：app.isPackaged 只能在 app ready 之后使用，这里用延迟判断
@@ -300,12 +301,8 @@ function createWindow() {
 
     mainWindow.loadURL(startUrl);
 
-    // 准备就绪后显示并最大化，解决 macOS 启动不最大化问题
-    mainWindow.once('ready-to-show', () => {
-        if (!mainWindow) return;
-        mainWindow.maximize();
-        mainWindow.show();
-    });
+    // Prefer showing the shell immediately; renderer loading should not hide the app window.
+    installStartupWindowVisibility(mainWindow);
 
     mainWindow.on('closed', () => {
         mainWindow = null;
