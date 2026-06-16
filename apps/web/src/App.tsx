@@ -101,6 +101,7 @@ function App() {
     toggleLayoutMode: togglePreviewLayoutMode,
   } = useWorkspacePreviewLayout();
   const activePreviewLayoutMode = isMobile ? "balanced" : previewLayoutMode;
+  const isReadOnlyLayout = activePreviewLayoutMode === "preview";
 
   // 全局保存快捷键（统一监听器）
   useEffect(() => {
@@ -208,10 +209,10 @@ function App() {
     () =>
       ({
         "--preview-pane-width":
-          activePreviewLayoutMode === "editor"
-            ? "48px"
-            : activePreviewLayoutMode === "preview"
-              ? "calc(100% - 360px)"
+          activePreviewLayoutMode === "preview"
+            ? "100%"
+            : activePreviewLayoutMode === "editor"
+              ? "48px"
               : `${previewPanePercent}%`,
       }) as CSSProperties,
     [activePreviewLayoutMode, previewPanePercent],
@@ -400,31 +401,37 @@ function App() {
             ref={workspaceRef}
             style={workspaceStyle}
           >
-            <div className="editor-pane">
-              {/* 存储未就绪或文件/历史加载中显示 loading */}
-              {!ready ||
-              fileLoading ||
-              (historyLoading && !isElectron && storageType === "indexeddb") ? (
-                <div className="workspace-loading">
-                  <Loader2 className="animate-spin" size={24} />
-                  <p>正在加载文章</p>
+            {!isReadOnlyLayout && (
+              <>
+                <div className="editor-pane">
+                  {/* 存储未就绪或文件/历史加载中显示 loading */}
+                  {!ready ||
+                  fileLoading ||
+                  (historyLoading &&
+                    !isElectron &&
+                    storageType === "indexeddb") ? (
+                    <div className="workspace-loading">
+                      <Loader2 className="animate-spin" size={24} />
+                      <p>正在加载文章</p>
+                    </div>
+                  ) : (
+                    <MarkdownEditor />
+                  )}
                 </div>
-              ) : (
-                <MarkdownEditor />
-              )}
-            </div>
-            <div
-              className="workspace-preview-resizer"
-              role="separator"
-              aria-label="调整预览面板宽度"
-              aria-orientation="vertical"
-              aria-valuemin={MIN_PREVIEW_PANE_PERCENT}
-              aria-valuemax={MAX_PREVIEW_PANE_PERCENT}
-              aria-valuenow={previewPanePercent}
-              tabIndex={0}
-              onPointerDown={handlePreviewResizerPointerDown}
-              onKeyDown={handlePreviewResizerKeyDown}
-            />
+                <div
+                  className="workspace-preview-resizer"
+                  role="separator"
+                  aria-label="调整预览面板宽度"
+                  aria-orientation="vertical"
+                  aria-valuemin={MIN_PREVIEW_PANE_PERCENT}
+                  aria-valuemax={MAX_PREVIEW_PANE_PERCENT}
+                  aria-valuenow={previewPanePercent}
+                  tabIndex={0}
+                  onPointerDown={handlePreviewResizerPointerDown}
+                  onKeyDown={handlePreviewResizerKeyDown}
+                />
+              </>
+            )}
             <div className="preview-pane">
               {!ready ||
               fileLoading ||

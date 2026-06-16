@@ -3,7 +3,8 @@
 import { useCallback, useState } from "react";
 
 /**
- * Describes which workspace pane should receive priority in desktop layout.
+ * Describes the desktop workspace layout mode. Preview mode is read-only and
+ * gives the rendered Markdown the full workspace instead of keeping an editor pane.
  */
 export type WorkspacePreviewLayoutMode = "balanced" | "preview" | "editor";
 
@@ -99,7 +100,7 @@ export function saveWorkspacePreviewLayoutMode(
 }
 
 /**
- * Coordinates preview pane width and preview-priority layout state for the app shell.
+ * Coordinates preview pane width and desktop workspace layout state for the app shell.
  */
 export function useWorkspacePreviewLayout() {
   const [previewPanePercent, setPreviewPanePercentState] = useState(() =>

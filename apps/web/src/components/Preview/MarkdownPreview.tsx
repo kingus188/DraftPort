@@ -38,9 +38,9 @@ interface SyncScrollDetail {
 type PreviewMode = "mobile" | "desktop";
 
 interface MarkdownPreviewProps {
-  /** Current desktop workspace pane priority; mobile keeps its separate view switcher. */
+  /** Current desktop workspace layout; preview mode is read-only and hides editing chrome. */
   layoutMode?: WorkspacePreviewLayoutMode;
-  /** Toggles between balanced and preview-priority workspace layouts. */
+  /** Toggles between balanced editing layout and read-only preview layout. */
   onToggleLayoutMode?: () => void;
   /** Toggles the right preview pane between visible and editor-priority collapsed states. */
   onTogglePreviewCollapsed?: () => void;
@@ -277,6 +277,9 @@ export function MarkdownPreview({
 
   const isPreviewCollapsed = layoutMode === "editor";
   const previewCollapseLabel = isPreviewCollapsed ? "显示预览" : "收起预览";
+  const isReadOnlyLayout = layoutMode === "preview";
+  const readOnlyLayoutLabel = isReadOnlyLayout ? "退出只读模式" : "只读模式";
+  const readOnlyLayoutText = isReadOnlyLayout ? "退出只读" : "只读";
 
   if (isPreviewCollapsed) {
     return (
@@ -324,18 +327,20 @@ export function MarkdownPreview({
           {onToggleLayoutMode && (
             <button
               type="button"
-              className="preview-layout-action"
-              aria-label={
-                layoutMode === "preview" ? "恢复编辑布局" : "预览优先"
-              }
-              title={layoutMode === "preview" ? "恢复编辑布局" : "预览优先"}
+              className={`preview-layout-action preview-readonly-toggle ${
+                isReadOnlyLayout ? "is-active" : ""
+              }`}
+              aria-label={readOnlyLayoutLabel}
+              aria-pressed={isReadOnlyLayout}
+              title={readOnlyLayoutLabel}
               onClick={onToggleLayoutMode}
             >
-              {layoutMode === "preview" ? (
+              {isReadOnlyLayout ? (
                 <Minimize2 size={16} strokeWidth={2} />
               ) : (
                 <Maximize2 size={16} strokeWidth={2} />
               )}
+              <span>{readOnlyLayoutText}</span>
             </button>
           )}
           <div className="preview-device-actions" aria-label="预览设备">

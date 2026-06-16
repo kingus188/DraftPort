@@ -88,7 +88,7 @@ describe("MarkdownPreview device modes", () => {
     expect(subtitle()).toHaveTextContent("手机宽度");
   });
 
-  it("calls layout toggle from the preview priority button", () => {
+  it("calls layout toggle from the read-only mode button", () => {
     const onToggleLayoutMode = vi.fn();
 
     render(
@@ -98,19 +98,27 @@ describe("MarkdownPreview device modes", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "预览优先" }));
+    const readOnlyButton = screen.getByRole("button", { name: "只读模式" });
+
+    expect(readOnlyButton).toHaveTextContent("只读");
+    expect(readOnlyButton).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(readOnlyButton);
 
     expect(onToggleLayoutMode).toHaveBeenCalledTimes(1);
   });
 
-  it("shows restore layout action in preview priority mode", () => {
+  it("shows restore editing action in read-only mode", () => {
     render(
       <MarkdownPreview layoutMode="preview" onToggleLayoutMode={vi.fn()} />,
     );
 
-    expect(
-      screen.getByRole("button", { name: "恢复编辑布局" }),
-    ).toBeInTheDocument();
+    const readOnlyButton = screen.getByRole("button", {
+      name: "退出只读模式",
+    });
+
+    expect(readOnlyButton).toHaveTextContent("退出只读");
+    expect(readOnlyButton).toHaveAttribute("aria-pressed", "true");
   });
 
   it("calls preview collapse toggle from the collapse action", () => {
