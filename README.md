@@ -64,22 +64,6 @@
 >
 > ⚠️ **Linux 用户注意**：运行前需设置可执行权限：`chmod +x DraftPort.AppImage`
 
-### Docker 部署
-
-```bash
-docker compose pull
-docker compose up -d
-```
-
-访问 `http://localhost:8080` 即可使用。
-
-默认会拉取 `ghcr.io/kingus188/draftport-web:latest`。
-如需指定版本镜像，可覆盖环境变量：
-
-```bash
-DRAFTPORT_IMAGE=ghcr.io/kingus188/draftport-web:<版本号> docker compose up -d
-```
-
 ---
 
 ## 🛠️ 本地开发
