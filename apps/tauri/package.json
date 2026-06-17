@@ -1,0 +1,13 @@
+{
+  "name": "draftport-tauri",
+  "version": "1.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:web": "cd ../web && ../../node_modules/.bin/tsc -b && ./node_modules/.bin/vite build",
+    "dev": "cd src-tauri && PATH=\"$HOME/.cargo/bin:$(dirname \"$(rustup which rustc)\"):$PATH\" cargo-tauri dev",
+    "build": "cd src-tauri && PATH=\"$HOME/.cargo/bin:$(dirname \"$(rustup which rustc)\"):$PATH\" cargo-tauri build --bundles app",
+    "test": "cd src-tauri && PATH=\"$HOME/.cargo/bin:$(dirname \"$(rustup which rustc)\"):$PATH\" cargo test",
+    "tauri": "cd src-tauri && PATH=\"$HOME/.cargo/bin:$(dirname \"$(rustup which rustc)\"):$PATH\" cargo-tauri"
+  }
+}

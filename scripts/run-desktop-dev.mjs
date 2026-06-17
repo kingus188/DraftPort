@@ -1,5 +1,4 @@
 import { spawn } from 'child_process';
-import http from 'http';
 
 function run(command, args) {
   const child = spawn(command, args, { stdio: 'inherit', shell: true });
@@ -12,18 +11,4 @@ function run(command, args) {
   return child;
 }
 
-run('pnpm', ['dev:web']);
-
-function checkServer(url, onReady) {
-  const request = http.get(url, (res) => {
-    res.destroy();
-    onReady();
-  });
-  request.on('error', () => {
-    setTimeout(() => checkServer(url, onReady), 1000);
-  });
-}
-
-checkServer('http://localhost:5173', () => {
-  run('pnpm', ['dev:electron']);
-});
+run('npm', ['--prefix', 'apps/tauri', 'run', 'dev']);

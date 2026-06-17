@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "DraftPort",
+  "version": "1.0.1",
+  "identifier": "com.draftport.desktop",
+  "build": {
+    "beforeDevCommand": "cd ../../web && ../../node_modules/.bin/vite --host 127.0.0.1",
+    "beforeBuildCommand": "cd ../web && ../../node_modules/.bin/tsc -b && ./node_modules/.bin/vite build",
+    "devUrl": "http://127.0.0.1:5173",
+    "frontendDist": "../../web/dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "DraftPort",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 1024,
+        "minHeight": 640,
+        "visible": true,
+        "decorations": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg"],
+    "icon": [
+      "../../electron/assets/icon.png",
+      "../../electron/assets/icon.icns",
+      "../../electron/assets/icon.ico"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "10.13"
+    }
+  }
+}

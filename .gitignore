@@ -12,9 +12,14 @@ apps/electron/node_modules/
 apps/electron/dist/
 apps/electron/web-dist/
 apps/electron/release/
+
+# Tauri
+apps/tauri/src-tauri/gen/schemas/
+apps/tauri/src-tauri/target/
 .tmp/
 
 # AI Agent files
 .agentdocs/
 .gemini/
 .claude/
+AGNTNTS.md

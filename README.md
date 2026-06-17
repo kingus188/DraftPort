@@ -89,6 +89,7 @@ DRAFTPORT_IMAGE=ghcr.io/kingus188/draftport-web:<版本号> docker compose up -d
 
 - Node.js ≥ 18
 - pnpm ≥ 9（推荐 `corepack enable pnpm`）
+- Rust stable toolchain（桌面端 Tauri 内核需要）
 
 ### 安装与运行
 
@@ -99,7 +100,7 @@ pnpm install
 # 启动 Web 开发服务器
 pnpm dev:web
 
-# 启动桌面端（需先启动 Web）
+# 启动桌面端（Tauri 内核，会先构建 Web）
 pnpm dev:desktop
 ```
 
@@ -109,9 +110,8 @@ pnpm dev:desktop
 # 构建 Web
 pnpm --filter @draftport/web build
 
-# 构建桌面应用
-pnpm --filter draftport-electron run build:mac  # macOS
-pnpm --filter draftport-electron run build:win  # Windows
+# 构建桌面应用（Tauri 内核）
+pnpm build:desktop
 ```
 
 ---
@@ -122,7 +122,8 @@ pnpm --filter draftport-electron run build:win  # Windows
 DraftPort/
 ├── apps/
 │   ├── web/        # React + Vite 前端
-│   ├── electron/   # Electron 桌面端
+│   ├── tauri/      # Tauri 桌面端
+│   ├── electron/   # 旧 Electron 桌面端（迁移期保留）
 │   └── server/     # NestJS 图片上传服务
 ├── packages/
 │   └── core/       # Markdown 解析 / 主题 / 工具

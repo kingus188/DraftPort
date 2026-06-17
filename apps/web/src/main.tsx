@@ -8,7 +8,9 @@ import {
   getSafeSessionStorage,
   installPreloadErrorHandler,
 } from "./bootstrap/installPreloadErrorHandler";
+import { installTauriElectronBridge } from "./desktop/tauriBridge";
 
+installTauriElectronBridge();
 installPreloadErrorHandler({
   target: window,
   storage: getSafeSessionStorage(),

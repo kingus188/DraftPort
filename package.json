@@ -6,8 +6,10 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "dev:web": "pnpm --filter @draftport/web run dev",
-    "dev:electron": "ELECTRON_START_URL=http://localhost:5173 NODE_ENV=development pnpm --filter draftport-electron run dev -- --dev",
-    "dev:desktop": "node scripts/run-desktop-dev.mjs",
+    "dev:electron:legacy": "ELECTRON_START_URL=http://localhost:5173 NODE_ENV=development pnpm --filter draftport-electron run dev -- --dev",
+    "dev:tauri": "npm --prefix apps/tauri run dev",
+    "dev:desktop": "npm --prefix apps/tauri run dev",
+    "build:desktop": "npm --prefix apps/tauri run build",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "prepare": "husky"
