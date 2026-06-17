@@ -2,8 +2,6 @@ import { useRef, useState, useEffect } from "react";
 import {
   Heading,
   List,
-  Image,
-  Loader2,
   Workflow,
   ChevronRight,
   ChevronLeft,
@@ -11,11 +9,6 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-import {
-  WECHAT_IMAGE_MAX_SIZE_BYTES,
-  formatImageSize,
-} from "../../services/image/autoCompressImage";
-import { uploadEditorImage } from "../../services/image/imageUploadFlow";
 import {
   blockTools,
   headingOptions,
@@ -33,8 +26,6 @@ interface ToolbarProps {
 }
 
 export function Toolbar({ onInsert }: ToolbarProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
   const [showMermaidMenu, setShowMermaidMenu] = useState(false);
   const [showMermaidMore, setShowMermaidMore] = useState(false);
   const [showHeadingMenu, setShowHeadingMenu] = useState(false);
@@ -131,54 +122,6 @@ export function Toolbar({ onInsert }: ToolbarProps) {
       }
       return next;
     });
-  };
-
-  const handleImageClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // 验证文件类型
-    if (!file.type.startsWith("image/")) {
-      toast.error("请选择图片文件");
-      return;
-    }
-
-    setUploading(true);
-    const needAutoCompress = file.size > WECHAT_IMAGE_MAX_SIZE_BYTES;
-    const loadingMessage = needAutoCompress
-      ? "正在压缩并上传图片..."
-      : "正在上传图片...";
-    const loadingToastId = toast.loading(loadingMessage);
-
-    try {
-      const result = await uploadEditorImage(file, {
-        compressionOptions: { maxSizeBytes: WECHAT_IMAGE_MAX_SIZE_BYTES },
-      });
-
-      // 插入 Markdown
-      onInsert("![", `](${result.url})`, file.name.replace(/\.[^/.]+$/, ""));
-
-      const successMessage = result.compressed
-        ? `图片上传成功（已自动压缩 ${formatImageSize(
-            result.originalSize,
-          )} -> ${formatImageSize(result.finalSize)}）`
-        : "图片上传成功";
-      toast.success(successMessage);
-    } catch (error) {
-      console.error("图片上传失败:", error);
-      toast.error(error instanceof Error ? error.message : "图片上传失败");
-    } finally {
-      toast.dismiss(loadingToastId);
-      setUploading(false);
-      // 清空 input，允许重复上传同一文件
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
   };
 
   const toggleLinkToFootnote = () => {
@@ -346,27 +289,6 @@ export function Toolbar({ onInsert }: ToolbarProps) {
             </div>
           )}
         </div>
-
-        <button
-          className="md-toolbar-btn"
-          onClick={handleImageClick}
-          disabled={uploading}
-          data-tooltip="上传图片"
-        >
-          {uploading ? (
-            <Loader2 size={16} className="spinning" />
-          ) : (
-            <Image size={16} />
-          )}
-        </button>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          style={{ display: "none" }}
-        />
       </div>
 
       <div className="md-toolbar-group" aria-label="发布辅助">

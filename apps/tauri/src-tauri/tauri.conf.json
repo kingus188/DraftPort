@@ -29,12 +29,8 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["app", "dmg"],
-    "icon": [
-      "../../electron/assets/icon.png",
-      "../../electron/assets/icon.icns",
-      "../../electron/assets/icon.ico"
-    ],
+    "targets": "all",
+    "icon": ["icons/icon.png", "icons/icon.icns", "icons/icon.ico"],
     "macOS": {
       "minimumSystemVersion": "10.13"
     }

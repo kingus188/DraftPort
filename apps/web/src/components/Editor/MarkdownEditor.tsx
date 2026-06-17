@@ -15,15 +15,9 @@ import { Toolbar } from "./Toolbar";
 import { SearchPanel } from "./SearchPanel";
 import { SaveIndicator } from "./SaveIndicator";
 import { useFileStore } from "../../store/fileStore";
-import toast from "react-hot-toast";
 import "./MarkdownEditor.css";
 import { customKeymap } from "./editorShortcuts";
 import { paragraphSelectionStyle } from "./mouseSelectionStyle";
-import {
-  WECHAT_IMAGE_MAX_SIZE_BYTES,
-  formatImageSize,
-} from "../../services/image/autoCompressImage";
-import { uploadEditorImage } from "../../services/image/imageUploadFlow";
 
 const SYNC_SCROLL_EVENT = "draftport-sync-scroll";
 
@@ -33,8 +27,8 @@ interface SyncScrollDetail {
 }
 
 /**
- * Hosts the CodeMirror Markdown surface, toolbar inserts, upload paste flow,
- * document metadata, and editor-to-preview scroll synchronization.
+ * Hosts the CodeMirror Markdown surface, toolbar inserts, document metadata,
+ * and editor-to-preview scroll synchronization.
  */
 export function MarkdownEditor() {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -78,86 +72,6 @@ export function MarkdownEditor() {
         githubLight,
         EditorView.lineWrapping,
         paragraphSelectionStyle,
-        EditorView.domEventHandlers({
-          paste: (event, view) => {
-            const items = event.clipboardData?.items;
-            if (!items) return;
-
-            for (const item of items) {
-              if (item.type.startsWith("image/")) {
-                event.preventDefault();
-                const file = item.getAsFile();
-                if (!file) continue;
-
-                const needAutoCompress =
-                  file.size > WECHAT_IMAGE_MAX_SIZE_BYTES;
-
-                // 使用统一流程自动压缩并上传
-                const uploadPromise = (async () => {
-                  const result = await uploadEditorImage(file, {
-                    compressionOptions: {
-                      maxSizeBytes: WECHAT_IMAGE_MAX_SIZE_BYTES,
-                    },
-                  });
-                  return result;
-                })();
-
-                const loadingToken = `draftport-upload-${Date.now()}-${Math.random()
-                  .toString(36)
-                  .slice(2, 8)}`;
-                const loadingText = `![上传中... ${file.name}](${loadingToken})`;
-                const range = view.state.selection.main;
-                view.dispatch({
-                  changes: {
-                    from: range.from,
-                    to: range.to,
-                    insert: loadingText,
-                  },
-                });
-
-                toast.promise(uploadPromise, {
-                  loading: needAutoCompress
-                    ? "正在压缩并上传图片..."
-                    : "正在上传图片...",
-                  success: (result) => {
-                    const imageText = `![](${result.url})`;
-                    const currentDoc = view.state.doc.toString();
-                    const index = currentDoc.indexOf(loadingText);
-
-                    if (index !== -1) {
-                      view.dispatch({
-                        changes: {
-                          from: index,
-                          to: index + loadingText.length,
-                          insert: imageText,
-                        },
-                      });
-                    }
-                    return result.compressed
-                      ? `图片上传成功（已自动压缩 ${formatImageSize(
-                          result.originalSize,
-                        )} -> ${formatImageSize(result.finalSize)}）`
-                      : "图片上传成功";
-                  },
-                  error: (err) => {
-                    const currentDoc = view.state.doc.toString();
-                    const index = currentDoc.indexOf(loadingText);
-                    if (index !== -1) {
-                      view.dispatch({
-                        changes: {
-                          from: index,
-                          to: index + loadingText.length,
-                          insert: "",
-                        },
-                      });
-                    }
-                    return `上传失败: ${err.message}`;
-                  },
-                });
-              }
-            }
-          },
-        }),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             const newContent = update.state.doc.toString();

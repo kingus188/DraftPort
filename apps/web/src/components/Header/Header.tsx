@@ -10,17 +10,11 @@ const StorageModeSelector = lazy(() =>
     default: m.StorageModeSelector,
   })),
 );
-const ImageHostSettings = lazy(() =>
-  import("../Settings/ImageHostSettings").then((m) => ({
-    default: m.ImageHostSettings,
-  })),
-);
 import {
   Layers,
   Palette,
   Send,
   Code,
-  ImageIcon,
   BookOpenText,
   Gem,
   Sun,
@@ -103,7 +97,6 @@ export function Header() {
     useEditorStore();
   const [showThemePanel, setShowThemePanel] = useState(false);
   const [showStorageModal, setShowStorageModal] = useState(false);
-  const [showImageHostModal, setShowImageHostModal] = useState(false);
   const uiTheme = useUITheme((state) => state.theme);
   const setTheme = useUITheme((state) => state.setTheme);
   const isDarkTheme = uiTheme === "dark";
@@ -179,11 +172,6 @@ export function Header() {
             />
           )}
           <FloatingToolbarButton
-            icon={<ImageIcon size={18} strokeWidth={2} />}
-            label="图床设置"
-            onClick={() => setShowImageHostModal(true)}
-          />
-          <FloatingToolbarButton
             icon={<Palette size={18} strokeWidth={2} />}
             label="主题管理"
             onClick={() => setShowThemePanel(true)}
@@ -253,14 +241,6 @@ export function Header() {
             )}
             <button
               className="btn-secondary"
-              onClick={() => setShowImageHostModal(true)}
-              aria-label="图库"
-            >
-              <ImageIcon size={18} strokeWidth={2} />
-              <span>图库</span>
-            </button>
-            <button
-              className="btn-secondary"
               onClick={() => setShowThemePanel(true)}
               aria-label="主题"
             >
@@ -327,23 +307,6 @@ export function Header() {
           }
         >
           <StorageModeSelector />
-        </Suspense>
-      </Modal>
-
-      <Modal
-        open={showImageHostModal}
-        onClose={() => setShowImageHostModal(false)}
-        title="图床设置"
-        className="modal-narrow"
-      >
-        <Suspense
-          fallback={
-            <div style={{ padding: "20px", textAlign: "center" }}>
-              loading...
-            </div>
-          }
-        >
-          <ImageHostSettings />
         </Suspense>
       </Modal>
     </>

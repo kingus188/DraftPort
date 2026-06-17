@@ -22,7 +22,6 @@
 | 📝  | **Markdown 语法**    | 支持 GFM、表格、代码高亮、数学公式                       |
 | 🎨  | **主题切换**         | 内置十余款精美主题，支持可视化设计器或自定义 CSS         |
 | 📋  | **多平台富文本复制** | 支持微信公众号 / 知乎 / 掘金，减少跨平台发布前的二次排版 |
-| 🖼️  | **多图床支持**       | 官方图床 / 七牛云 / 阿里云 / 腾讯云 / S3 兼容            |
 | 💾  | **本地优先**         | 数据存储在本地，无需登录，隐私安全                       |
 | 📱  | **跨平台**           | Web 端 + 桌面端（macOS / Windows / Linux）               |
 | 🌙  | **界面风格**         | 亮色 / 深色 双模式可选                                   |
@@ -122,9 +121,7 @@ pnpm build:desktop
 DraftPort/
 ├── apps/
 │   ├── web/        # React + Vite 前端
-│   ├── tauri/      # Tauri 桌面端
-│   ├── electron/   # 旧 Electron 桌面端（迁移期保留）
-│   └── server/     # NestJS 图片上传服务
+│   └── tauri/      # Tauri 桌面端
 ├── packages/
 │   └── core/       # Markdown 解析 / 主题 / 工具
 ├── templates/      # 主题 CSS 模板

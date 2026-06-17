@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-DraftPort is a pnpm/Turbo monorepo. `apps/web` contains the React + Vite editor UI, including component, hook, service, storage, and bootstrap tests under `apps/web/src/__tests__`. `apps/electron` contains the desktop shell and Node test files beside the relevant source modules. `apps/server` is a NestJS image upload service with unit tests in `src` and e2e tests in `test`. Shared Markdown parsing, theme, and rendering logic lives in `packages/core`. Theme templates live in `templates`; release and automation files live in `.github`.
+DraftPort is a pnpm/Turbo monorepo. `apps/web` contains the React + Vite editor UI, including component, hook, service, storage, and bootstrap tests under `apps/web/src/__tests__`. `apps/tauri` contains the Tauri desktop shell; its Rust commands and tests live in `src-tauri/src/main.rs`. Shared Markdown parsing, theme, and rendering logic lives in `packages/core`. Theme templates live in `templates`; release and automation files live in `.github`.
 
 ## Build, Test, and Development Commands
 
@@ -14,16 +14,15 @@ DraftPort is a pnpm/Turbo monorepo. `apps/web` contains the React + Vite editor 
 - `pnpm format`: run Prettier on TypeScript, TSX, and Markdown files.
 - `pnpm --filter @draftport/web test`: run web Vitest tests.
 - `pnpm --filter @draftport/core test`: run core Vitest tests.
-- `pnpm --filter @draftport/server test`: run server Jest tests.
-- `pnpm --filter draftport-electron test`: compile and run Electron Node tests.
+- `pnpm build:desktop`: build the Tauri desktop app.
 
 ## Coding Style & Naming Conventions
 
-Use TypeScript for application and package code. Follow existing local style: React components use `PascalCase`, hooks use `useCamelCase`, services and utilities use descriptive `camelCase` names, and tests mirror the feature name. ESLint is configured at the root and per server package; Prettier is the formatter. Avoid broad utility modules when a feature-owned module is clearer.
+Use TypeScript for application and package code. Follow existing local style: React components use `PascalCase`, hooks use `useCamelCase`, services and utilities use descriptive `camelCase` names, and tests mirror the feature name. ESLint is configured at the root; Prettier is the formatter. Avoid broad utility modules when a feature-owned module is clearer.
 
 ## Testing Guidelines
 
-Prefer focused tests near the affected domain. Web and core tests use Vitest and usually live in `src/__tests__` with `*.test.ts` or `*.test.tsx`. Server unit tests use `*.spec.ts`; server e2e tests use `*.e2e-spec.ts`. Electron tests use `*.test.ts` and run after TypeScript compilation. Add regression tests for behavioral fixes before changing implementation when feasible.
+Prefer focused tests near the affected domain. Web and core tests use Vitest and usually live in `src/__tests__` with `*.test.ts` or `*.test.tsx`. Tauri Rust tests live in the `#[cfg(test)]` module of `apps/tauri/src-tauri/src/main.rs` and run via `cargo test`. Add regression tests for behavioral fixes before changing implementation when feasible.
 
 ## Commit & Pull Request Guidelines
 

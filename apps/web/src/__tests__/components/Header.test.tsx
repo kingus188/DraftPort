@@ -20,12 +20,6 @@ vi.mock("../../components/StorageModeSelector/StorageModeSelector", () => ({
     <div data-testid="storage-selector">Storage Selector</div>
   ),
 }));
-vi.mock("../../components/Settings/ImageHostSettings", () => ({
-  ImageHostSettings: () => (
-    <div data-testid="image-host-settings">Image Host Settings</div>
-  ),
-}));
-
 describe("Header", () => {
   // Default mocks
   const mockCopyToWechat = vi.fn();
@@ -113,7 +107,6 @@ describe("Header", () => {
     expect(logo.getAttribute("src")).toBe("/favicon-dark.svg");
     expect(screen.getByText("DraftPort")).toBeInTheDocument();
     expect(screen.getByText("公众号 Markdown 排版编辑器")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "图库" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "主题" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "HTML" })).toBeInTheDocument();
     expect(screen.getByText("复制到知乎")).toBeInTheDocument();
@@ -216,7 +209,6 @@ describe("Header", () => {
 
     expect(screen.getByLabelText("显示标题栏")).toBeInTheDocument();
     expect(screen.getByLabelText("主题管理")).toBeInTheDocument();
-    expect(screen.getByLabelText("图床设置")).toBeInTheDocument();
     expect(screen.getByLabelText("复制到知乎")).toBeInTheDocument();
     expect(screen.getByLabelText("复制到掘金")).toBeInTheDocument();
     expect(screen.getByLabelText("复制到公众号")).toBeInTheDocument();
