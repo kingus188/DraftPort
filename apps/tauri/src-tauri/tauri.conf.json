@@ -4,7 +4,7 @@
   "version": "1.0.1",
   "identifier": "com.draftport.desktop",
   "build": {
-    "beforeDevCommand": "cd ../../web && ../../node_modules/.bin/vite --host 127.0.0.1",
+    "beforeDevCommand": "cd ../web && ./node_modules/.bin/vite --host 127.0.0.1",
     "beforeBuildCommand": "cd ../web && ../../node_modules/.bin/tsc -b && ./node_modules/.bin/vite build",
     "devUrl": "http://127.0.0.1:5173",
     "frontendDist": "../../web/dist"
