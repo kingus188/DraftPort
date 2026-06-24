@@ -29,6 +29,7 @@ import { materializePreviewImageSources } from "../../utils/previewImageSources"
 import "./MarkdownPreview.css";
 
 const SYNC_SCROLL_EVENT = "draftport-sync-scroll";
+const LARGE_MARKDOWN_PREVIEW_CHAR_LIMIT = 200_000;
 
 interface SyncScrollDetail {
   source: "editor" | "preview";
@@ -36,6 +37,14 @@ interface SyncScrollDetail {
 }
 
 type PreviewMode = "mobile" | "desktop";
+
+/**
+ * Classifies Markdown documents that should avoid the expensive rich-preview
+ * pipeline, matching VS Code's habit of disabling costly features on large files.
+ */
+function isLargeMarkdownPreview(markdown: string): boolean {
+  return markdown.length > LARGE_MARKDOWN_PREVIEW_CHAR_LIMIT;
+}
 
 interface MarkdownPreviewProps {
   /** Current desktop workspace layout; preview mode is read-only and hides editing chrome. */
@@ -68,6 +77,7 @@ export function MarkdownPreview({
   const isSyncingRef = useRef(false);
   const mermaidRenderIdRef = useRef(0);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("mobile");
+  const isLargePreview = isLargeMarkdownPreview(markdown);
 
   // 获取当前主题对象（注意与 line 25 的 themeId 区分）
   const currentTheme = useThemeStore(
@@ -80,11 +90,16 @@ export function MarkdownPreview({
 
   // 缓存 parser 实例，避免每次渲染都创建新实例
   const parser = useMemo(
-    () => createMarkdownParser({ showMacBar }),
-    [showMacBar],
+    () => (isLargePreview ? null : createMarkdownParser({ showMacBar })),
+    [isLargePreview, showMacBar],
   );
 
   useEffect(() => {
+    if (isLargePreview || !parser) {
+      setHtml("");
+      return;
+    }
+
     const rawHtml = parser.render(markdown);
     const htmlWithLocalImages = materializePreviewImageSources(
       rawHtml,
@@ -110,12 +125,13 @@ export function MarkdownPreview({
     uiTheme,
     linkToFootnoteEnabled,
     currentFilePath,
+    isLargePreview,
   ]);
 
   // KaTeX 渲染：轻量级、快速，解决内存问题
   // MathJax 仅在复制到微信时使用
   useEffect(() => {
-    if (!previewRef.current || !html) {
+    if (isLargePreview || !previewRef.current || !html) {
       return;
     }
 
@@ -132,7 +148,7 @@ export function MarkdownPreview({
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [html, markdown]);
+  }, [html, isLargePreview, markdown]);
 
   const mermaidTheme = designerVars?.mermaidTheme || "base";
   const mermaidConfigKey = useMemo(() => mermaidTheme, [mermaidTheme]);
@@ -146,7 +162,7 @@ export function MarkdownPreview({
   }, []);
 
   useEffect(() => {
-    if (!previewRef.current || !html) return;
+    if (isLargePreview || !previewRef.current || !html) return;
 
     const mermaidBlocks = Array.from(
       previewRef.current.querySelectorAll<HTMLElement>(".mermaid"),
@@ -180,11 +196,11 @@ export function MarkdownPreview({
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [html, mermaidConfigKey, designerVars]);
+  }, [html, isLargePreview, mermaidConfigKey, designerVars]);
 
   // 表格渲染为图片：让预览效果与手机阅读体验一致
   useEffect(() => {
-    if (!previewRef.current || !html) return;
+    if (isLargePreview || !previewRef.current || !html) return;
 
     const tables = previewRef.current.querySelectorAll(".table-container");
     if (tables.length === 0) return;
@@ -196,7 +212,7 @@ export function MarkdownPreview({
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [html]);
+  }, [html, isLargePreview]);
 
   // 处理预览栏滚动事件
   const handlePreviewScroll = useCallback(() => {
@@ -279,13 +295,18 @@ export function MarkdownPreview({
   const previewCollapseLabel = isPreviewCollapsed ? "显示预览" : "收起预览";
   const isReadOnlyLayout = layoutMode === "preview";
   const readOnlyLayoutLabel = isReadOnlyLayout ? "退出只读模式" : "只读模式";
-  const readOnlyLayoutText = isReadOnlyLayout ? "退出只读" : "只读";
+  const previewSubtitle = isReadOnlyLayout
+    ? "公众号预览 · 同步滚动 · 全宽阅读"
+    : `公众号预览 · 同步滚动 · ${
+        previewMode === "mobile" ? "手机宽度" : "桌面宽度"
+      }`;
 
   if (isPreviewCollapsed) {
     return (
       <div
         className="markdown-preview markdown-preview--collapsed"
         data-preview-mode={previewMode}
+        data-layout-mode={layoutMode}
       >
         {onTogglePreviewCollapsed && (
           <button
@@ -303,14 +324,15 @@ export function MarkdownPreview({
   }
 
   return (
-    <div className="markdown-preview" data-preview-mode={previewMode}>
+    <div
+      className="markdown-preview"
+      data-preview-mode={previewMode}
+      data-layout-mode={layoutMode}
+    >
       <div className="preview-header">
         <div className="preview-title-stack">
           <span className="preview-title">实时预览</span>
-          <span className="preview-subtitle">
-            公众号预览 · 同步滚动 ·{" "}
-            {previewMode === "mobile" ? "手机宽度" : "桌面宽度"}
-          </span>
+          <span className="preview-subtitle">{previewSubtitle}</span>
         </div>
         <div className="preview-header-actions">
           {onTogglePreviewCollapsed && (
@@ -340,29 +362,30 @@ export function MarkdownPreview({
               ) : (
                 <Maximize2 size={16} strokeWidth={2} />
               )}
-              <span>{readOnlyLayoutText}</span>
             </button>
           )}
-          <div className="preview-device-actions" aria-label="预览设备">
-            <button
-              type="button"
-              aria-label="手机预览"
-              aria-pressed={previewMode === "mobile"}
-              className={previewMode === "mobile" ? "active" : undefined}
-              onClick={() => setPreviewMode("mobile")}
-            >
-              <Smartphone size={17} strokeWidth={2} />
-            </button>
-            <button
-              type="button"
-              aria-label="桌面预览"
-              aria-pressed={previewMode === "desktop"}
-              className={previewMode === "desktop" ? "active" : undefined}
-              onClick={() => setPreviewMode("desktop")}
-            >
-              <Monitor size={17} strokeWidth={2} />
-            </button>
-          </div>
+          {!isReadOnlyLayout && (
+            <div className="preview-device-actions" aria-label="预览设备">
+              <button
+                type="button"
+                aria-label="手机预览"
+                aria-pressed={previewMode === "mobile"}
+                className={previewMode === "mobile" ? "active" : undefined}
+                onClick={() => setPreviewMode("mobile")}
+              >
+                <Smartphone size={17} strokeWidth={2} />
+              </button>
+              <button
+                type="button"
+                aria-label="桌面预览"
+                aria-pressed={previewMode === "desktop"}
+                className={previewMode === "desktop" ? "active" : undefined}
+                onClick={() => setPreviewMode("desktop")}
+              >
+                <Monitor size={17} strokeWidth={2} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <div
@@ -383,7 +406,20 @@ export function MarkdownPreview({
               __html: getThemeCSS(theme, uiTheme === "dark"),
             }}
           />
-          <div ref={previewRef} dangerouslySetInnerHTML={{ __html: html }} />
+          {isLargePreview ? (
+            <div className="large-preview-mode" role="note">
+              <div className="large-preview-mode__banner">
+                <strong>大文件只读优化模式</strong>
+                <span>
+                  已关闭完整 Markdown
+                  渲染、图表和表格后处理，保留纯文本阅读以降低内存占用。
+                </span>
+              </div>
+              <pre className="large-preview-mode__text">{markdown}</pre>
+            </div>
+          ) : (
+            <div ref={previewRef} dangerouslySetInnerHTML={{ __html: html }} />
+          )}
         </div>
       </div>
     </div>

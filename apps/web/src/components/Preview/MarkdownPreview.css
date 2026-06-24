@@ -7,7 +7,7 @@
 
 .preview-header {
   min-height: 82px;
-  padding: 0 32px;
+  padding: 0 24px;
   border-bottom: 1px solid var(--border-light);
   background: #ffffff;
   display: flex;
@@ -27,10 +27,15 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
+  overflow: hidden;
   min-width: 0;
 }
 
 .preview-subtitle {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--text-tertiary);
   font-size: 12px;
   font-weight: 600;
@@ -66,15 +71,6 @@
   background: #eef4f7;
   border-color: color-mix(in srgb, var(--accent-primary) 45%, transparent);
   color: var(--accent-primary);
-}
-
-.preview-readonly-toggle {
-  width: auto;
-  min-width: 76px;
-  padding: 0 11px;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 700;
 }
 
 .preview-readonly-toggle.is-active,
@@ -150,6 +146,64 @@
 
 .markdown-preview[data-preview-mode="desktop"] .preview-content {
   width: min(760px, calc(100% - 32px));
+}
+
+.markdown-preview[data-layout-mode="preview"] .preview-container {
+  padding: 0;
+}
+
+.markdown-preview[data-layout-mode="preview"] .preview-content {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 48px clamp(28px, 6vw, 96px);
+}
+
+.large-preview-mode {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.large-preview-mode__banner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid #d8dee6;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.large-preview-mode__banner strong {
+  color: #111827;
+  font-size: 14px;
+}
+
+.large-preview-mode__text {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #111827;
+  font:
+    14px/1.75 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 /* 响应式 */

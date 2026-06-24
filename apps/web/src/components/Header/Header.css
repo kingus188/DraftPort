@@ -11,6 +11,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 18px;
   padding: 0 calc(32px + var(--titlebar-right-inset, 0px)) 0
     calc(24px + var(--titlebar-left-inset, 0px));
   position: sticky;
@@ -203,6 +204,8 @@
   display: flex;
   align-items: center;
   gap: 24px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* 右侧区域容器（工具栏 + 窗口控制按钮） */
@@ -210,6 +213,8 @@
   display: flex;
   align-items: center;
   height: 100%;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .app-header button,
@@ -314,6 +319,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  min-width: 0;
   cursor: pointer;
   transition: opacity 0.2s ease;
   opacity: 1;
@@ -328,16 +334,24 @@
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .logo-info {
   display: flex;
   flex-direction: row;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 16px;
+  min-width: 0;
 }
 
 .logo-subtitle {
+  display: block;
+  max-width: min(220px, 28vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 13px;
   color: #087c43;
   background: #dff5e8;
@@ -404,14 +418,18 @@
 .header-right {
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 8px;
+  min-width: 0;
 }
 
 /* 主按钮 - 更加精致 */
 .btn-primary {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  flex-shrink: 0;
   min-width: 196px;
   height: 44px;
   padding: 0 24px;
@@ -425,6 +443,7 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .btn-primary:hover {
@@ -445,7 +464,9 @@
 .btn-secondary {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  flex-shrink: 0;
   height: 44px;
   min-width: 104px;
   padding: 0 18px;
@@ -457,6 +478,7 @@
   font-weight: 700;
   transition: all 0.2s ease;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .btn-secondary:hover {
@@ -596,6 +618,28 @@
 }
 
 /* 响应式 */
+@media (max-width: 1240px) {
+  .logo-subtitle {
+    display: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .btn-secondary {
+    min-width: 44px;
+    padding: 0 12px;
+  }
+
+  .btn-secondary span {
+    display: none;
+  }
+
+  .btn-primary {
+    min-width: 164px;
+    padding: 0 18px;
+  }
+}
+
 @media (max-width: 768px) {
   .app-header {
     height: 56px;

@@ -9,7 +9,7 @@
     "paths": {
       "@draftport/core": ["../../packages/core/src/index.ts"]
     },
-    "types": ["vite/client", "@testing-library/jest-dom"],
+    "types": ["vite/client", "@testing-library/jest-dom", "node"],
     "skipLibCheck": true,
     /* Bundler mode */
     "moduleResolution": "bundler",

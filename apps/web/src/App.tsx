@@ -100,7 +100,7 @@ function App() {
     setPreviewPanePercent,
     toggleLayoutMode: togglePreviewLayoutMode,
   } = useWorkspacePreviewLayout();
-  const activePreviewLayoutMode = isMobile ? "balanced" : previewLayoutMode;
+  const activePreviewLayoutMode = previewLayoutMode;
   const isReadOnlyLayout = activePreviewLayoutMode === "preview";
 
   // 全局保存快捷键（统一监听器）
@@ -443,9 +443,7 @@ function App() {
               ) : (
                 <MarkdownPreview
                   layoutMode={activePreviewLayoutMode}
-                  onToggleLayoutMode={
-                    isMobile ? undefined : togglePreviewLayoutMode
-                  }
+                  onToggleLayoutMode={togglePreviewLayoutMode}
                   onTogglePreviewCollapsed={
                     isMobile ? undefined : togglePreviewCollapsed
                   }

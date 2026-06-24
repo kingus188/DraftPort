@@ -107,6 +107,7 @@
 
 .workspace[data-preview-layout="preview"] .preview-pane {
   flex: 1 1 auto;
+  min-width: 0;
 }
 
 .workspace[data-preview-layout="editor"] .editor-pane {
@@ -192,6 +193,10 @@
     display: none;
   }
 
+  .workspace[data-preview-layout="preview"] .preview-pane {
+    display: flex;
+  }
+
   .workspace-preview-resizer {
     display: none;
   }
@@ -239,6 +244,12 @@
     .workspace[data-mobile-view="editor"]
     .preview-pane {
     display: none;
+  }
+
+  .app[data-layout-mode="mobile"]
+    .workspace[data-preview-layout="preview"]
+    .preview-pane {
+    display: flex;
   }
 
   .app[data-layout-mode="mobile"]

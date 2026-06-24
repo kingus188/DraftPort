@@ -1,6 +1,6 @@
 // Verifies the live preview device mode contract without exercising Markdown rendering internals.
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MarkdownPreview } from "../../components/Preview/MarkdownPreview";
 
 const mocks = vi.hoisted(() => {
@@ -11,8 +11,24 @@ const mocks = vi.hoisted(() => {
     getAllThemes: vi.fn(() => [{ id: "default", designerVariables: {} }]),
     getThemeCSS: vi.fn(() => "#draftport { color: #111827; }"),
   };
+  const editorState = {
+    markdown: "Preview body",
+  };
+  const renderMarkdownMock = vi.fn((markdown: string) => `<p>${markdown}</p>`);
+  const createMarkdownParserMock = vi.fn(() => ({
+    render: renderMarkdownMock,
+  }));
+  const processHtmlMock = vi.fn(
+    (html: string) => `<section id="draftport">${html}</section>`,
+  );
 
-  return { themeState };
+  return {
+    createMarkdownParserMock,
+    editorState,
+    processHtmlMock,
+    renderMarkdownMock,
+    themeState,
+  };
 });
 
 vi.mock("mermaid", () => ({
@@ -23,14 +39,12 @@ vi.mock("mermaid", () => ({
 }));
 
 vi.mock("@draftport/core", () => ({
-  createMarkdownParser: () => ({
-    render: (markdown: string) => `<p>${markdown}</p>`,
-  }),
-  processHtml: (html: string) => `<section id="draftport">${html}</section>`,
+  createMarkdownParser: mocks.createMarkdownParserMock,
+  processHtml: mocks.processHtmlMock,
 }));
 
 vi.mock("../../store/editorStore", () => ({
-  useEditorStore: () => ({ markdown: "Preview body" }),
+  useEditorStore: () => mocks.editorState,
 }));
 
 vi.mock("../../store/themeStore", () => ({
@@ -44,6 +58,13 @@ vi.mock("../../hooks/useUITheme", () => ({
 }));
 
 describe("MarkdownPreview device modes", () => {
+  beforeEach(() => {
+    mocks.editorState.markdown = "Preview body";
+    mocks.createMarkdownParserMock.mockClear();
+    mocks.renderMarkdownMock.mockClear();
+    mocks.processHtmlMock.mockClear();
+  });
+
   it("renders mobile preview mode by default", () => {
     const { container } = render(<MarkdownPreview />);
     const subtitle = container.querySelector(".preview-subtitle");
@@ -100,7 +121,7 @@ describe("MarkdownPreview device modes", () => {
 
     const readOnlyButton = screen.getByRole("button", { name: "只读模式" });
 
-    expect(readOnlyButton).toHaveTextContent("只读");
+    expect(readOnlyButton.textContent).toBe("");
     expect(readOnlyButton).toHaveAttribute("aria-pressed", "false");
 
     fireEvent.click(readOnlyButton);
@@ -117,8 +138,41 @@ describe("MarkdownPreview device modes", () => {
       name: "退出只读模式",
     });
 
-    expect(readOnlyButton).toHaveTextContent("退出只读");
+    expect(readOnlyButton.textContent).toBe("");
     expect(readOnlyButton).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("uses a full-container preview without device width choices in read-only mode", () => {
+    const { container } = render(
+      <MarkdownPreview layoutMode="preview" onToggleLayoutMode={vi.fn()} />,
+    );
+
+    expect(container.querySelector(".markdown-preview")).toHaveAttribute(
+      "data-layout-mode",
+      "preview",
+    );
+    expect(container.querySelector(".preview-subtitle")).toHaveTextContent(
+      "全宽阅读",
+    );
+    expect(
+      screen.queryByRole("button", { name: "手机预览" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "桌面预览" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders large markdown through a reduced read-only path", () => {
+    mocks.editorState.markdown = `${"# Large file\n\n"}${"body\n".repeat(
+      50000,
+    )}`;
+
+    render(<MarkdownPreview layoutMode="preview" />);
+
+    expect(mocks.renderMarkdownMock).not.toHaveBeenCalled();
+    expect(mocks.processHtmlMock).not.toHaveBeenCalled();
+    expect(screen.getByText("大文件只读优化模式")).toBeInTheDocument();
+    expect(screen.getByText(/已关闭完整 Markdown 渲染/)).toBeInTheDocument();
   });
 
   it("calls preview collapse toggle from the collapse action", () => {

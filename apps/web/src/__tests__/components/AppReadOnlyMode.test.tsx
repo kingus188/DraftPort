@@ -73,6 +73,10 @@ vi.mock("../../store/editorStore", () => {
 describe("App read-only workspace mode", () => {
   beforeEach(() => {
     localStorage.clear();
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 1024,
+    });
   });
 
   it("keeps the editor visible in the balanced desktop layout", () => {
@@ -101,5 +105,21 @@ describe("App read-only workspace mode", () => {
     expect(
       screen.queryByRole("separator", { name: "调整预览面板宽度" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("keeps the restored read-only layout on narrow viewports", () => {
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 500,
+    });
+    localStorage.setItem("draftport-preview-layout-mode", "preview");
+
+    render(<App />);
+
+    expect(screen.queryByTestId("markdown-editor")).not.toBeInTheDocument();
+    expect(screen.getByTestId("markdown-preview")).toHaveAttribute(
+      "data-layout-mode",
+      "preview",
+    );
   });
 });
