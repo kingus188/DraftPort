@@ -43,4 +43,12 @@ describe("responsive shell chrome styles", () => {
       "flex-shrink: 0",
     );
   });
+
+  it("keeps collapsed history width respected on narrower desktop windows", () => {
+    const css = readWorkspaceStyle("src/App.css");
+
+    expect(css).toMatch(
+      /grid-template-columns:\s*var\(--history-width,\s*clamp\(280px,\s*25vw,\s*340px\)\)\s*minmax\(0,\s*1fr\);/,
+    );
+  });
 });

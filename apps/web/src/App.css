@@ -171,7 +171,9 @@
 
 @media (max-width: 1280px) {
   .app-main {
-    grid-template-columns: clamp(280px, 25vw, 340px) minmax(0, 1fr);
+    grid-template-columns:
+      var(--history-width, clamp(280px, 25vw, 340px))
+      minmax(0, 1fr);
   }
 
   .preview-pane {
