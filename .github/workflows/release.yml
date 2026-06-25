@@ -10,6 +10,16 @@ on:
         description: Existing release tag to publish assets to during manual runs.
         required: false
         default: ''
+      platform:
+        description: Platform to build during manual runs.
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - macos-latest
+          - windows-2022
+          - ubuntu-latest
 
 permissions:
   contents: write
@@ -23,6 +33,7 @@ jobs:
           - macos-latest
           - windows-2022
           - ubuntu-latest
+    if: ${{ github.event_name == 'push' || inputs.platform == 'all' || inputs.platform == matrix.platform }}
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
