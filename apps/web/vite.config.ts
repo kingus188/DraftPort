@@ -10,6 +10,14 @@ const packageJson = JSON.parse(
 
 export default defineConfig({
   base: "./",
+  // Pin the dev server so the Tauri shell (devUrl http://127.0.0.1:5173) always
+  // finds it: bind IPv4 to avoid an IPv6-only `localhost` mismatch, and use
+  // strictPort so a busy 5173 fails loudly instead of silently moving to 5174.
+  server: {
+    host: "127.0.0.1",
+    port: 5173,
+    strictPort: true,
+  },
   resolve: {
     alias: {
       "@draftport/core": path.resolve(
