@@ -4,7 +4,7 @@
   "packageManager": "pnpm@9.0.2",
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "npm --prefix apps/tauri run dev",
     "dev:web": "pnpm --filter @draftport/web run dev",
     "dev:tauri": "npm --prefix apps/tauri run dev",
     "dev:desktop": "npm --prefix apps/tauri run dev",
