@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "DraftPort",
-  "version": "1.0.3",
+  "version": "1.2.11",
   "identifier": "com.draftport.desktop",
   "build": {
     "beforeDevCommand": "cd ../web && ./node_modules/.bin/vite --host 127.0.0.1",
