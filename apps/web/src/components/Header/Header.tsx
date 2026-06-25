@@ -101,7 +101,7 @@ export function Header() {
   const setTheme = useUITheme((state) => state.setTheme);
   const isDarkTheme = uiTheme === "dark";
 
-  const { isElectron, isWindows, platform } = useWindowControls();
+  const { isElectron, isWindows } = useWindowControls();
 
   // 自动隐藏标题栏状态
   const [autoHide, setAutoHide] = useState(() => {
@@ -132,10 +132,6 @@ export function Header() {
   const handleHideHeader = () => {
     setAutoHide(true);
   };
-
-  // Mac 平台使用内联样式强制避让
-  const headerStyle =
-    platform === "darwin" ? { paddingLeft: "80px" } : undefined;
 
   return (
     <>
@@ -200,10 +196,7 @@ export function Header() {
         </div>
       )}
 
-      <header
-        className={`app-header ${autoHide ? "header-auto-hide" : ""}`}
-        style={headerStyle}
-      >
+      <header className={`app-header ${autoHide ? "header-auto-hide" : ""}`}>
         <div className="header-left">
           <div className="logo">
             <HeaderLogoMark isDarkTheme={isDarkTheme} />

@@ -96,6 +96,46 @@
   border-right: 1px solid #d8dee6;
 }
 
+.workspace-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  border-bottom: 1px solid #d8dee6;
+  background: var(--bg-primary);
+}
+
+.workspace-preview-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #d8dee6;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #273244;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.workspace-preview-toggle:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.workspace:not([data-preview-layout="preview"]) .editor-pane {
+  border-right: none;
+}
+
+.editor-pane > .markdown-editor,
+.editor-pane > .wysiwyg-markdown-editor {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
+
 .preview-pane {
   flex: 0 0 var(--preview-pane-width, 42%);
   min-width: 360px;
@@ -240,6 +280,10 @@
     border: var(--border-width) solid var(--glass-border);
     min-height: 0;
     height: 100%;
+  }
+
+  .app[data-layout-mode="mobile"] .workspace-editor-actions {
+    padding: 8px 10px;
   }
 
   .app[data-layout-mode="mobile"]

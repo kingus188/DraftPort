@@ -1,21 +1,20 @@
-import type {
-  CSSProperties,
-  KeyboardEvent as ReactKeyboardEvent,
-  PointerEvent as ReactPointerEvent,
-} from "react";
+import type { CSSProperties } from "react";
 import {
   lazy,
   Suspense,
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import { Toaster } from "react-hot-toast";
 import { Header } from "./components/Header/Header";
 import { FileSidebar } from "./components/Sidebar/FileSidebar";
 import { MarkdownEditor } from "./components/Editor/MarkdownEditor";
+import {
+  canUseWysiwygMarkdown,
+  WysiwygMarkdownEditor,
+} from "./components/Editor/WysiwygMarkdownEditor";
 import { MarkdownPreview } from "./components/Preview/MarkdownPreview";
 import { useFileSystem } from "./hooks/useFileSystem";
 import { useMobileView } from "./hooks/useMobileView";
@@ -25,15 +24,11 @@ import "./styles/global.css";
 import "./App.css";
 
 import { useStorageContext } from "./storage/StorageContext";
-import { Loader2 } from "lucide-react";
+import { Eye, Loader2 } from "lucide-react";
 import { useHistoryStore } from "./store/historyStore";
 import { useFileStore } from "./store/fileStore";
 import { platform } from "./lib/platformAdapter";
-import {
-  MAX_PREVIEW_PANE_PERCENT,
-  MIN_PREVIEW_PANE_PERCENT,
-  useWorkspacePreviewLayout,
-} from "./hooks/useWorkspacePreviewLayout";
+import { useWorkspacePreviewLayout } from "./hooks/useWorkspacePreviewLayout";
 
 const HistoryPanel = lazy(() =>
   import("./components/History/HistoryPanel").then((m) => ({
@@ -72,6 +67,8 @@ interface ElectronUpdateAPI {
   openReleases?: () => void;
 }
 
+type EditorMode = "wysiwyg" | "source";
+
 /**
  * Owns the top-level editor shell and keeps desktop, mobile, and Electron
  * storage modes wired through the same workspace panes.
@@ -86,37 +83,52 @@ function App() {
     activeView,
     setActiveView,
   } = useMobileView();
+  const isElectron = platform.isElectron;
   const isMobile = isMobileScreen && !platform.isElectron;
   const copyToWechat = useEditorStore((state) => state.copyToWechat);
   const copyToZhihu = useEditorStore((state) => state.copyToZhihu);
   const copyToJuejin = useEditorStore((state) => state.copyToJuejin);
   const copyAsHtml = useEditorStore((state) => state.copyAsHtml);
+  const markdown = useEditorStore((state) => state.markdown);
+  const storedFilePath = useEditorStore((state) => state.currentFilePath);
+  const currentFilePath = useFileStore((state) => state.currentFile?.path);
   const [showThemePanel, setShowThemePanel] = useState(false);
-  const workspaceRef = useRef<HTMLDivElement>(null);
+  const [editorMode, setEditorMode] = useState<EditorMode>("wysiwyg");
   const {
     layoutMode: previewLayoutMode,
-    previewPanePercent,
     setLayoutMode: setPreviewLayoutMode,
-    setPreviewPanePercent,
     toggleLayoutMode: togglePreviewLayoutMode,
   } = useWorkspacePreviewLayout();
   const activePreviewLayoutMode = previewLayoutMode;
   const isReadOnlyLayout = activePreviewLayoutMode === "preview";
+  const canUseWysiwygEditor = canUseWysiwygMarkdown(markdown);
+  const activeEditorMode = canUseWysiwygEditor ? editorMode : "source";
+  const isWorkspaceLoading =
+    !ready ||
+    fileLoading ||
+    (historyLoading && !isElectron && storageType === "indexeddb");
+  const wysiwygDocumentKey =
+    currentFilePath ?? storedFilePath ?? "draftport-unsaved-document";
 
-  // 全局保存快捷键（统一监听器）
+  // 全局编辑快捷键：保存文档，并在 Typora-like 编辑与 Markdown 源码之间切换。
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "s") {
         e.preventDefault();
         saveFile(true); // showToast = true
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "/") {
+        e.preventDefault();
+        if (!canUseWysiwygEditor) return;
+        setEditorMode((current) =>
+          current === "wysiwyg" ? "source" : "wysiwyg",
+        );
       }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [saveFile]);
-
-  const isElectron = platform.isElectron;
-
+  }, [canUseWysiwygEditor, saveFile]);
   // 更新提示状态
   const [updateInfo, setUpdateInfo] = useState<{
     latestVersion: string;
@@ -205,68 +217,17 @@ function App() {
       }) as CSSProperties,
     [historyWidth],
   );
-  const workspaceStyle = useMemo(
-    () =>
-      ({
-        "--preview-pane-width":
-          activePreviewLayoutMode === "preview"
-            ? "100%"
-            : activePreviewLayoutMode === "editor"
-              ? "48px"
-              : `${previewPanePercent}%`,
-      }) as CSSProperties,
-    [activePreviewLayoutMode, previewPanePercent],
-  );
-  const updatePreviewPanePercentFromClientX = useCallback(
-    (clientX: number) => {
-      const workspace = workspaceRef.current;
-      if (!workspace) return;
-      const rect = workspace.getBoundingClientRect();
-      if (rect.width <= 0) return;
-      const nextPercent = ((rect.right - clientX) / rect.width) * 100;
-      setPreviewLayoutMode("balanced");
-      setPreviewPanePercent(nextPercent);
-    },
-    [setPreviewLayoutMode, setPreviewPanePercent],
-  );
-  const handlePreviewResizerPointerDown = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (isMobile) return;
-      event.preventDefault();
-      updatePreviewPanePercentFromClientX(event.clientX);
+  const openPublishPreview = useCallback(() => {
+    setPreviewLayoutMode("preview");
+  }, [setPreviewLayoutMode]);
 
-      const handlePointerMove = (moveEvent: PointerEvent) => {
-        updatePreviewPanePercentFromClientX(moveEvent.clientX);
-      };
-      const handlePointerUp = () => {
-        document.body.classList.remove("is-resizing-preview-pane");
-        window.removeEventListener("pointermove", handlePointerMove);
-        window.removeEventListener("pointerup", handlePointerUp);
-      };
-
-      document.body.classList.add("is-resizing-preview-pane");
-      window.addEventListener("pointermove", handlePointerMove);
-      window.addEventListener("pointerup", handlePointerUp);
+  const handleMobileViewChange = useCallback(
+    (nextView: "editor" | "preview") => {
+      setActiveView(nextView);
+      setPreviewLayoutMode(nextView === "preview" ? "preview" : "balanced");
     },
-    [isMobile, updatePreviewPanePercentFromClientX],
+    [setActiveView, setPreviewLayoutMode],
   );
-  const handlePreviewResizerKeyDown = useCallback(
-    (event: ReactKeyboardEvent<HTMLDivElement>) => {
-      if (isMobile) return;
-      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-      event.preventDefault();
-      setPreviewLayoutMode("balanced");
-      setPreviewPanePercent(
-        previewPanePercent + (event.key === "ArrowLeft" ? 2 : -2),
-      );
-    },
-    [isMobile, previewPanePercent, setPreviewLayoutMode, setPreviewPanePercent],
-  );
-  const togglePreviewCollapsed = useCallback(() => {
-    setPreviewLayoutMode(
-      previewLayoutMode === "editor" ? "balanced" : "editor",
-    );
-  }, [previewLayoutMode, setPreviewLayoutMode]);
 
   // Electron 模式：强制选择工作区
   if (isElectron && !workspacePath) {
@@ -398,65 +359,58 @@ function App() {
             className="workspace"
             data-mobile-view={isMobile ? activeView : undefined}
             data-preview-layout={activePreviewLayoutMode}
-            ref={workspaceRef}
-            style={workspaceStyle}
           >
             {!isReadOnlyLayout && (
-              <>
-                <div className="editor-pane">
-                  {/* 存储未就绪或文件/历史加载中显示 loading */}
-                  {!ready ||
-                  fileLoading ||
-                  (historyLoading &&
-                    !isElectron &&
-                    storageType === "indexeddb") ? (
-                    <div className="workspace-loading">
-                      <Loader2 className="animate-spin" size={24} />
-                      <p>正在加载文章</p>
-                    </div>
-                  ) : (
-                    <MarkdownEditor />
-                  )}
-                </div>
-                <div
-                  className="workspace-preview-resizer"
-                  role="separator"
-                  aria-label="调整预览面板宽度"
-                  aria-orientation="vertical"
-                  aria-valuemin={MIN_PREVIEW_PANE_PERCENT}
-                  aria-valuemax={MAX_PREVIEW_PANE_PERCENT}
-                  aria-valuenow={previewPanePercent}
-                  tabIndex={0}
-                  onPointerDown={handlePreviewResizerPointerDown}
-                  onKeyDown={handlePreviewResizerKeyDown}
-                />
-              </>
+              <div className="editor-pane" data-editor-mode={activeEditorMode}>
+                {!isWorkspaceLoading && (
+                  <div className="workspace-editor-actions">
+                    <button
+                      type="button"
+                      className="workspace-preview-toggle"
+                      aria-label="发布预览"
+                      title="发布预览"
+                      onClick={openPublishPreview}
+                    >
+                      <Eye size={16} strokeWidth={2} />
+                      <span>发布预览</span>
+                    </button>
+                  </div>
+                )}
+                {/* 存储未就绪或文件/历史加载中显示 loading */}
+                {isWorkspaceLoading ? (
+                  <div className="workspace-loading">
+                    <Loader2 className="animate-spin" size={24} />
+                    <p>正在加载文章</p>
+                  </div>
+                ) : activeEditorMode === "wysiwyg" ? (
+                  <WysiwygMarkdownEditor key={wysiwygDocumentKey} />
+                ) : (
+                  <MarkdownEditor />
+                )}
+              </div>
             )}
-            <div className="preview-pane">
-              {!ready ||
-              fileLoading ||
-              (historyLoading && !isElectron && storageType === "indexeddb") ? (
-                <div className="workspace-loading">
-                  <Loader2 className="animate-spin" size={24} />
-                  <p>正在加载文章</p>
-                </div>
-              ) : (
-                <MarkdownPreview
-                  layoutMode={activePreviewLayoutMode}
-                  onToggleLayoutMode={togglePreviewLayoutMode}
-                  onTogglePreviewCollapsed={
-                    isMobile ? undefined : togglePreviewCollapsed
-                  }
-                />
-              )}
-            </div>
+            {isReadOnlyLayout && (
+              <div className="preview-pane">
+                {isWorkspaceLoading ? (
+                  <div className="workspace-loading">
+                    <Loader2 className="animate-spin" size={24} />
+                    <p>正在加载文章</p>
+                  </div>
+                ) : (
+                  <MarkdownPreview
+                    layoutMode={activePreviewLayoutMode}
+                    onToggleLayoutMode={togglePreviewLayoutMode}
+                  />
+                )}
+              </div>
+            )}
           </div>
 
           {/* 移动端底部工具栏 */}
           {isMobile && (
             <MobileToolbar
               activeView={activeView}
-              onViewChange={setActiveView}
+              onViewChange={handleMobileViewChange}
               onCopyToWechat={copyToWechat}
               onCopyToZhihu={copyToZhihu}
               onCopyToJuejin={copyToJuejin}

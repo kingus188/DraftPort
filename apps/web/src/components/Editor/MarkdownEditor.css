@@ -6,85 +6,6 @@
   border-right: none;
 }
 
-.editor-header {
-  min-height: 98px;
-  padding: 0 28px;
-  border-bottom: 1px solid var(--border-light);
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.editor-document-info {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-width: 0;
-}
-
-.editor-status-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  background: var(--accent-primary);
-  flex-shrink: 0;
-}
-
-.editor-status-dot.saved {
-  background: var(--accent-primary);
-}
-
-.editor-status-dot.dirty {
-  background: #f59e0b;
-}
-
-.editor-status-dot.saving {
-  background: #38bdf8;
-  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.14);
-}
-
-.editor-title-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.editor-title {
-  font-size: 17px;
-  font-weight: 800;
-  color: #111827;
-  letter-spacing: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.editor-subtitle {
-  width: fit-content;
-  font-size: 11px;
-  color: #667085;
-  background: #f0f2f5;
-  padding: 3px 7px;
-  border-radius: 4px;
-  line-height: 1;
-  font-weight: 600;
-}
-
-.editor-header-stats {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #273244;
-  font-size: 15px;
-  flex-shrink: 0;
-}
-
-.editor-header-stats strong {
-  font-weight: 500;
-}
-
 .editor-container {
   flex: 1;
   overflow: hidden;
@@ -409,21 +330,8 @@
 /* ========================================
    深色模式 - 编辑器样式覆盖
    ======================================== */
-[data-ui-theme="dark"] .editor-header {
-  background: #252526;
-}
-
 [data-ui-theme="dark"] .editor-footer {
   background: #252526;
-}
-
-[data-ui-theme="dark"] .editor-title {
-  color: #f1f5f9;
-}
-
-[data-ui-theme="dark"] .editor-subtitle {
-  color: #9d9d9d;
-  background: #333333;
 }
 
 [data-ui-theme="dark"] .workspace-guard {

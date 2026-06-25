@@ -114,6 +114,24 @@ describe("Header", () => {
     expect(screen.getByText("复制到公众号")).toBeInTheDocument();
   });
 
+  it("does not offset header branding on macOS", () => {
+    vi.mocked(useWindowControls).mockReturnValue({
+      isElectron: true,
+      isWindows: false,
+      isMac: true,
+      platform: "darwin",
+      minimize: mockMinimize,
+      maximize: mockMaximize,
+      close: mockClose,
+    });
+
+    render(<Header />);
+
+    expect(document.querySelector(".app-header")).not.toHaveStyle({
+      paddingLeft: "80px",
+    });
+  });
+
   it("toggles theme interaction", () => {
     render(<Header />);
 

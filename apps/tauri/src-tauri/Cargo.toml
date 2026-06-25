@@ -1,6 +1,6 @@
 [package]
 name = "draftport-tauri"
-version = "1.0.1"
+version = "1.0.3"
 description = "DraftPort desktop shell powered by Tauri"
 authors = ["DraftPort Team"]
 edition = "2021"

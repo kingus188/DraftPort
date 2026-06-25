@@ -14,7 +14,6 @@ import { countWords, countLines } from "../../utils/wordCount";
 import { Toolbar } from "./Toolbar";
 import { SearchPanel } from "./SearchPanel";
 import { SaveIndicator } from "./SaveIndicator";
-import { useFileStore } from "../../store/fileStore";
 import "./MarkdownEditor.css";
 import { customKeymap } from "./editorShortcuts";
 import { paragraphSelectionStyle } from "./mouseSelectionStyle";
@@ -34,10 +33,6 @@ export function MarkdownEditor() {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const { markdown: content, setMarkdown } = useEditorStore();
-  const currentFile = useFileStore((state) => state.currentFile);
-  const fileIsDirty = useFileStore((state) => state.isDirty);
-  const fileIsSaving = useFileStore((state) => state.isSaving);
-  const editorIsEditing = useEditorStore((state) => state.isEditing);
   const uiTheme = useUITheme((state) => state.theme);
   const isSyncingRef = useRef(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -159,19 +154,6 @@ export function MarkdownEditor() {
 
   const wordCount = countWords(content);
   const lineCount = countLines(content);
-  const documentTitle =
-    currentFile?.title ||
-    currentFile?.name.replace(/\.md$/, "") ||
-    "未命名文档";
-  const isFileMode = Boolean(currentFile);
-  const isDirty = isFileMode ? fileIsDirty : editorIsEditing;
-  const saveStatus = fileIsSaving ? "saving" : isDirty ? "dirty" : "saved";
-  const saveStatusLabel =
-    saveStatus === "saving"
-      ? "保存中"
-      : saveStatus === "dirty"
-        ? "有未保存更改"
-        : "已同步";
 
   const handleInsert = (
     prefix: string,
@@ -206,24 +188,6 @@ export function MarkdownEditor() {
 
   return (
     <div className="markdown-editor">
-      <div className="editor-header">
-        <div className="editor-document-info">
-          <span
-            className={`editor-status-dot ${saveStatus}`}
-            aria-hidden="true"
-          />
-          <div className="editor-title-stack">
-            <span className="editor-title">{documentTitle}</span>
-            <span className="editor-subtitle">
-              Markdown 编辑器 · {saveStatusLabel}
-            </span>
-          </div>
-        </div>
-        <div className="editor-header-stats" aria-label={`字数 ${wordCount}`}>
-          <span>W</span>
-          <strong>{wordCount}</strong>
-        </div>
-      </div>
       <Toolbar onInsert={handleInsert} />
       {showSearch && viewRef.current && (
         <SearchPanel

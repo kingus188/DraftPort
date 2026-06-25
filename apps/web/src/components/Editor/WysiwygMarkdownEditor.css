@@ -1,0 +1,93 @@
+.wysiwyg-markdown-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--bg-primary);
+}
+
+.wysiwyg-markdown-editor__surface {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.wysiwyg-markdown-editor [data-milkdown-root] {
+  min-height: 100%;
+}
+
+.wysiwyg-markdown-editor .milkdown {
+  min-height: 100%;
+}
+
+.wysiwyg-markdown-editor .ProseMirror {
+  box-sizing: border-box;
+  min-height: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 44px 40px 80px;
+  outline: none;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.78;
+}
+
+.wysiwyg-markdown-editor .ProseMirror h1,
+.wysiwyg-markdown-editor .ProseMirror h2,
+.wysiwyg-markdown-editor .ProseMirror h3 {
+  line-height: 1.35;
+  letter-spacing: 0;
+  color: var(--text-primary);
+}
+
+.wysiwyg-markdown-editor .ProseMirror h1 {
+  margin: 0 0 28px;
+  font-size: 32px;
+}
+
+.wysiwyg-markdown-editor .ProseMirror h2 {
+  margin: 32px 0 16px;
+  font-size: 24px;
+}
+
+.wysiwyg-markdown-editor .ProseMirror h3 {
+  margin: 28px 0 12px;
+  font-size: 19px;
+}
+
+.wysiwyg-markdown-editor .ProseMirror p {
+  margin: 0 0 16px;
+}
+
+.wysiwyg-markdown-editor .ProseMirror blockquote {
+  margin: 18px 0;
+  padding-left: 18px;
+  border-left: 3px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.wysiwyg-markdown-editor .ProseMirror pre {
+  overflow-x: auto;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--bg-hover);
+}
+
+.wysiwyg-markdown-editor .ProseMirror code {
+  font-family: var(--font-mono);
+}
+
+[data-ui-theme="dark"] .wysiwyg-markdown-editor {
+  background: #1e1e1e;
+}
+
+[data-ui-theme="dark"] .wysiwyg-markdown-editor .ProseMirror {
+  color: #d4d4d4;
+}
+
+[data-ui-theme="dark"] .wysiwyg-markdown-editor .ProseMirror h1,
+[data-ui-theme="dark"] .wysiwyg-markdown-editor .ProseMirror h2,
+[data-ui-theme="dark"] .wysiwyg-markdown-editor .ProseMirror h3 {
+  color: #f1f5f9;
+}

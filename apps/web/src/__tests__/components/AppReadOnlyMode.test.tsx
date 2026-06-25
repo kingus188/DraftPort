@@ -16,6 +16,11 @@ vi.mock("../../components/Editor/MarkdownEditor", () => ({
   MarkdownEditor: () => <div data-testid="markdown-editor" />,
 }));
 
+vi.mock("../../components/Editor/WysiwygMarkdownEditor", () => ({
+  canUseWysiwygMarkdown: () => true,
+  WysiwygMarkdownEditor: () => <div data-testid="wysiwyg-markdown-editor" />,
+}));
+
 vi.mock("../../components/Preview/MarkdownPreview", () => ({
   MarkdownPreview: ({
     layoutMode,
@@ -79,17 +84,15 @@ describe("App read-only workspace mode", () => {
     });
   });
 
-  it("keeps the editor visible in the balanced desktop layout", () => {
+  it("uses WYSIWYG editing without a permanent preview in the balanced desktop layout", () => {
     render(<App />);
 
-    expect(screen.getByTestId("markdown-editor")).toBeInTheDocument();
-    expect(screen.getByTestId("markdown-preview")).toHaveAttribute(
-      "data-layout-mode",
-      "balanced",
-    );
+    expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
+    expect(screen.queryByTestId("markdown-editor")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("markdown-preview")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("separator", { name: "调整预览面板宽度" }),
-    ).toBeInTheDocument();
+      screen.queryByRole("separator", { name: "调整预览面板宽度" }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders only the markdown preview when read-only layout is restored", () => {
