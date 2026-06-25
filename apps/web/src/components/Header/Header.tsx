@@ -5,8 +5,14 @@ import "./Header.css";
 const ThemePanel = lazy(() =>
   import("../Theme/ThemePanel").then((m) => ({ default: m.ThemePanel })),
 );
+const VersionTimelinePanel = lazy(() =>
+  import("../VersionTimeline/VersionTimelinePanel").then((m) => ({
+    default: m.VersionTimelinePanel,
+  })),
+);
 import {
   Palette,
+  History,
   Send,
   Code,
   BookOpenText,
@@ -75,6 +81,7 @@ export function Header() {
   const { copyToWechat, copyToZhihu, copyToJuejin, copyAsHtml } =
     useEditorStore();
   const [showThemePanel, setShowThemePanel] = useState(false);
+  const [showVersionPanel, setShowVersionPanel] = useState(false);
   const uiTheme = useUITheme((state) => state.theme);
   const setTheme = useUITheme((state) => state.setTheme);
   const logoSrc = resolveAppAssetPath(
@@ -105,6 +112,14 @@ export function Header() {
               ) : (
                 <Moon size={18} strokeWidth={2} />
               )}
+            </button>
+            <button
+              className="btn-secondary"
+              onClick={() => setShowVersionPanel(true)}
+              aria-label="版本时间线"
+            >
+              <History size={18} strokeWidth={2} />
+              <span>版本</span>
             </button>
             <button
               className="btn-secondary"
@@ -149,6 +164,13 @@ export function Header() {
         <ThemePanel
           open={showThemePanel}
           onClose={() => setShowThemePanel(false)}
+        />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <VersionTimelinePanel
+          open={showVersionPanel}
+          onClose={() => setShowVersionPanel(false)}
         />
       </Suspense>
     </>

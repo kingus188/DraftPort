@@ -31,6 +31,6 @@ export interface DocumentVersion extends VersionContent {
 export interface VersionRepository {
   list(docKey: string): Promise<DocumentVersion[]>;
   append(version: DocumentVersion): Promise<void>;
-  remove(id: string): Promise<void>;
+  remove(docKey: string, id: string): Promise<void>;
   prune(docKey: string, keepAuto: number): Promise<void>;
 }
