@@ -35,12 +35,12 @@ const getRenderedPlainText = (container: HTMLElement): string => {
   return container.textContent || "";
 };
 
-/** Writes HTML through the Electron bridge when the desktop shell exposes it. */
-const copyViaElectronClipboard = async (
+/** Writes HTML through the Desktop bridge when the desktop shell exposes it. */
+const copyViaDesktopClipboard = async (
   container: HTMLElement,
 ): Promise<{ success: boolean; error?: string } | null> => {
-  const writeHTML = window.electron?.clipboard?.writeHTML;
-  if (!window.electron?.isElectron || !writeHTML) return null;
+  const writeHTML = window.desktop?.clipboard?.writeHTML;
+  if (!window.desktop?.isDesktop || !writeHTML) return null;
 
   return writeHTML({
     html: container.innerHTML,
@@ -98,12 +98,12 @@ export async function copyRichHtmlToClipboard(
     let copied = false;
 
     try {
-      const electronResult = await copyViaElectronClipboard(container);
-      if (electronResult) {
-        copied = electronResult.success;
+      const desktopResult = await copyViaDesktopClipboard(container);
+      if (desktopResult) {
+        copied = desktopResult.success;
       }
     } catch (error) {
-      console.error("Electron 剪贴板写入失败，降级为浏览器复制链路", error);
+      console.error("Desktop 剪贴板写入失败，降级为浏览器复制链路", error);
     }
 
     if (!copied) {

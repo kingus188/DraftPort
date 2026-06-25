@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import toast from "react-hot-toast";
-import type { StorageAdapter } from "../storage/StorageAdapter";
 import type { FileItem } from "../store/fileTypes";
 import { useFileStore } from "../store/fileStore";
 import {
@@ -8,14 +7,12 @@ import {
   joinPath,
   LAST_FILE_KEY,
   replacePathPrefix,
-  splitPath,
-  type ElectronAPI,
+  type DesktopAPI,
 } from "./useFileSystemHelpers";
 
 interface UseFileSystemFolderActionsParams {
-  electron: ElectronAPI | null;
-  adapter: StorageAdapter | null;
-  refreshFiles: () => Promise<void>;
+  desktop: DesktopAPI | null;
+  refreshFiles: () => Promise<unknown>;
   currentFile: FileItem | null;
   setCurrentFile: (file: FileItem | null) => void;
   setMarkdown: (value: string) => void;
@@ -24,8 +21,7 @@ interface UseFileSystemFolderActionsParams {
 }
 
 export function useFileSystemFolderActions({
-  electron,
-  adapter,
+  desktop,
   refreshFiles,
   currentFile,
   setCurrentFile,
@@ -49,75 +45,40 @@ export function useFileSystemFolderActions({
 
   const createFolder = useCallback(
     async (folderName: string, parentFolder?: string) => {
+      if (!desktop) return null;
       const fullPath = joinPath(parentFolder, folderName);
-
-      if (electron) {
-        const res = await electron.fs.createFolder(fullPath);
-        if (res.success) {
-          toast.success("文件夹已创建");
-          await refreshFiles();
-          return res.path;
-        }
-        toast.error(res.error || "创建失败");
-        return null;
+      const res = await desktop.fs.createFolder(fullPath);
+      if (res.success) {
+        toast.success("文件夹已创建");
+        await refreshFiles();
+        return res.path;
       }
-
-      if (adapter?.createFolder) {
-        const res = await adapter.createFolder(fullPath);
-        if (res.success) {
-          toast.success("文件夹已创建");
-          await refreshFiles();
-          return res.path;
-        }
-        toast.error(res.error || "创建失败");
-        return null;
-      }
-
-      toast.error("当前存储模式不支持文件夹操作");
+      toast.error(res.error || "创建失败");
       return null;
     },
-    [electron, adapter, refreshFiles],
+    [desktop, refreshFiles],
   );
 
   const moveToFolder = useCallback(
     async (file: FileItem, targetFolder: string) => {
-      if (electron) {
-        const res = await electron.fs.moveFile({
-          filePath: file.path,
-          targetFolder,
-        });
-        if (res.success) {
-          toast.success("文件已移动");
-          await refreshFiles();
-          if (currentFile && currentFile.path === file.path && res.newPath) {
-            setCurrentFile({ ...currentFile, path: res.newPath });
-            localStorage.setItem(LAST_FILE_KEY, res.newPath);
-          }
-          return true;
+      if (!desktop) return false;
+      const res = await desktop.fs.moveFile({
+        filePath: file.path,
+        targetFolder,
+      });
+      if (res.success) {
+        toast.success("文件已移动");
+        await refreshFiles();
+        if (currentFile && currentFile.path === file.path && res.newPath) {
+          setCurrentFile({ ...currentFile, path: res.newPath });
+          localStorage.setItem(LAST_FILE_KEY, res.newPath);
         }
-        toast.error(res.error || "移动失败");
-        return false;
+        return true;
       }
-
-      if (adapter?.moveFile) {
-        const res = await adapter.moveFile(file.path, targetFolder);
-        if (res.success) {
-          toast.success("文件已移动");
-          await refreshFiles();
-          if (currentFile && currentFile.path === file.path && res.newPath) {
-            setCurrentFile({ ...currentFile, path: res.newPath });
-            localStorage.setItem(LAST_FILE_KEY, res.newPath);
-          }
-          return true;
-        }
-        toast.error(res.error || "移动失败");
-        return false;
-      }
-
-      toast.error("当前存储模式不支持文件夹操作");
+      toast.error(res.error || "移动失败");
       return false;
     },
-    [electron, adapter, refreshFiles, currentFile, setCurrentFile],
+    [desktop, refreshFiles, currentFile, setCurrentFile],
   );
 
   const renameFolder = useCallback(
@@ -128,123 +89,66 @@ export function useFileSystemFolderActions({
         toast.error("文件夹名称不能为空");
         return { success: false as const };
       }
+      if (!desktop) return { success: false as const };
 
-      const { dir, sep } = splitPath(folder.path);
-      const targetPath = dir ? `${dir}${sep}${safeBaseName}` : safeBaseName;
-
-      if (electron) {
-        const res = await electron.fs.renameFolder({
-          folderPath: folder.path,
-          newName: safeBaseName,
-        });
-        if (res.success && res.newPath) {
-          toast.success("文件夹已重命名");
-          await refreshFiles();
-          updateCurrentFilePathForFolder(folder.path, res.newPath);
-          return { success: true as const, newPath: res.newPath };
-        }
-        toast.error(res.error || "重命名失败");
-        return { success: false as const };
+      const res = await desktop.fs.renameFolder({
+        folderPath: folder.path,
+        newName: safeBaseName,
+      });
+      if (res.success && res.newPath) {
+        toast.success("文件夹已重命名");
+        await refreshFiles();
+        updateCurrentFilePathForFolder(folder.path, res.newPath);
+        return { success: true as const, newPath: res.newPath };
       }
-
-      if (adapter?.renameFolder) {
-        const res = await adapter.renameFolder(folder.path, targetPath);
-        if (res.success && res.newPath) {
-          toast.success("文件夹已重命名");
-          await refreshFiles();
-          updateCurrentFilePathForFolder(folder.path, res.newPath);
-          return { success: true as const, newPath: res.newPath };
-        }
-        toast.error(res.error || "重命名失败");
-        return { success: false as const };
-      }
-
-      toast.error("当前存储模式不支持文件夹操作");
+      toast.error(res.error || "重命名失败");
       return { success: false as const };
     },
-    [electron, adapter, refreshFiles, updateCurrentFilePathForFolder],
+    [desktop, refreshFiles, updateCurrentFilePathForFolder],
   );
 
   const moveFolder = useCallback(
     async (folder: { path: string }, targetFolder: string) => {
-      if (electron) {
-        const res = await electron.fs.moveFolder({
-          folderPath: folder.path,
-          targetFolder,
-        });
-        if (res.success && res.newPath) {
-          toast.success("文件夹已移动");
-          await refreshFiles();
-          updateCurrentFilePathForFolder(folder.path, res.newPath);
-          return { success: true as const, newPath: res.newPath };
-        }
-        toast.error(res.error || "移动失败");
-        return { success: false as const };
+      if (!desktop) return { success: false as const };
+      const res = await desktop.fs.moveFolder({
+        folderPath: folder.path,
+        targetFolder,
+      });
+      if (res.success && res.newPath) {
+        toast.success("文件夹已移动");
+        await refreshFiles();
+        updateCurrentFilePathForFolder(folder.path, res.newPath);
+        return { success: true as const, newPath: res.newPath };
       }
-
-      if (adapter?.moveFolder) {
-        const res = await adapter.moveFolder(folder.path, targetFolder);
-        if (res.success && res.newPath) {
-          toast.success("文件夹已移动");
-          await refreshFiles();
-          updateCurrentFilePathForFolder(folder.path, res.newPath);
-          return { success: true as const, newPath: res.newPath };
-        }
-        toast.error(res.error || "移动失败");
-        return { success: false as const };
-      }
-
-      toast.error("当前存储模式不支持文件夹操作");
+      toast.error(res.error || "移动失败");
       return { success: false as const };
     },
-    [electron, adapter, refreshFiles, updateCurrentFilePathForFolder],
+    [desktop, refreshFiles, updateCurrentFilePathForFolder],
   );
 
   const deleteFolder = useCallback(
     async (folderPath: string, options?: { recursive?: boolean }) => {
-      if (electron) {
-        const res = await electron.fs.deleteFolder({
-          folderPath,
-          recursive: options?.recursive,
-        });
-        if (res.success) {
-          toast.success("文件夹已删除");
-          await refreshFiles();
-          if (currentFile && isPathWithinFolder(currentFile.path, folderPath)) {
-            setCurrentFile(null);
-            setMarkdown("");
-            setIsDirty(false);
-            setLastSavedContent("");
-          }
-          return true;
+      if (!desktop) return false;
+      const res = await desktop.fs.deleteFolder({
+        folderPath,
+        recursive: options?.recursive,
+      });
+      if (res.success) {
+        toast.success("文件夹已删除");
+        await refreshFiles();
+        if (currentFile && isPathWithinFolder(currentFile.path, folderPath)) {
+          setCurrentFile(null);
+          setMarkdown("");
+          setIsDirty(false);
+          setLastSavedContent("");
         }
-        toast.error(res.error || "删除失败");
-        return false;
+        return true;
       }
-
-      if (adapter?.deleteFolder) {
-        const res = await adapter.deleteFolder(folderPath, options);
-        if (res.success) {
-          toast.success("文件夹已删除");
-          await refreshFiles();
-          if (currentFile && isPathWithinFolder(currentFile.path, folderPath)) {
-            setCurrentFile(null);
-            setMarkdown("");
-            setIsDirty(false);
-            setLastSavedContent("");
-          }
-          return true;
-        }
-        toast.error(res.error || "删除失败");
-        return false;
-      }
-
-      toast.error("当前存储模式不支持文件夹操作");
+      toast.error(res.error || "删除失败");
       return false;
     },
     [
-      electron,
-      adapter,
+      desktop,
       refreshFiles,
       currentFile,
       setMarkdown,
@@ -256,19 +160,12 @@ export function useFileSystemFolderActions({
 
   const inspectFolder = useCallback(
     async (folderPath: string) => {
-      if (electron) {
-        const res = await electron.fs.inspectFolder(folderPath);
-        if (res.success && res.entries) return res.entries;
-        return [];
-      }
-      if (adapter?.inspectFolder) {
-        const res = await adapter.inspectFolder(folderPath);
-        if (res.success && res.entries) return res.entries;
-        return [];
-      }
+      if (!desktop) return [];
+      const res = await desktop.fs.inspectFolder(folderPath);
+      if (res.success && res.entries) return res.entries;
       return [];
     },
-    [electron, adapter],
+    [desktop],
   );
 
   return {

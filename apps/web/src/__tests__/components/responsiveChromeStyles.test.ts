@@ -19,29 +19,27 @@ function getRuleBody(css: string, selector: string): string {
 }
 
 describe("responsive shell chrome styles", () => {
-  it("keeps header branding on one line and lets the subtitle truncate", () => {
+  it("keeps the header as a compact action toolbar", () => {
     const css = readWorkspaceStyle("src/components/Header/Header.css");
 
-    expect(getRuleBody(css, ".logo-info")).toContain("flex-wrap: nowrap");
-    expect(getRuleBody(css, ".logo-subtitle")).toContain(
-      "text-overflow: ellipsis",
+    expect(getRuleBody(css, ".app-header")).toContain("height: 56px");
+    expect(getRuleBody(css, ".header-actions")).toContain(
+      "justify-content: space-between",
+    );
+    expect(getRuleBody(css, ".header-brand")).toContain("display: flex");
+    expect(getRuleBody(css, ".header-right")).toContain(
+      "justify-content: flex-end",
     );
   });
 
-  it("keeps preview header actions separate from truncating subtitle text", () => {
+  it("keeps the static preview content full width without preview chrome", () => {
     const css = readWorkspaceStyle(
       "src/components/Preview/MarkdownPreview.css",
     );
 
-    expect(getRuleBody(css, ".preview-title-stack")).toContain(
-      "overflow: hidden",
-    );
-    expect(getRuleBody(css, ".preview-subtitle")).toContain(
-      "text-overflow: ellipsis",
-    );
-    expect(getRuleBody(css, ".preview-header-actions")).toContain(
-      "flex-shrink: 0",
-    );
+    expect(getRuleBody(css, ".preview-content")).toContain("width: 100%");
+    expect(css).not.toContain(".preview-header");
+    expect(css).not.toContain(".preview-device-actions");
   });
 
   it("keeps collapsed history width respected on narrower desktop windows", () => {

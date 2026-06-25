@@ -1,7 +1,7 @@
 import type { SyntheticEvent } from "react";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useFileSystem } from "../../hooks/useFileSystem";
-import { getElectron } from "../../hooks/useFileSystemHelpers";
+import { getDesktopBridge } from "../../hooks/useFileSystemHelpers";
 import toast from "react-hot-toast";
 import type { FileItem, FolderItem } from "../../store/fileTypes";
 import { type SortMode, getSortMode, saveSortMode } from "./sortUtils";
@@ -28,7 +28,7 @@ export { ROOT_DROP_TARGET, FILE_DRAG_TYPE, FOLDER_DRAG_TYPE, getBaseName };
  * Builds the interaction state and file-system actions needed by the file tree sidebar.
  */
 export function useSidebarState() {
-  const electron = getElectron();
+  const desktop = getDesktopBridge();
   const {
     files,
     currentFile,
@@ -92,12 +92,12 @@ export function useSidebarState() {
   const allFolders = useMemo(() => collectAllFolders(files), [files]);
 
   const refreshRecentItems = useCallback(async () => {
-    if (!electron?.recentItems) {
+    if (!desktop?.recentItems) {
       setRecentItems(new Map());
       return;
     }
     try {
-      const result = await electron.recentItems.list();
+      const result = await desktop.recentItems.list();
       if (!result.success || !result.items) {
         setRecentItems(new Map());
         return;
@@ -109,7 +109,7 @@ export function useSidebarState() {
       console.error("[RecentItems] load failed", error);
       setRecentItems(new Map());
     }
-  }, [electron]);
+  }, [desktop]);
 
   useEffect(() => {
     void refreshRecentItems();
@@ -139,10 +139,10 @@ export function useSidebarState() {
 
   const recordFolderOpen = useCallback(
     async (folderPath: string | null) => {
-      if (!electron?.recentItems || !workspacePath) return;
+      if (!desktop?.recentItems || !workspacePath) return;
       const targetPath = folderPath ?? workspacePath;
       try {
-        const result = await electron.recentItems.recordOpen({
+        const result = await desktop.recentItems.recordOpen({
           itemPath: targetPath,
           itemType: "folder",
         });
@@ -153,7 +153,7 @@ export function useSidebarState() {
         console.error("[RecentItems] record folder failed", error);
       }
     },
-    [electron, refreshRecentItems, workspacePath],
+    [desktop, refreshRecentItems, workspacePath],
   );
 
   const filteredItems = useMemo(

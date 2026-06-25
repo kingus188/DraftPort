@@ -11,39 +11,10 @@
   border-top: var(--border-width) solid var(--glass-border);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 0 16px;
   z-index: 200;
   padding-bottom: env(safe-area-inset-bottom, 0);
-}
-
-.mobile-toolbar-tabs {
-  display: flex;
-  gap: 4px;
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-pill);
-  padding: 4px;
-}
-
-.mobile-tab {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: none;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.mobile-tab.active {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-sm);
 }
 
 .mobile-toolbar-actions {

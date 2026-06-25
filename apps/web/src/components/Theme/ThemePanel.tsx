@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
-import { useEditorStore } from "../../store/editorStore";
 import { useThemeStore } from "../../store/themeStore";
-import { useHistoryStore } from "../../store/historyStore";
-import { platformActions } from "../../lib/platformAdapter";
 import { type DesignerVariables, defaultVariables } from "./ThemeDesigner";
 import { generateCSS } from "./ThemeDesigner/generateCSS";
 import { ThemePanelView } from "./ThemePanelView";
@@ -46,9 +43,6 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
   const exportThemeCSS = useThemeStore((state) => state.exportThemeCSS);
   const importTheme = useThemeStore((state) => state.importTheme);
   const customThemesFromStore = useThemeStore((state) => state.customThemes);
-  const persistActiveSnapshot = useHistoryStore(
-    (state) => state.persistActiveSnapshot,
-  );
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const exportMenuRef = useRef<HTMLDivElement | null>(null);
@@ -233,15 +227,6 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
     }
 
     selectTheme(selectedThemeId);
-    if (platformActions.shouldPersistHistory()) {
-      const state = useEditorStore.getState();
-      await persistActiveSnapshot({
-        markdown: state.markdown,
-        theme: selectedThemeId,
-        customCSS: "",
-        themeName: selectedTheme?.name || "默认主题",
-      });
-    }
     onClose();
   };
 
@@ -256,16 +241,6 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
         editorMode === "visual" ? designerVariables : undefined,
       );
       selectTheme(newTheme.id);
-
-      if (platformActions.shouldPersistHistory()) {
-        const state = useEditorStore.getState();
-        await persistActiveSnapshot({
-          markdown: state.markdown,
-          theme: newTheme.id,
-          customCSS: "",
-          themeName: newTheme.name,
-        });
-      }
 
       setSelectedThemeId(newTheme.id);
       setCssInput(cssToSave);
@@ -298,19 +273,6 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
         updates.designerVariables = designerVariables;
       }
       updateTheme(selectedThemeId, updates);
-
-      if (platformActions.shouldPersistHistory()) {
-        const editorState = useEditorStore.getState();
-        const themeState = useThemeStore.getState();
-        if (themeState.themeId === selectedThemeId) {
-          await persistActiveSnapshot({
-            markdown: editorState.markdown,
-            theme: selectedThemeId,
-            customCSS: "",
-            themeName: nameInput.trim() || "未命名主题",
-          });
-        }
-      }
 
       setOriginalName(nameInput.trim() || "未命名主题");
       setOriginalCss(cssInput);

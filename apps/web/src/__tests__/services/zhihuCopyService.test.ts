@@ -7,7 +7,7 @@ const mocked = vi.hoisted(() => ({
   parserRender: vi.fn(),
   createMarkdownParserMock: vi.fn(),
   clipboardWrite: vi.fn(),
-  electronClipboardWrite: vi.fn(),
+  desktopClipboardWrite: vi.fn(),
 }));
 
 vi.mock("react-hot-toast", () => ({
@@ -94,7 +94,7 @@ describe("copyToZhihu", () => {
     };
     doc.execCommand = vi.fn(() => true);
 
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "desktop", {
       configurable: true,
       value: undefined,
     });
@@ -124,13 +124,13 @@ describe("copyToZhihu", () => {
     );
   });
 
-  it("prefers electron HTML clipboard bridge in electron runtime", async () => {
-    Object.defineProperty(window, "electron", {
+  it("prefers desktop HTML clipboard bridge in desktop runtime", async () => {
+    Object.defineProperty(window, "desktop", {
       configurable: true,
       value: {
-        isElectron: true,
+        isDesktop: true,
         clipboard: {
-          writeHTML: mocked.electronClipboardWrite.mockResolvedValue({
+          writeHTML: mocked.desktopClipboardWrite.mockResolvedValue({
             success: true,
           }),
         },
@@ -140,7 +140,7 @@ describe("copyToZhihu", () => {
 
     await copyToZhihu("# 标题");
 
-    expect(mocked.electronClipboardWrite).toHaveBeenCalledWith({
+    expect(mocked.desktopClipboardWrite).toHaveBeenCalledWith({
       html: "<h1>标题</h1><p>段落</p>",
       text: "标题段落",
     });

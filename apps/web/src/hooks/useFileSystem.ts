@@ -2,7 +2,6 @@ import { useCallback, useRef } from "react";
 import { useFileStore } from "../store/fileStore";
 import { useEditorStore } from "../store/editorStore";
 import { useThemeStore } from "../store/themeStore";
-import { useStorageContext } from "../storage/StorageContext";
 import type { FileItem } from "../store/fileTypes";
 import toast from "react-hot-toast";
 import {
@@ -13,10 +12,10 @@ import {
 } from "../utils/markdownFileMeta";
 import { resolveNewArticleThemeSnapshot } from "../utils/newArticleTheme";
 import {
-  convertAdapterFilesToTreeItems,
   convertToTreeItems,
+  findDefaultMarkdownFile,
   flattenFiles,
-  getElectron,
+  getDesktopBridge,
   joinPath,
   LAST_FILE_KEY,
   WORKSPACE_KEY,
@@ -29,16 +28,12 @@ interface UseFileSystemOptions {
 }
 
 /**
- * Coordinates the active storage backend with editor state and file-tree mutations.
+ * Coordinates the Tauri desktop file backend with editor state and file-tree
+ * mutations.
  */
 export function useFileSystem(options: UseFileSystemOptions = {}) {
   const { enableEffects = false } = options;
-  const {
-    adapter,
-    ready: storageReady,
-    type: storageType,
-  } = useStorageContext();
-  const electron = getElectron();
+  const desktop = getDesktopBridge();
   const {
     workspacePath,
     files,
@@ -61,76 +56,28 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
   const { setMarkdown, markdown } = useEditorStore();
   const { themeId: theme, themeName } = useThemeStore();
   const isCreating = useRef<boolean>(false);
+
   const refreshFiles = useCallback(
     async (dir?: string) => {
-      if (electron) {
-        const target = dir || workspacePath;
-        if (!target) return;
+      if (!desktop) return [];
+      const target = dir || workspacePath;
+      if (!target) return [];
 
-        const res = await electron.fs.listFiles(target);
-        if (res.success && res.files) {
-          setFiles(convertToTreeItems(res.files));
-        }
-        return;
+      const res = await desktop.fs.listFiles(target);
+      if (res.success && res.files) {
+        const nextFiles = convertToTreeItems(res.files);
+        setFiles(nextFiles);
+        return nextFiles;
       }
-
-      if (adapter && storageReady) {
-        try {
-          const rawFiles = await adapter.listFiles();
-          setFiles(convertAdapterFilesToTreeItems(rawFiles));
-        } catch (error) {
-          console.error("加载文件列表失败:", error);
-          toast.error("无法加载文件列表");
-        }
-      }
+      return [];
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [workspacePath, electron, adapter, storageReady],
+    [workspacePath, desktop],
   );
-
-  const loadWorkspace = useCallback(
-    async (path: string) => {
-      if (electron) {
-        setLoading(true);
-        try {
-          const res = await electron.fs.setWorkspace(path);
-          if (res.success) {
-            setWorkspacePath(path);
-            localStorage.setItem(WORKSPACE_KEY, path);
-            await refreshFiles(path);
-          } else {
-            setWorkspacePath(null);
-            localStorage.removeItem(WORKSPACE_KEY);
-          }
-        } catch (error) {
-          console.error(error);
-        } finally {
-          setLoading(false);
-        }
-        return;
-      }
-
-      setWorkspacePath(path);
-      await refreshFiles();
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [electron],
-  );
-
-  const selectWorkspace = useCallback(async () => {
-    if (electron) {
-      const res = await electron.fs.selectWorkspace();
-      if (res.success && res.path) {
-        await loadWorkspace(res.path);
-      }
-      return;
-    }
-
-    toast('请在右上角"存储模式"中切换文件夹', { icon: "ℹ️" });
-  }, [loadWorkspace, electron]);
 
   const openFile = useCallback(
     async (file: FileItem) => {
+      if (!desktop) return;
       setIsRestoring(true);
 
       const currentIsDirty = useFileStore.getState().isDirty;
@@ -148,54 +95,33 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
           title: activeFile.title || stripMarkdownExtension(activeFile.name),
         });
 
-        if (electron) {
-          try {
-            const res = await electron.fs.saveFile({
-              filePath: activeFile.path,
-              content: fullContent,
-            });
-            if (res.success) {
-              setIsDirty(false);
-              setLastSavedContent(fullContent);
-              setLastSavedAt(new Date());
-              await refreshFiles();
-            } else {
-              console.error("切换前保存失败:", res.error);
-            }
-          } catch (error) {
-            console.error("切换前保存失败:", error);
-          }
-        } else if (adapter && storageReady) {
-          try {
-            await adapter.writeFile(activeFile.path, fullContent);
+        try {
+          const res = await desktop.fs.saveFile({
+            filePath: activeFile.path,
+            content: fullContent,
+          });
+          if (res.success) {
             setIsDirty(false);
             setLastSavedContent(fullContent);
             setLastSavedAt(new Date());
-            await refreshFiles();
-          } catch (error) {
-            console.error("切换前保存失败:", error);
+            // 切换前保存只改内容、不改文件树结构，无需全量重列目录。
+          } else {
+            console.error("切换前保存失败:", res.error);
           }
+        } catch (error) {
+          console.error("切换前保存失败:", error);
         }
       }
 
       let content = "";
       let success = false;
 
-      if (electron) {
-        const res = electron.fs.openFile
-          ? await electron.fs.openFile(file.path)
-          : await electron.fs.readFile(file.path);
-        if (res.success && typeof res.content === "string") {
-          content = res.content;
-          success = true;
-        }
-      } else if (adapter && storageReady) {
-        try {
-          content = await adapter.readFile(file.path);
-          success = true;
-        } catch (error) {
-          console.error("读取文件错误:", error);
-        }
+      const res = desktop.fs.openFile
+        ? await desktop.fs.openFile(file.path)
+        : await desktop.fs.readFile(file.path);
+      if (res.success && typeof res.content === "string") {
+        content = res.content;
+        success = true;
       }
 
       if (success) {
@@ -221,12 +147,69 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       localStorage.setItem(LAST_FILE_KEY, file.path);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [setMarkdown, electron, adapter, storageReady, refreshFiles],
+    [setMarkdown, desktop],
   );
+
+  const loadWorkspace = useCallback(
+    async (path: string) => {
+      if (!desktop) return;
+      setLoading(true);
+      try {
+        const res = await desktop.fs.setWorkspace(path);
+        if (res.success) {
+          setWorkspacePath(path);
+          localStorage.setItem(WORKSPACE_KEY, path);
+          const nextFiles = await refreshFiles(path);
+          const hasActiveFile = Boolean(useFileStore.getState().currentFile);
+          if (!hasActiveFile) {
+            const target = findDefaultMarkdownFile(
+              nextFiles,
+              localStorage.getItem(LAST_FILE_KEY),
+            );
+            if (target) {
+              await openFile(target);
+            } else {
+              localStorage.removeItem(LAST_FILE_KEY);
+              setCurrentFile(null);
+              setMarkdown("");
+              setIsDirty(false);
+              setLastSavedContent("");
+            }
+          }
+        } else {
+          setWorkspacePath(null);
+          localStorage.removeItem(WORKSPACE_KEY);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      desktop,
+      openFile,
+      refreshFiles,
+      setCurrentFile,
+      setIsDirty,
+      setLastSavedContent,
+      setMarkdown,
+      setLoading,
+      setWorkspacePath,
+    ],
+  );
+
+  const selectWorkspace = useCallback(async () => {
+    if (!desktop) return;
+    const res = await desktop.fs.selectWorkspace();
+    if (res.success && res.path) {
+      await loadWorkspace(res.path);
+    }
+  }, [loadWorkspace, desktop]);
 
   const createFile = useCallback(
     async (folderPath?: string) => {
-      if (isCreating.current) return;
+      if (!desktop || isCreating.current) return;
       isCreating.current = true;
 
       const initialTitle = "新文章";
@@ -246,38 +229,19 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
         const filename = `未命名文章-${Date.now()}.md`;
         const targetPath = joinPath(folderPath, filename);
 
-        if (electron) {
-          if (!workspacePath) return;
-          const res = await electron.fs.createFile({
-            filename: targetPath,
-            content: initialContent,
-          });
-          if (res.success && res.filePath) {
-            await refreshFiles();
-            const newFile = {
-              name: res.filename!,
-              path: res.filePath!,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              size: 0,
-              title: initialTitle,
-              themeName: targetTheme.themeName,
-            };
-            await openFile(newFile);
-            toast.success("已创建新文章");
-          }
-          return;
-        }
-
-        if (adapter && storageReady) {
-          await adapter.writeFile(targetPath, initialContent);
+        if (!workspacePath) return;
+        const res = await desktop.fs.createFile({
+          filename: targetPath,
+          content: initialContent,
+        });
+        if (res.success && res.filePath) {
           await refreshFiles();
           const newFile = {
-            name: filename,
-            path: targetPath,
+            name: res.filename!,
+            path: res.filePath!,
             createdAt: new Date(),
             updatedAt: new Date(),
-            size: initialContent.length,
+            size: 0,
             title: initialTitle,
             themeName: targetTheme.themeName,
           };
@@ -290,12 +254,12 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
         isCreating.current = false;
       }
     },
-    [workspacePath, refreshFiles, openFile, electron, adapter, storageReady],
+    [workspacePath, refreshFiles, openFile, desktop],
   );
 
   const saveFile = useCallback(
     async (showToast = false) => {
-      if (!currentFile) return;
+      if (!desktop || !currentFile) return;
       setSaving(true);
 
       const { markdown: latestMarkdown } = useEditorStore.getState();
@@ -316,24 +280,12 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
         return;
       }
 
-      let success = false;
-      let errorMsg = "";
-
-      if (electron) {
-        const res = await electron.fs.saveFile({
-          filePath: currentFile.path,
-          content: fullContent,
-        });
-        if (res.success) success = true;
-        else errorMsg = res.error || "Unknown error";
-      } else if (adapter && storageReady) {
-        try {
-          await adapter.writeFile(currentFile.path, fullContent);
-          success = true;
-        } catch (error: unknown) {
-          errorMsg = error instanceof Error ? error.message : String(error);
-        }
-      }
+      const res = await desktop.fs.saveFile({
+        filePath: currentFile.path,
+        content: fullContent,
+      });
+      const success = res.success;
+      const errorMsg = res.success ? "" : res.error || "Unknown error";
 
       setSaving(false);
 
@@ -347,7 +299,7 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentFile, electron, adapter, storageReady],
+    [currentFile, desktop],
   );
 
   const updateFileTitle = useCallback(
@@ -357,26 +309,17 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
         toast.error("标题不能为空");
         return;
       }
-
-      let content = "";
-      if (electron) {
-        const readRes = await electron.fs.readFile(file.path);
-        if (!readRes.success || typeof readRes.content !== "string") {
-          toast.error(readRes.error || "读取文件失败");
-          return;
-        }
-        content = readRes.content;
-      } else if (adapter && storageReady) {
-        try {
-          content = await adapter.readFile(file.path);
-        } catch {
-          toast.error("读取文件失败");
-          return;
-        }
-      } else {
+      if (!desktop) {
         toast.error("当前模式不支持此操作");
         return;
       }
+
+      const readRes = await desktop.fs.readFile(file.path);
+      if (!readRes.success || typeof readRes.content !== "string") {
+        toast.error(readRes.error || "读取文件失败");
+        return;
+      }
+      const content = readRes.content;
 
       const parsed = parseMarkdownFileContent(content);
       const fullContent = applyMarkdownFileMeta(content, {
@@ -386,26 +329,12 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
         title: nextTitle,
       });
 
-      let success = false;
-      let errorMsg = "";
-      if (electron) {
-        const saveRes = await electron.fs.saveFile({
-          filePath: file.path,
-          content: fullContent,
-        });
-        success = saveRes.success;
-        errorMsg = saveRes.error || "";
-      } else if (adapter && storageReady) {
-        try {
-          await adapter.writeFile(file.path, fullContent);
-          success = true;
-        } catch (error: unknown) {
-          errorMsg = error instanceof Error ? error.message : String(error);
-        }
-      }
-
-      if (!success) {
-        toast.error(errorMsg || "更新标题失败");
+      const saveRes = await desktop.fs.saveFile({
+        filePath: file.path,
+        content: fullContent,
+      });
+      if (!saveRes.success) {
+        toast.error(saveRes.error || "更新标题失败");
         return;
       }
 
@@ -421,26 +350,14 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       await refreshFiles();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [refreshFiles, currentFile, electron, adapter, storageReady],
+    [refreshFiles, currentFile, desktop],
   );
 
   const deleteFile = useCallback(
     async (file: FileItem) => {
-      let success = false;
-
-      if (electron) {
-        const res = await electron.fs.deleteFile(file.path);
-        success = res.success;
-      } else if (adapter && storageReady) {
-        try {
-          await adapter.deleteFile(file.path);
-          success = true;
-        } catch (error) {
-          console.error(error);
-        }
-      }
-
-      if (success) {
+      if (!desktop) return;
+      const res = await desktop.fs.deleteFile(file.path);
+      if (res.success) {
         toast.success("已删除");
         await refreshFiles();
         if (currentFile && currentFile.path === file.path) {
@@ -454,12 +371,11 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [refreshFiles, currentFile, setMarkdown, electron, adapter, storageReady],
+    [refreshFiles, currentFile, setMarkdown, desktop],
   );
 
   const folderActions = useFileSystemFolderActions({
-    electron,
-    adapter,
+    desktop,
     refreshFiles,
     currentFile,
     setCurrentFile,
@@ -470,10 +386,7 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
 
   useFileSystemEffects({
     enabled: enableEffects,
-    electron,
-    adapter,
-    storageReady,
-    storageType,
+    desktop,
     currentFile,
     markdown,
     theme,

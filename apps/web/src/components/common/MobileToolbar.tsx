@@ -1,6 +1,4 @@
 import {
-  Pencil,
-  Eye,
   Copy,
   MoreHorizontal,
   Palette,
@@ -10,25 +8,25 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
-import type { MobileViewType } from "../../hooks/useMobileView";
 import "./MobileToolbar.css";
 
 interface MobileToolbarProps {
-  activeView: MobileViewType;
-  onViewChange: (view: MobileViewType) => void;
+  /** Copies the current Markdown document as WeChat-ready rich content. */
   onCopyToWechat: () => void;
+  /** Copies the current Markdown document as Zhihu-compatible rich content. */
   onCopyToZhihu: () => void;
+  /** Copies the current Markdown document as Juejin-compatible rich content. */
   onCopyToJuejin: () => void;
+  /** Copies the current Markdown document as generic HTML. */
   onCopyAsHtml: () => void;
+  /** Opens the theme management surface from the mobile overflow menu. */
   onOpenTheme: () => void;
 }
 
 /**
- * 移动端底部工具栏
+ * Renders mobile publishing actions without editor/preview view switching.
  */
 export function MobileToolbar({
-  activeView,
-  onViewChange,
   onCopyToWechat,
   onCopyToZhihu,
   onCopyToJuejin,
@@ -103,32 +101,17 @@ export function MobileToolbar({
 
       {/* 底部工具栏 */}
       <div className="mobile-toolbar">
-        <div className="mobile-toolbar-tabs">
-          <button
-            className={`mobile-tab ${activeView === "editor" ? "active" : ""}`}
-            onClick={() => onViewChange("editor")}
-          >
-            <Pencil size={18} />
-            <span>编辑</span>
-          </button>
-          <button
-            className={`mobile-tab ${activeView === "preview" ? "active" : ""}`}
-            onClick={() => onViewChange("preview")}
-          >
-            <Eye size={18} />
-            <span>预览</span>
-          </button>
-        </div>
-
         <div className="mobile-toolbar-actions">
           <button
             className="mobile-action-btn primary"
+            aria-label="复制到公众号"
             onClick={onCopyToWechat}
           >
             <Copy size={18} />
           </button>
           <button
             className="mobile-action-btn"
+            aria-label="更多功能"
             onClick={() => setShowMenu(true)}
           >
             <MoreHorizontal size={18} />

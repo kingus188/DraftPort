@@ -15,11 +15,12 @@ vi.mock("../../components/Theme/ThemePanel", () => ({
   ThemePanel: ({ open }: { open: boolean }) =>
     open ? <div data-testid="theme-panel">Theme Panel</div> : null,
 }));
-vi.mock("../../components/StorageModeSelector/StorageModeSelector", () => ({
-  StorageModeSelector: () => (
-    <div data-testid="storage-selector">Storage Selector</div>
-  ),
-}));
+
+type HeaderThemeState = {
+  theme: "default" | "dark";
+  setTheme: (theme: "default" | "dark") => void;
+};
+
 describe("Header", () => {
   // Default mocks
   const mockCopyToWechat = vi.fn();
@@ -78,15 +79,16 @@ describe("Header", () => {
       copyAsHtml: mockCopyAsHtml,
     });
 
-    vi.mocked(useUITheme).mockImplementation(
-      (selector: (state: any) => any) => {
-        const state = { theme: "light", setTheme: mockSetTheme };
-        return selector(state);
-      },
-    );
+    vi.mocked(useUITheme).mockImplementation((selector) => {
+      const state: HeaderThemeState = {
+        theme: "default",
+        setTheme: mockSetTheme,
+      };
+      return selector(state);
+    });
 
     vi.mocked(useWindowControls).mockReturnValue({
-      isElectron: false,
+      isDesktop: false,
       isWindows: false,
       isMac: true,
       platform: "web",
@@ -100,13 +102,14 @@ describe("Header", () => {
     vi.unstubAllGlobals();
   });
 
-  it("renders logo and core elements", () => {
+  it("renders a compact publishing toolbar with minimal brand identity", () => {
     render(<Header />);
 
-    const logo = screen.getByAltText("DraftPort Logo") as HTMLImageElement;
-    expect(logo.getAttribute("src")).toBe("/favicon-dark.svg");
+    expect(screen.getByAltText("DraftPort Logo")).toBeInTheDocument();
     expect(screen.getByText("DraftPort")).toBeInTheDocument();
-    expect(screen.getByText("公众号 Markdown 排版编辑器")).toBeInTheDocument();
+    expect(
+      screen.queryByText("公众号 Markdown 排版编辑器"),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "主题" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "HTML" })).toBeInTheDocument();
     expect(screen.getByText("复制到知乎")).toBeInTheDocument();
@@ -114,9 +117,9 @@ describe("Header", () => {
     expect(screen.getByText("复制到公众号")).toBeInTheDocument();
   });
 
-  it("does not offset header branding on macOS", () => {
+  it("keeps the minimal brand visible on macOS", () => {
     vi.mocked(useWindowControls).mockReturnValue({
-      isElectron: true,
+      isDesktop: true,
       isWindows: false,
       isMac: true,
       platform: "darwin",
@@ -127,6 +130,7 @@ describe("Header", () => {
 
     render(<Header />);
 
+    expect(screen.getByText("DraftPort")).toBeInTheDocument();
     expect(document.querySelector(".app-header")).not.toHaveStyle({
       paddingLeft: "80px",
     });
@@ -170,7 +174,7 @@ describe("Header", () => {
 
   it("does not render window controls on Web/Mac", () => {
     vi.mocked(useWindowControls).mockReturnValue({
-      isElectron: false,
+      isDesktop: false,
       isWindows: false,
       isMac: true,
       platform: "web",
@@ -185,9 +189,9 @@ describe("Header", () => {
     expect(screen.queryByLabelText("关闭")).not.toBeInTheDocument();
   });
 
-  it("renders window controls on Windows Electron", () => {
+  it("renders window controls on Windows Desktop", () => {
     vi.mocked(useWindowControls).mockReturnValue({
-      isElectron: true,
+      isDesktop: true,
       isWindows: true,
       isMac: false,
       platform: "win32",
@@ -207,41 +211,24 @@ describe("Header", () => {
     expect(mockClose).toHaveBeenCalled();
   });
 
-  it("toggles header visibility (hide/show)", () => {
+  it("does not expose manual header visibility switching", () => {
     render(<Header />);
 
-    const hideBtn = screen.getByLabelText("隐藏标题栏");
-    fireEvent.click(hideBtn);
-
-    expect(screen.getByLabelText("显示标题栏")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByLabelText("显示标题栏"));
-
-    expect(screen.getByLabelText("隐藏标题栏")).toBeInTheDocument();
+    expect(screen.queryByLabelText("隐藏标题栏")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("显示标题栏")).not.toBeInTheDocument();
   });
 
-  it("shows floating toolbar buttons when header is hidden", () => {
+  it("does not render floating toolbar buttons", () => {
     render(<Header />);
 
-    fireEvent.click(screen.getByLabelText("隐藏标题栏"));
-
-    expect(screen.getByLabelText("显示标题栏")).toBeInTheDocument();
-    expect(screen.getByLabelText("主题管理")).toBeInTheDocument();
-    expect(screen.getByLabelText("复制到知乎")).toBeInTheDocument();
-    expect(screen.getByLabelText("复制到掘金")).toBeInTheDocument();
-    expect(screen.getByLabelText("复制到公众号")).toBeInTheDocument();
+    expect(document.querySelector(".floating-toolbar")).not.toBeInTheDocument();
   });
 
-  it("persists header visibility to localStorage", async () => {
+  it("does not persist header visibility state", async () => {
     render(<Header />);
-
-    fireEvent.click(screen.getByLabelText("隐藏标题栏"));
 
     await waitFor(() => {
-      expect(storageMock.setItem).toHaveBeenCalledWith(
-        "draftport-header-autohide",
-        "true",
-      );
+      expect(storageMock.setItem).not.toHaveBeenCalled();
     });
   });
 });

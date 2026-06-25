@@ -1,4 +1,4 @@
-// Verifies the Electron startup screen can resume work from persisted recent items.
+// Verifies the Desktop startup screen can resume work from persisted recent items.
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Welcome } from "../../components/Welcome/Welcome";
@@ -35,7 +35,7 @@ const mocks = vi.hoisted(() => {
     ],
   }));
 
-  const electron = {
+  const desktop = {
     recentItems: {
       list,
     },
@@ -46,7 +46,7 @@ const mocks = vi.hoisted(() => {
     openFile,
     selectWorkspace,
     list,
-    electron,
+    desktop,
   };
 });
 
@@ -59,7 +59,7 @@ vi.mock("../../hooks/useFileSystem", () => ({
 }));
 
 vi.mock("../../hooks/useFileSystemHelpers", () => ({
-  getElectron: () => mocks.electron,
+  getDesktopBridge: () => mocks.desktop,
 }));
 
 describe("Welcome recent items", () => {

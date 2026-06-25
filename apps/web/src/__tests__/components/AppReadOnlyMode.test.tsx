@@ -2,7 +2,6 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../App";
-import type { WorkspacePreviewLayoutMode } from "../../hooks/useWorkspacePreviewLayout";
 
 vi.mock("../../components/Header/Header", () => ({
   Header: () => <div data-testid="header" />,
@@ -22,11 +21,7 @@ vi.mock("../../components/Editor/WysiwygMarkdownEditor", () => ({
 }));
 
 vi.mock("../../components/Preview/MarkdownPreview", () => ({
-  MarkdownPreview: ({
-    layoutMode,
-  }: {
-    layoutMode?: WorkspacePreviewLayoutMode;
-  }) => <div data-testid="markdown-preview" data-layout-mode={layoutMode} />,
+  MarkdownPreview: () => <div data-testid="markdown-preview" />,
 }));
 
 vi.mock("../../components/common/MobileToolbar", () => ({
@@ -44,21 +39,17 @@ vi.mock("../../hooks/useFileSystem", () => ({
   }),
 }));
 
-vi.mock("../../storage/StorageContext", () => ({
-  useStorageContext: () => ({
-    type: "filesystem",
-    ready: true,
-  }),
-}));
-
-vi.mock("../../store/historyStore", () => ({
-  useHistoryStore: (selector: (state: { loading: boolean }) => unknown) =>
-    selector({ loading: false }),
-}));
-
 vi.mock("../../store/fileStore", () => ({
-  useFileStore: (selector: (state: { isLoading: boolean }) => unknown) =>
-    selector({ isLoading: false }),
+  useFileStore: (
+    selector: (state: {
+      isLoading: boolean;
+      currentFile: { path: string };
+    }) => unknown,
+  ) =>
+    selector({
+      isLoading: false,
+      currentFile: { path: "/workspace/first.md" },
+    }),
 }));
 
 vi.mock("../../store/editorStore", () => {
@@ -95,22 +86,20 @@ describe("App read-only workspace mode", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("renders only the markdown preview when read-only layout is restored", () => {
+  it("ignores restored read-only layout and keeps WYSIWYG editing", () => {
     localStorage.setItem("draftport-preview-layout-mode", "preview");
 
     render(<App />);
 
+    expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
     expect(screen.queryByTestId("markdown-editor")).not.toBeInTheDocument();
-    expect(screen.getByTestId("markdown-preview")).toHaveAttribute(
-      "data-layout-mode",
-      "preview",
-    );
+    expect(screen.queryByTestId("markdown-preview")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("separator", { name: "调整预览面板宽度" }),
     ).not.toBeInTheDocument();
   });
 
-  it("keeps the restored read-only layout on narrow viewports", () => {
+  it("ignores restored read-only layout on narrow viewports", () => {
     Object.defineProperty(window, "innerWidth", {
       configurable: true,
       value: 500,
@@ -119,10 +108,8 @@ describe("App read-only workspace mode", () => {
 
     render(<App />);
 
+    expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
     expect(screen.queryByTestId("markdown-editor")).not.toBeInTheDocument();
-    expect(screen.getByTestId("markdown-preview")).toHaveAttribute(
-      "data-layout-mode",
-      "preview",
-    );
+    expect(screen.queryByTestId("markdown-preview")).not.toBeInTheDocument();
   });
 });

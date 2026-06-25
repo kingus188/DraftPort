@@ -10,13 +10,13 @@ interface WindowControlsOverlay {
 export function useWindowControls() {
   // SSR/Node 环境的基本安全检查
   const hasWindow = typeof window !== "undefined";
-  const isElectron = hasWindow && (window.electron?.isElectron ?? false);
-  const platform = hasWindow ? window.electron?.platform : undefined;
+  const isDesktop = hasWindow && (window.desktop?.isDesktop ?? false);
+  const platform = hasWindow ? window.desktop?.platform : undefined;
   const isWindows = platform === "win32";
   const isMac = platform === "darwin";
 
   useEffect(() => {
-    if (!isElectron || isWindows) {
+    if (!isDesktop || isWindows) {
       document.documentElement.style.removeProperty("--titlebar-right-inset");
       document.documentElement.style.removeProperty("--titlebar-left-inset");
       return;
@@ -73,16 +73,16 @@ export function useWindowControls() {
       document.documentElement.style.removeProperty("--titlebar-right-inset");
       document.documentElement.style.removeProperty("--titlebar-left-inset");
     };
-  }, [isElectron, isWindows]);
+  }, [isDesktop, isWindows]);
 
   return {
-    isElectron,
+    isDesktop,
     isWindows,
     isMac,
     platform,
-    // 安全访问：如果不是 Electron 或 window 未定义，则为 undefined
-    minimize: hasWindow ? window.electron?.window?.minimize : undefined,
-    maximize: hasWindow ? window.electron?.window?.maximize : undefined,
-    close: hasWindow ? window.electron?.window?.close : undefined,
+    // 安全访问：如果不是 Desktop 或 window 未定义，则为 undefined
+    minimize: hasWindow ? window.desktop?.window?.minimize : undefined,
+    maximize: hasWindow ? window.desktop?.window?.maximize : undefined,
+    close: hasWindow ? window.desktop?.window?.close : undefined,
   };
 }

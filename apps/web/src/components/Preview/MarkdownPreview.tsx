@@ -1,13 +1,12 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
-import mermaid from "mermaid";
 import {
-  Maximize2,
-  Minimize2,
-  Monitor,
-  PanelRightClose,
-  PanelRightOpen,
-  Smartphone,
-} from "lucide-react";
+  useEffect,
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+  useDeferredValue,
+} from "react";
+import mermaid from "mermaid";
 import { createMarkdownParser, processHtml } from "@draftport/core";
 import { useEditorStore } from "../../store/editorStore";
 import { useThemeStore } from "../../store/themeStore";
@@ -23,7 +22,6 @@ import {
   getThemedMermaidDiagram,
 } from "../../utils/mermaidConfig";
 import { renderTableBlocksForPreview } from "../../services/wechatTableRenderer";
-import type { WorkspacePreviewLayoutMode } from "../../hooks/useWorkspacePreviewLayout";
 import { useFileStore } from "../../store/fileStore";
 import { materializePreviewImageSources } from "../../utils/previewImageSources";
 import "./MarkdownPreview.css";
@@ -36,8 +34,6 @@ interface SyncScrollDetail {
   ratio: number;
 }
 
-type PreviewMode = "mobile" | "desktop";
-
 /**
  * Classifies Markdown documents that should avoid the expensive rich-preview
  * pipeline, matching VS Code's habit of disabling costly features on large files.
@@ -46,25 +42,15 @@ function isLargeMarkdownPreview(markdown: string): boolean {
   return markdown.length > LARGE_MARKDOWN_PREVIEW_CHAR_LIMIT;
 }
 
-interface MarkdownPreviewProps {
-  /** Current desktop workspace layout; preview mode is read-only and hides editing chrome. */
-  layoutMode?: WorkspacePreviewLayoutMode;
-  /** Toggles between balanced editing layout and read-only preview layout. */
-  onToggleLayoutMode?: () => void;
-  /** Toggles the right preview pane between visible and editor-priority collapsed states. */
-  onTogglePreviewCollapsed?: () => void;
-}
-
 /**
- * Renders the WeChat-styled live preview and coordinates math, Mermaid, table
- * images, link handling, and synchronized scrolling with the editor.
+ * Renders the WeChat-styled static preview used by non-editing surfaces while
+ * keeping Markdown rendering, math, Mermaid, table images, and link handling in one place.
  */
-export function MarkdownPreview({
-  layoutMode = "balanced",
-  onToggleLayoutMode,
-  onTogglePreviewCollapsed,
-}: MarkdownPreviewProps = {}) {
+export function MarkdownPreview() {
   const { markdown } = useEditorStore();
+  // Keystrokes update `markdown` instantly; the heavy parse/render pipeline
+  // follows this deferred value so typing never blocks on rendering.
+  const deferredMarkdown = useDeferredValue(markdown);
   const currentFilePath = useFileStore((state) => state.currentFile?.path);
   const { themeId: theme, customCSS, getThemeCSS } = useThemeStore();
   const uiTheme = useUITheme((state) => state.theme);
@@ -76,7 +62,6 @@ export function MarkdownPreview({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isSyncingRef = useRef(false);
   const mermaidRenderIdRef = useRef(0);
-  const [previewMode, setPreviewMode] = useState<PreviewMode>("mobile");
   const isLargePreview = isLargeMarkdownPreview(markdown);
 
   // 获取当前主题对象（注意与 line 25 的 themeId 区分）
@@ -100,7 +85,7 @@ export function MarkdownPreview({
       return;
     }
 
-    const rawHtml = parser.render(markdown);
+    const rawHtml = parser.render(deferredMarkdown);
     const htmlWithLocalImages = materializePreviewImageSources(
       rawHtml,
       currentFilePath,
@@ -117,7 +102,7 @@ export function MarkdownPreview({
 
     setHtml(styledHtml);
   }, [
-    markdown,
+    deferredMarkdown,
     theme,
     customCSS,
     getThemeCSS,
@@ -136,7 +121,7 @@ export function MarkdownPreview({
     }
 
     // 检测是否包含数学公式
-    if (!hasMathFormula(markdown)) {
+    if (!hasMathFormula(deferredMarkdown)) {
       return; // 无公式，跳过渲染
     }
 
@@ -148,7 +133,7 @@ export function MarkdownPreview({
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [html, isLargePreview, markdown]);
+  }, [html, isLargePreview, deferredMarkdown]);
 
   const mermaidTheme = designerVars?.mermaidTheme || "base";
   const mermaidConfigKey = useMemo(() => mermaidTheme, [mermaidTheme]);
@@ -291,112 +276,17 @@ export function MarkdownPreview({
     };
   }, []);
 
-  const isPreviewCollapsed = layoutMode === "editor";
-  const previewCollapseLabel = isPreviewCollapsed ? "显示预览" : "收起预览";
-  const isReadOnlyLayout = layoutMode === "preview";
-  const readOnlyLayoutLabel = isReadOnlyLayout ? "退出只读模式" : "只读模式";
-  const previewSubtitle = isReadOnlyLayout
-    ? "公众号预览 · 同步滚动 · 全宽阅读"
-    : `公众号预览 · 同步滚动 · ${
-        previewMode === "mobile" ? "手机宽度" : "桌面宽度"
-      }`;
-
-  if (isPreviewCollapsed) {
-    return (
-      <div
-        className="markdown-preview markdown-preview--collapsed"
-        data-preview-mode={previewMode}
-        data-layout-mode={layoutMode}
-      >
-        {onTogglePreviewCollapsed && (
-          <button
-            type="button"
-            className="preview-layout-action preview-collapse-action"
-            aria-label={previewCollapseLabel}
-            title={previewCollapseLabel}
-            onClick={onTogglePreviewCollapsed}
-          >
-            <PanelRightOpen size={16} strokeWidth={2} />
-          </button>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div
-      className="markdown-preview"
-      data-preview-mode={previewMode}
-      data-layout-mode={layoutMode}
-    >
-      <div className="preview-header">
-        <div className="preview-title-stack">
-          <span className="preview-title">实时预览</span>
-          <span className="preview-subtitle">{previewSubtitle}</span>
-        </div>
-        <div className="preview-header-actions">
-          {onTogglePreviewCollapsed && (
-            <button
-              type="button"
-              className="preview-layout-action preview-collapse-action"
-              aria-label={previewCollapseLabel}
-              title={previewCollapseLabel}
-              onClick={onTogglePreviewCollapsed}
-            >
-              <PanelRightClose size={16} strokeWidth={2} />
-            </button>
-          )}
-          {onToggleLayoutMode && (
-            <button
-              type="button"
-              className={`preview-layout-action preview-readonly-toggle ${
-                isReadOnlyLayout ? "is-active" : ""
-              }`}
-              aria-label={readOnlyLayoutLabel}
-              aria-pressed={isReadOnlyLayout}
-              title={readOnlyLayoutLabel}
-              onClick={onToggleLayoutMode}
-            >
-              {isReadOnlyLayout ? (
-                <Minimize2 size={16} strokeWidth={2} />
-              ) : (
-                <Maximize2 size={16} strokeWidth={2} />
-              )}
-            </button>
-          )}
-          {!isReadOnlyLayout && (
-            <div className="preview-device-actions" aria-label="预览设备">
-              <button
-                type="button"
-                aria-label="手机预览"
-                aria-pressed={previewMode === "mobile"}
-                className={previewMode === "mobile" ? "active" : undefined}
-                onClick={() => setPreviewMode("mobile")}
-              >
-                <Smartphone size={17} strokeWidth={2} />
-              </button>
-              <button
-                type="button"
-                aria-label="桌面预览"
-                aria-pressed={previewMode === "desktop"}
-                className={previewMode === "desktop" ? "active" : undefined}
-                onClick={() => setPreviewMode("desktop")}
-              >
-                <Monitor size={17} strokeWidth={2} />
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+    <div className="markdown-preview" data-preview-mode="mobile">
       <div
         className="preview-container"
         ref={scrollContainerRef}
         onClick={(e) => {
           const target = e.target as HTMLElement;
           const link = target.closest("a");
-          if (link && link.href && window.electron?.shell?.openExternal) {
+          if (link && link.href && window.desktop?.shell?.openExternal) {
             e.preventDefault();
-            window.electron.shell.openExternal(link.href);
+            window.desktop.shell.openExternal(link.href);
           }
         }}
       >
@@ -409,7 +299,7 @@ export function MarkdownPreview({
           {isLargePreview ? (
             <div className="large-preview-mode" role="note">
               <div className="large-preview-mode__banner">
-                <strong>大文件只读优化模式</strong>
+                <strong>大文件静态阅读模式</strong>
                 <span>
                   已关闭完整 Markdown
                   渲染、图表和表格后处理，保留纯文本阅读以降低内存占用。

@@ -19,7 +19,7 @@ vi.mock("../../hooks/useFileSystem", () => ({
 }));
 
 vi.mock("../../hooks/useFileSystemHelpers", () => ({
-  getElectron: () => ({
+  getDesktopBridge: () => ({
     fs: {},
     recentItems: {
       list: mocks.list,

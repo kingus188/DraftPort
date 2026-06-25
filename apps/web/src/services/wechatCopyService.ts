@@ -145,10 +145,10 @@ const getRenderedPlainText = (container: HTMLElement): string => {
   return container.textContent || "";
 };
 
-const copyViaElectronClipboard = async (
+const copyViaDesktopClipboard = async (
   container: HTMLElement,
 ): Promise<{ success: boolean; error?: string } | null> => {
-  const writeHTML = window.electron?.clipboard?.writeHTML;
+  const writeHTML = window.desktop?.clipboard?.writeHTML;
   if (!writeHTML) return null;
 
   return writeHTML({
@@ -157,13 +157,13 @@ const copyViaElectronClipboard = async (
   });
 };
 
-const shouldPreferElectronClipboard = (): boolean => {
-  const electron = window.electron;
-  if (!electron?.isElectron) return false;
+const shouldPreferDesktopClipboard = (): boolean => {
+  const desktop = window.desktop;
+  if (!desktop?.isDesktop) return false;
 
   // Windows 下优先使用与手动复制一致的选区链路，降低公众号样式丢失概率
-  if (electron.platform === "win32") return false;
-  if (electron.platform === "darwin" || electron.platform === "linux")
+  if (desktop.platform === "win32") return false;
+  if (desktop.platform === "darwin" || desktop.platform === "linux")
     return true;
   return false;
 };
@@ -221,30 +221,30 @@ export async function copyToWechat(
 
     let copied = false;
 
-    const preferElectronClipboard = shouldPreferElectronClipboard();
+    const preferDesktopClipboard = shouldPreferDesktopClipboard();
 
-    if (!preferElectronClipboard) {
+    if (!preferDesktopClipboard) {
       copied = copyViaNativeExecCommand(container);
     }
 
-    if (!copied && window.electron?.isElectron) {
+    if (!copied && window.desktop?.isDesktop) {
       try {
-        const electronResult = await copyViaElectronClipboard(container);
-        if (electronResult) {
-          copied = electronResult.success;
-          if (!electronResult.success) {
+        const desktopResult = await copyViaDesktopClipboard(container);
+        if (desktopResult) {
+          copied = desktopResult.success;
+          if (!desktopResult.success) {
             console.warn(
-              "[DraftPort] Electron clipboard bridge unavailable, fallback to browser copy chain",
-              electronResult.error || "unknown error",
+              "[DraftPort] Desktop clipboard bridge unavailable, fallback to browser copy chain",
+              desktopResult.error || "unknown error",
             );
           }
         }
       } catch (e) {
-        console.error("Electron clipboard 写入失败，降级为浏览器复制链路", e);
+        console.error("Desktop clipboard 写入失败，降级为浏览器复制链路", e);
       }
     }
 
-    if (!copied && preferElectronClipboard) {
+    if (!copied && preferDesktopClipboard) {
       copied = copyViaNativeExecCommand(container);
     }
 

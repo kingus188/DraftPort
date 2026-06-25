@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FileText, FolderOpen } from "lucide-react";
 import { useFileSystem } from "../../hooks/useFileSystem";
 import {
-  getElectron,
+  getDesktopBridge,
   type RecentItemRecord,
 } from "../../hooks/useFileSystemHelpers";
 import "./Welcome.css";
@@ -35,19 +35,19 @@ function getBaseName(rawPath: string) {
 }
 
 /**
- * Renders the Electron startup screen and lets users resume from persisted recent items.
+ * Renders the Desktop startup screen and lets users resume from persisted recent items.
  */
 export function Welcome() {
   const { selectWorkspace, loadWorkspace, openFile } = useFileSystem();
   const [recentItems, setRecentItems] = useState<RecentItemRecord[]>([]);
-  const electron = getElectron();
+  const desktop = getDesktopBridge();
 
   useEffect(() => {
     let cancelled = false;
-    if (!electron?.recentItems) return;
+    if (!desktop?.recentItems) return;
 
     void (async () => {
-      const result = await electron.recentItems?.list(STARTUP_RECENT_LIMIT);
+      const result = await desktop.recentItems?.list(STARTUP_RECENT_LIMIT);
       if (!cancelled && result?.success && result.items) {
         setRecentItems(result.items);
       }
@@ -56,7 +56,7 @@ export function Welcome() {
     return () => {
       cancelled = true;
     };
-  }, [electron]);
+  }, [desktop]);
 
   const handleRecentClick = useCallback(
     async (item: RecentItemRecord) => {

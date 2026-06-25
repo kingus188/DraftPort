@@ -7,7 +7,7 @@ const mocked = vi.hoisted(() => ({
   createMarkdownParserMock: vi.fn(),
   processHtmlMock: vi.fn(),
   clipboardWrite: vi.fn(),
-  electronClipboardWrite: vi.fn(),
+  desktopClipboardWrite: vi.fn(),
   resolveInlineStyleVariablesForCopy: vi.fn((html: string) => html),
   applyLightRootVars: vi.fn(),
   renderMermaidBlocks: vi.fn(async (_container?: Element) => undefined),
@@ -151,7 +151,7 @@ describe("wechatCopyService clipboard strategy", () => {
       doc.execCommand = () => true;
     }
 
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "desktop", {
       configurable: true,
       value: undefined,
     });
@@ -196,14 +196,14 @@ describe("wechatCopyService clipboard strategy", () => {
     expect(mocked.toastError).not.toHaveBeenCalled();
   });
 
-  it("prefers electron clipboard bridge in electron runtime", async () => {
-    Object.defineProperty(window, "electron", {
+  it("prefers desktop clipboard bridge in desktop runtime", async () => {
+    Object.defineProperty(window, "desktop", {
       configurable: true,
       value: {
-        isElectron: true,
+        isDesktop: true,
         platform: "darwin",
         clipboard: {
-          writeHTML: mocked.electronClipboardWrite.mockResolvedValue({
+          writeHTML: mocked.desktopClipboardWrite.mockResolvedValue({
             success: true,
           }),
         },
@@ -213,21 +213,21 @@ describe("wechatCopyService clipboard strategy", () => {
 
     await copyToWechat("test", "#draftport p { margin: 18px 0; }");
 
-    expect(mocked.electronClipboardWrite).toHaveBeenCalledTimes(1);
+    expect(mocked.desktopClipboardWrite).toHaveBeenCalledTimes(1);
     expect(execSpy).not.toHaveBeenCalled();
     expect(mocked.clipboardWrite).not.toHaveBeenCalled();
     expect(mocked.toastSuccess).toHaveBeenCalled();
     expect(mocked.toastError).not.toHaveBeenCalled();
   });
 
-  it("prefers native execCommand in electron win32 runtime", async () => {
-    Object.defineProperty(window, "electron", {
+  it("prefers native execCommand in desktop win32 runtime", async () => {
+    Object.defineProperty(window, "desktop", {
       configurable: true,
       value: {
-        isElectron: true,
+        isDesktop: true,
         platform: "win32",
         clipboard: {
-          writeHTML: mocked.electronClipboardWrite.mockResolvedValue({
+          writeHTML: mocked.desktopClipboardWrite.mockResolvedValue({
             success: true,
           }),
         },
@@ -238,20 +238,20 @@ describe("wechatCopyService clipboard strategy", () => {
     await copyToWechat("test", "#draftport p { margin: 18px 0; }");
 
     expect(execSpy).toHaveBeenCalledWith("copy");
-    expect(mocked.electronClipboardWrite).not.toHaveBeenCalled();
+    expect(mocked.desktopClipboardWrite).not.toHaveBeenCalled();
     expect(mocked.clipboardWrite).not.toHaveBeenCalled();
     expect(mocked.toastSuccess).toHaveBeenCalled();
     expect(mocked.toastError).not.toHaveBeenCalled();
   });
 
-  it("falls back to native execCommand when electron bridge returns failure", async () => {
-    Object.defineProperty(window, "electron", {
+  it("falls back to native execCommand when desktop bridge returns failure", async () => {
+    Object.defineProperty(window, "desktop", {
       configurable: true,
       value: {
-        isElectron: true,
+        isDesktop: true,
         platform: "darwin",
         clipboard: {
-          writeHTML: mocked.electronClipboardWrite.mockResolvedValue({
+          writeHTML: mocked.desktopClipboardWrite.mockResolvedValue({
             success: false,
             error: "bridge failed",
           }),
@@ -262,21 +262,21 @@ describe("wechatCopyService clipboard strategy", () => {
 
     await copyToWechat("test", "#draftport p { margin: 18px 0; }");
 
-    expect(mocked.electronClipboardWrite).toHaveBeenCalledTimes(1);
+    expect(mocked.desktopClipboardWrite).toHaveBeenCalledTimes(1);
     expect(execSpy).toHaveBeenCalledWith("copy");
     expect(mocked.clipboardWrite).not.toHaveBeenCalled();
     expect(mocked.toastSuccess).toHaveBeenCalled();
     expect(mocked.toastError).not.toHaveBeenCalled();
   });
 
-  it("falls back to Clipboard API when electron bridge and execCommand both fail", async () => {
-    Object.defineProperty(window, "electron", {
+  it("falls back to Clipboard API when desktop bridge and execCommand both fail", async () => {
+    Object.defineProperty(window, "desktop", {
       configurable: true,
       value: {
-        isElectron: true,
+        isDesktop: true,
         platform: "darwin",
         clipboard: {
-          writeHTML: mocked.electronClipboardWrite.mockResolvedValue({
+          writeHTML: mocked.desktopClipboardWrite.mockResolvedValue({
             success: false,
             error: "bridge failed",
           }),
@@ -287,21 +287,21 @@ describe("wechatCopyService clipboard strategy", () => {
 
     await copyToWechat("test", "#draftport p { margin: 18px 0; }");
 
-    expect(mocked.electronClipboardWrite).toHaveBeenCalledTimes(1);
+    expect(mocked.desktopClipboardWrite).toHaveBeenCalledTimes(1);
     expect(execSpy).toHaveBeenCalledWith("copy");
     expect(mocked.clipboardWrite).toHaveBeenCalledTimes(1);
     expect(mocked.toastSuccess).toHaveBeenCalled();
     expect(mocked.toastError).not.toHaveBeenCalled();
   });
 
-  it("falls back to electron bridge when win32 execCommand fails", async () => {
-    Object.defineProperty(window, "electron", {
+  it("falls back to desktop bridge when win32 execCommand fails", async () => {
+    Object.defineProperty(window, "desktop", {
       configurable: true,
       value: {
-        isElectron: true,
+        isDesktop: true,
         platform: "win32",
         clipboard: {
-          writeHTML: mocked.electronClipboardWrite.mockResolvedValue({
+          writeHTML: mocked.desktopClipboardWrite.mockResolvedValue({
             success: true,
           }),
         },
@@ -312,7 +312,7 @@ describe("wechatCopyService clipboard strategy", () => {
     await copyToWechat("test", "#draftport p { margin: 18px 0; }");
 
     expect(execSpy).toHaveBeenCalledWith("copy");
-    expect(mocked.electronClipboardWrite).toHaveBeenCalledTimes(1);
+    expect(mocked.desktopClipboardWrite).toHaveBeenCalledTimes(1);
     expect(mocked.clipboardWrite).not.toHaveBeenCalled();
     expect(mocked.toastSuccess).toHaveBeenCalled();
     expect(mocked.toastError).not.toHaveBeenCalled();
@@ -360,13 +360,13 @@ describe("wechatCopyService clipboard strategy", () => {
       },
     );
 
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "desktop", {
       configurable: true,
       value: {
-        isElectron: true,
+        isDesktop: true,
         platform: "darwin",
         clipboard: {
-          writeHTML: mocked.electronClipboardWrite.mockResolvedValue({
+          writeHTML: mocked.desktopClipboardWrite.mockResolvedValue({
             success: true,
           }),
         },
@@ -375,8 +375,8 @@ describe("wechatCopyService clipboard strategy", () => {
 
     await copyToWechat("test", "#draftport p { margin: 18px 0; }");
 
-    expect(mocked.electronClipboardWrite).toHaveBeenCalledTimes(1);
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    expect(mocked.desktopClipboardWrite).toHaveBeenCalledTimes(1);
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     const snapshot = document.createElement("div");
@@ -395,13 +395,13 @@ describe("wechatCopyService clipboard strategy", () => {
       '<section id="draftport"><pre class="custom"><span class="mac-sign" style="padding: 10px 14px 0;"><svg xmlns="http://www.w3.org/2000/svg" width="45" height="13" viewBox="0 0 450 130"></svg></span><code class="hljs">const a = 1;</code></pre></section>',
     );
 
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "desktop", {
       configurable: true,
       value: {
-        isElectron: true,
+        isDesktop: true,
         platform: "darwin",
         clipboard: {
-          writeHTML: mocked.electronClipboardWrite.mockResolvedValue({
+          writeHTML: mocked.desktopClipboardWrite.mockResolvedValue({
             success: true,
           }),
         },
@@ -417,7 +417,7 @@ describe("wechatCopyService clipboard strategy", () => {
     expect(mocked.createMarkdownParserMock).toHaveBeenCalledWith({
       showMacBar: true,
     });
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     expect(payload.html).toContain("<img");
@@ -450,13 +450,13 @@ describe("wechatCopyService clipboard strategy", () => {
       value: BrokenImage,
     });
 
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "desktop", {
       configurable: true,
       value: {
-        isElectron: true,
+        isDesktop: true,
         platform: "darwin",
         clipboard: {
-          writeHTML: mocked.electronClipboardWrite.mockResolvedValue({
+          writeHTML: mocked.desktopClipboardWrite.mockResolvedValue({
             success: true,
           }),
         },
@@ -469,7 +469,7 @@ describe("wechatCopyService clipboard strategy", () => {
       { showMacBar: true },
     );
 
-    const [payload] = mocked.electronClipboardWrite.mock.calls[0] as [
+    const [payload] = mocked.desktopClipboardWrite.mock.calls[0] as [
       { html: string; text: string },
     ];
     expect(payload.html).toContain("<svg");

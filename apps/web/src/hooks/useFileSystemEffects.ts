@@ -1,6 +1,4 @@
 import { useEffect, useRef } from "react";
-import type { StorageAdapter } from "../storage/StorageAdapter";
-import type { StorageType } from "../storage/types";
 import { useFileStore } from "../store/fileStore";
 import { useThemeStore } from "../store/themeStore";
 import {
@@ -8,19 +6,18 @@ import {
   stripMarkdownExtension,
 } from "../utils/markdownFileMeta";
 import {
-  flattenFiles,
-  LAST_FILE_KEY,
   WORKSPACE_KEY,
-  type ElectronAPI,
+  type DesktopAPI,
   type RecentItemRecord,
 } from "./useFileSystemHelpers";
+import {
+  createAutosaveScheduler,
+  type AutosaveScheduler,
+} from "./autosaveScheduler";
 
 interface UseFileSystemEffectsParams {
   enabled: boolean;
-  electron: ElectronAPI | null;
-  adapter: StorageAdapter | null;
-  storageReady: boolean;
-  storageType: StorageType;
+  desktop: DesktopAPI | null;
   currentFile: ReturnType<typeof useFileStore.getState>["currentFile"];
   markdown: string;
   theme: string;
@@ -29,23 +26,14 @@ interface UseFileSystemEffectsParams {
   isDirty: boolean;
   lastSavedContent: string;
   loadWorkspace: (path: string) => Promise<void>;
-  refreshFiles: (dir?: string) => Promise<void>;
+  refreshFiles: (dir?: string) => Promise<unknown>;
   openFile: (
     file: NonNullable<ReturnType<typeof useFileStore.getState>["currentFile"]>,
   ) => Promise<void>;
   createFile: (folderPath?: string) => Promise<void>;
   saveFile: (showToast?: boolean) => Promise<void>;
   selectWorkspace: () => Promise<void>;
-  setCurrentFile: ReturnType<typeof useFileStore.getState>["setCurrentFile"];
-  setMarkdown: (value: string) => void;
   setIsDirty: ReturnType<typeof useFileStore.getState>["setIsDirty"];
-  setLastSavedContent: ReturnType<
-    typeof useFileStore.getState
-  >["setLastSavedContent"];
-  setLoading: ReturnType<typeof useFileStore.getState>["setLoading"];
-  setWorkspacePath: ReturnType<
-    typeof useFileStore.getState
-  >["setWorkspacePath"];
 }
 
 const getBrowserStorage = (): Storage | null => {
@@ -85,10 +73,7 @@ function toFileItem(item: RecentItemRecord) {
 
 export function useFileSystemEffects({
   enabled,
-  electron,
-  adapter,
-  storageReady,
-  storageType,
+  desktop,
   currentFile,
   markdown,
   theme,
@@ -102,18 +87,26 @@ export function useFileSystemEffects({
   createFile,
   saveFile,
   selectWorkspace,
-  setCurrentFile,
-  setMarkdown,
   setIsDirty,
-  setLastSavedContent,
-  setLoading,
-  setWorkspacePath,
 }: UseFileSystemEffectsParams) {
   const createFileRef = useRef(createFile);
   const saveFileRef = useRef(saveFile);
   const selectWorkspaceRef = useRef(selectWorkspace);
   const openFileRef = useRef(openFile);
   const loadWorkspaceRef = useRef(loadWorkspace);
+
+  // One scheduler for the document's lifetime; onSave reads the latest store
+  // state so it never writes a stale file or fights the restore guard.
+  const schedulerRef = useRef<AutosaveScheduler | null>(null);
+  if (schedulerRef.current === null) {
+    schedulerRef.current = createAutosaveScheduler({
+      onSave: () => {
+        const { isDirty: dirty, isRestoring: restoring } =
+          useFileStore.getState();
+        if (dirty && !restoring) void saveFileRef.current();
+      },
+    });
+  }
 
   useEffect(() => {
     createFileRef.current = createFile;
@@ -137,81 +130,39 @@ export function useFileSystemEffects({
 
   useEffect(() => {
     if (!enabled) return;
+    if (!desktop) return;
     const storage = getBrowserStorage();
-    if (electron) {
-      const saved = storage?.getItem?.(WORKSPACE_KEY);
-      if (saved) {
-        void loadWorkspace(saved);
-      }
-      return;
-    }
-
-    setCurrentFile(null);
-    setMarkdown("");
-    useThemeStore.getState().selectTheme("default");
-    setIsDirty(false);
-    setLastSavedContent("");
-
-    if (storageReady && storageType === "filesystem") {
-      setLoading(true);
-      void (async () => {
-        try {
-          await refreshFiles();
-          const lastPath = storage?.getItem?.(LAST_FILE_KEY);
-          const { files: currentFiles } = useFileStore.getState();
-          const flat = flattenFiles(currentFiles);
-          if (flat.length > 0) {
-            const target = lastPath
-              ? flat.find((file) => file.path === lastPath) || flat[0]
-              : flat[0];
-            if (target) {
-              await openFile(target);
-            }
-          }
-        } finally {
-          setLoading(false);
-        }
-      })();
-
-      const folderName =
-        storageType === "filesystem" &&
-        (adapter as unknown as { directoryName?: string } | null)?.directoryName
-          ? (adapter as unknown as { directoryName: string }).directoryName
-          : "本地文件夹";
-      setWorkspacePath(folderName);
-      return;
-    }
-
-    if (storageReady && storageType === "indexeddb") {
-      setWorkspacePath("浏览器存储");
+    const saved = storage?.getItem?.(WORKSPACE_KEY);
+    if (saved) {
+      void loadWorkspace(saved);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, electron, storageReady, storageType]);
+  }, [enabled, desktop]);
 
   useEffect(() => {
     if (!enabled) return;
-    if (!electron) return;
-    const handler = electron.fs.onRefresh(() => {
+    if (!desktop) return;
+    const handler = desktop.fs.onRefresh(() => {
       void refreshFiles();
     });
     return () => {
-      electron.fs.removeRefreshListener(handler);
+      desktop.fs.removeRefreshListener(handler);
     };
-  }, [enabled, refreshFiles, electron]);
+  }, [enabled, refreshFiles, desktop]);
 
   useEffect(() => {
     if (!enabled) return;
-    if (!electron) return;
-    electron.fs.onMenuNewFile(() => {
+    if (!desktop) return;
+    desktop.fs.onMenuNewFile(() => {
       void createFileRef.current();
     });
-    electron.fs.onMenuSave(() => {
+    desktop.fs.onMenuSave(() => {
       void saveFileRef.current();
     });
-    electron.fs.onMenuSwitchWorkspace(() => {
+    desktop.fs.onMenuSwitchWorkspace(() => {
       void selectWorkspaceRef.current();
     });
-    electron.fs.onMenuOpenRecentItem((item) => {
+    desktop.fs.onMenuOpenRecentItem((item) => {
       void (async () => {
         await loadWorkspaceRef.current(item.workspacePath);
         if (item.itemType === "file") {
@@ -225,48 +176,67 @@ export function useFileSystemEffects({
     });
 
     return () => {
-      electron.fs.removeAllListeners();
+      desktop.fs.removeAllListeners();
     };
-  }, [enabled, electron]);
+  }, [enabled, desktop]);
 
   useEffect(() => {
     if (!enabled) return;
     if (!currentFile || !markdown) return;
     if (isRestoring) return;
 
-    const { themeId: currentTheme, themeName: currentThemeName } =
-      useThemeStore.getState();
-    const fullContent = applyMarkdownFileMeta(lastSavedContent, {
-      body: markdown,
-      theme: currentTheme,
-      themeName: currentThemeName,
-      title: currentFile.title || stripMarkdownExtension(currentFile.name),
-    });
-
-    if (fullContent !== lastSavedContent) {
+    // Only the first edit after a save needs the full-content rebuild to flip
+    // the dirty flag. Dirty is monotonic until the next save/open resets it, so
+    // once dirty we skip the expensive reconstruction and just keep the
+    // autosave timer armed — this is the per-keystroke hot path.
+    if (!isDirty) {
+      const { themeId: currentTheme, themeName: currentThemeName } =
+        useThemeStore.getState();
+      const fullContent = applyMarkdownFileMeta(lastSavedContent, {
+        body: markdown,
+        theme: currentTheme,
+        themeName: currentThemeName,
+        title: currentFile.title || stripMarkdownExtension(currentFile.name),
+      });
+      if (fullContent === lastSavedContent) return;
       setIsDirty(true);
     }
-    if (!isDirty) return;
 
-    const timer = setTimeout(() => {
-      const currentIsRestoring = useFileStore.getState().isRestoring;
-      const currentIsDirty = useFileStore.getState().isDirty;
-      if (currentIsDirty && !currentIsRestoring) {
-        void saveFile();
-      }
-    }, 3000);
-
-    return () => clearTimeout(timer);
+    schedulerRef.current?.schedule();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     markdown,
     theme,
     themeName,
     currentFile,
-    saveFile,
     isRestoring,
     isDirty,
     lastSavedContent,
     enabled,
   ]);
+
+  // Force-flush pending writes on lifecycle boundaries so nothing is lost when
+  // the window loses focus, the tab is hidden, or the page is being unloaded.
+  useEffect(() => {
+    if (!enabled) return;
+    const flush = () => schedulerRef.current?.flush();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+    window.addEventListener("blur", flush);
+    window.addEventListener("beforeunload", flush);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("blur", flush);
+      window.removeEventListener("beforeunload", flush);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      schedulerRef.current?.cancel();
+    };
+  }, [enabled]);
+
+  // Switching files: the open flow persists the outgoing file itself, so drop
+  // any pending autosave to avoid a redundant late write.
+  useEffect(() => {
+    schedulerRef.current?.cancel();
+  }, [currentFile?.path]);
 }

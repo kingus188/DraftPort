@@ -1,12 +1,12 @@
 // Owns live-preview image source materialization for local Markdown files.
-// The renderer only creates custom asset URLs; Electron enforces workspace access.
+// The renderer only creates custom asset URLs; Desktop enforces workspace access.
 
 const LOCAL_ASSET_PROTOCOL_URL = "draftport-asset://local/";
 const URI_SCHEME_PATTERN = /^[a-zA-Z][a-zA-Z\d+.-]*:/;
 
 /**
  * Converts rendered Markdown image tags that point to relative local files into
- * Electron asset URLs rooted at the current Markdown file's directory.
+ * Desktop asset URLs rooted at the current Markdown file's directory.
  */
 export function materializePreviewImageSources(
   html: string,

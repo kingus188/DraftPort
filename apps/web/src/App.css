@@ -76,8 +76,22 @@
   width: 100%;
 }
 
-.editor-pane,
-.preview-pane {
+.workspace-empty-selection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  color: var(--text-secondary);
+  font-size: 15px;
+  background: var(--bg-primary);
+}
+
+.workspace-empty-selection p {
+  margin: 0;
+}
+
+.editor-pane {
   height: 100%;
   min-height: 0;
   border-radius: 0;
@@ -93,39 +107,6 @@
 .editor-pane {
   flex: 1 1 auto;
   min-width: 360px;
-  border-right: 1px solid #d8dee6;
-}
-
-.workspace-editor-actions {
-  display: flex;
-  justify-content: flex-end;
-  flex: 0 0 auto;
-  padding: 10px 16px;
-  border-bottom: 1px solid #d8dee6;
-  background: var(--bg-primary);
-}
-
-.workspace-preview-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid #d8dee6;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.94);
-  color: #273244;
-  font-size: 13px;
-  font-weight: 600;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-}
-
-.workspace-preview-toggle:hover {
-  border-color: var(--accent-primary);
-  color: var(--accent-primary);
-}
-
-.workspace:not([data-preview-layout="preview"]) .editor-pane {
   border-right: none;
 }
 
@@ -134,73 +115,6 @@
   flex: 1 1 auto;
   min-height: 0;
   height: auto;
-}
-
-.preview-pane {
-  flex: 0 0 var(--preview-pane-width, 42%);
-  min-width: 360px;
-}
-
-.workspace[data-preview-layout="preview"] .editor-pane {
-  flex: 0 0 360px;
-}
-
-.workspace[data-preview-layout="preview"] .preview-pane {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.workspace[data-preview-layout="editor"] .editor-pane {
-  flex: 1 1 auto;
-}
-
-.workspace[data-preview-layout="editor"] .preview-pane {
-  flex: 0 0 var(--preview-pane-width, 48px);
-  min-width: 48px;
-  border-left: 1px solid #d8dee6;
-}
-
-.workspace[data-preview-layout="editor"] .workspace-preview-resizer {
-  display: none;
-}
-
-.workspace-preview-resizer {
-  position: relative;
-  z-index: 5;
-  flex: 0 0 10px;
-  width: 10px;
-  margin-left: -5px;
-  margin-right: -5px;
-  cursor: col-resize;
-  background: transparent;
-  outline: none;
-}
-
-.workspace-preview-resizer::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 1px;
-  transform: translateX(-50%);
-  background: #d8dee6;
-  transition:
-    background 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.workspace-preview-resizer:hover::before,
-.workspace-preview-resizer:focus-visible::before,
-.is-resizing-preview-pane .workspace-preview-resizer::before {
-  background: var(--accent-primary);
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--accent-primary) 16%, transparent);
-}
-
-.is-resizing-preview-pane {
-  cursor: col-resize;
-  user-select: none;
 }
 
 @media (max-width: 1440px) {
@@ -214,33 +128,6 @@
     grid-template-columns:
       var(--history-width, clamp(280px, 25vw, 340px))
       minmax(0, 1fr);
-  }
-
-  .preview-pane {
-    min-width: 340px;
-  }
-}
-
-@media (max-width: 960px) {
-  .app-main {
-    padding: 0;
-  }
-
-  .workspace {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .preview-pane {
-    display: none;
-  }
-
-  .workspace[data-preview-layout="preview"] .preview-pane {
-    display: flex;
-  }
-
-  .workspace-preview-resizer {
-    display: none;
   }
 }
 
@@ -274,49 +161,20 @@
     min-height: 0;
   }
 
-  .app[data-layout-mode="mobile"] .editor-pane,
-  .app[data-layout-mode="mobile"] .preview-pane {
+  .app[data-layout-mode="mobile"] .editor-pane {
     border-radius: var(--radius-lg);
     border: var(--border-width) solid var(--glass-border);
     min-height: 0;
     height: 100%;
   }
 
-  .app[data-layout-mode="mobile"] .workspace-editor-actions {
-    padding: 8px 10px;
-  }
-
-  .app[data-layout-mode="mobile"]
-    .workspace[data-mobile-view="editor"]
-    .preview-pane {
-    display: none;
-  }
-
-  .app[data-layout-mode="mobile"]
-    .workspace[data-preview-layout="preview"]
-    .preview-pane {
-    display: flex;
-  }
-
-  .app[data-layout-mode="mobile"]
-    .workspace[data-mobile-view="preview"]
-    .editor-pane {
-    display: none;
-  }
-
-  .app[data-layout-mode="mobile"]
-    .workspace[data-mobile-view="editor"]
-    .editor-pane,
-  .app[data-layout-mode="mobile"]
-    .workspace[data-mobile-view="preview"]
-    .preview-pane {
+  .app[data-layout-mode="mobile"] .editor-pane {
     display: flex;
     flex-direction: column;
     height: 100%;
   }
 
-  .app[data-layout-mode="mobile"] .editor-pane:hover,
-  .app[data-layout-mode="mobile"] .preview-pane:hover {
+  .app[data-layout-mode="mobile"] .editor-pane:hover {
     transform: none;
     box-shadow: var(--glass-shadow);
   }

@@ -2,16 +2,16 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { installTauriElectronBridge } from "../../desktop/tauriBridge";
+import { installTauriDesktopBridge } from "../../desktop/tauriBridge";
 
 type TestWindow = Window & {
   __TAURI_EVENT_PLUGIN_INTERNALS__?: unknown;
 };
 
-describe("installTauriElectronBridge", () => {
+describe("installTauriDesktopBridge", () => {
   beforeEach(() => {
     const testWindow = window as TestWindow;
-    delete testWindow.electron;
+    delete testWindow.desktop;
     delete testWindow.__TAURI_INTERNALS__;
     delete testWindow.__TAURI_EVENT_PLUGIN_INTERNALS__;
     Object.defineProperty(navigator, "platform", {
@@ -28,12 +28,12 @@ describe("installTauriElectronBridge", () => {
     window.__TAURI_INTERNALS__ = { invoke };
     (window as TestWindow).__TAURI_EVENT_PLUGIN_INTERNALS__ = {};
 
-    installTauriElectronBridge();
+    installTauriDesktopBridge();
 
-    expect(window.electron?.isElectron).toBe(true);
-    expect(window.electron?.platform).toBe("darwin");
+    expect(window.desktop?.isDesktop).toBe(true);
+    expect(window.desktop?.platform).toBe("darwin");
 
-    await expect(window.electron?.fs.listFiles()).resolves.toEqual({
+    await expect(window.desktop?.fs.listFiles()).resolves.toEqual({
       success: true,
     });
     expect(invoke).toHaveBeenCalledWith("file_list", { dir: undefined });
@@ -46,18 +46,18 @@ describe("installTauriElectronBridge", () => {
     };
     (window as TestWindow).__TAURI_EVENT_PLUGIN_INTERNALS__ = {};
 
-    installTauriElectronBridge({
+    installTauriDesktopBridge({
       listen: (_event, callback) => {
         callbacks.push(callback as () => void);
         return Promise.resolve(() => callbacks.splice(0, callbacks.length));
       },
     });
 
-    window.electron?.fs.onRefresh(() => undefined);
+    window.desktop?.fs.onRefresh(() => undefined);
     await Promise.resolve();
     expect(callbacks).toHaveLength(1);
 
-    window.electron?.fs.removeAllListeners();
+    window.desktop?.fs.removeAllListeners();
     expect(callbacks).toHaveLength(0);
   });
 });

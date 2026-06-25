@@ -2,20 +2,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ThemePanel } from "../../components/Theme/ThemePanel";
 import { useThemeStore } from "../../store/themeStore";
-import { useEditorStore } from "../../store/editorStore";
-import { useHistoryStore } from "../../store/historyStore";
 import { useUITheme } from "../../hooks/useUITheme";
 
 // Mock stores and hooks
 vi.mock("../../store/themeStore");
-vi.mock("../../store/editorStore");
-vi.mock("../../store/historyStore");
 vi.mock("../../hooks/useUITheme");
-vi.mock("../../lib/platformAdapter", () => ({
-  platformActions: {
-    shouldPersistHistory: () => true,
-  },
-}));
 
 // Mock ThemeDesigner to avoid complex dependencies
 vi.mock("../../components/Theme/ThemeDesigner", () => ({
@@ -30,7 +21,6 @@ describe("ThemePanel", () => {
   const mockUpdateTheme = vi.fn();
   const mockDeleteTheme = vi.fn();
   const mockDuplicateTheme = vi.fn();
-  const mockPersistActiveSnapshot = vi.fn();
 
   const mockThemes = [
     {
@@ -72,37 +62,6 @@ describe("ThemePanel", () => {
         exportTheme: vi.fn(),
         exportThemeCSS: vi.fn(),
         importTheme: vi.fn().mockResolvedValue(true),
-      };
-      return selector(state);
-    });
-
-    // Setup editor store mock
-    vi.mocked(useEditorStore).mockImplementation(((
-      selector?: (state: { markdown: string }) => unknown,
-    ) => {
-      const state = { markdown: "# Test" };
-      return typeof selector === "function" ? selector(state) : state;
-    }) as unknown as typeof useEditorStore);
-    // Also mock getState for direct calls
-    (useEditorStore as unknown as { getState: () => unknown }).getState =
-      () => ({
-        markdown: "# Test",
-      });
-
-    vi.mocked(useHistoryStore).mockImplementation((selector) => {
-      const state = {
-        history: [],
-        loading: false,
-        filter: "",
-        activeId: null,
-        loadHistory: vi.fn(),
-        setFilter: vi.fn(),
-        setActiveId: vi.fn(),
-        saveSnapshot: vi.fn(),
-        persistActiveSnapshot: mockPersistActiveSnapshot,
-        deleteEntry: vi.fn(),
-        clearHistory: vi.fn(),
-        updateTitle: vi.fn(),
       };
       return selector(state);
     });

@@ -3,18 +3,28 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../App";
-import type { WorkspacePreviewLayoutMode } from "../../hooks/useWorkspacePreviewLayout";
+import type { FileItem } from "../../store/fileTypes";
 
-const fileStoreState = vi.hoisted(() => ({
-  currentFile: {
-    name: "first.md",
-    path: "/workspace/first.md",
-    createdAt: new Date("2026-01-01T00:00:00.000Z"),
-    updatedAt: new Date("2026-01-01T00:00:00.000Z"),
-    size: 10,
-  },
-  isLoading: false,
-}));
+const fileStoreState = vi.hoisted(
+  (): { currentFile: FileItem | null; isLoading: boolean } => ({
+    currentFile: {
+      name: "first.md",
+      path: "/workspace/first.md",
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+      size: 10,
+    },
+    isLoading: false,
+  }),
+);
+
+const activeFile = (): FileItem => ({
+  name: "first.md",
+  path: "/workspace/first.md",
+  createdAt: new Date("2026-01-01T00:00:00.000Z"),
+  updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+  size: 10,
+});
 
 const wysiwygMountState = vi.hoisted(() => ({
   mountCount: 0,
@@ -59,23 +69,11 @@ vi.mock("../../components/Editor/WysiwygMarkdownEditor", async () => {
 });
 
 vi.mock("../../components/Preview/MarkdownPreview", () => ({
-  MarkdownPreview: ({
-    layoutMode,
-  }: {
-    layoutMode?: WorkspacePreviewLayoutMode;
-  }) => <div data-testid="markdown-preview" data-layout-mode={layoutMode} />,
+  MarkdownPreview: () => <div data-testid="markdown-preview" />,
 }));
 
 vi.mock("../../components/common/MobileToolbar", () => ({
-  MobileToolbar: ({
-    onViewChange,
-  }: {
-    onViewChange: (view: "editor" | "preview") => void;
-  }) => (
-    <button type="button" onClick={() => onViewChange("preview")}>
-      移动预览
-    </button>
-  ),
+  MobileToolbar: () => <div data-testid="mobile-toolbar" />,
 }));
 
 vi.mock("../../components/Theme/MobileThemeSelector", () => ({
@@ -87,18 +85,6 @@ vi.mock("../../hooks/useFileSystem", () => ({
     workspacePath: "/workspace",
     saveFile: vi.fn(),
   }),
-}));
-
-vi.mock("../../storage/StorageContext", () => ({
-  useStorageContext: () => ({
-    type: "filesystem",
-    ready: true,
-  }),
-}));
-
-vi.mock("../../store/historyStore", () => ({
-  useHistoryStore: (selector: (state: { loading: boolean }) => unknown) =>
-    selector({ loading: false }),
 }));
 
 vi.mock("../../store/fileStore", () => ({
@@ -120,13 +106,7 @@ describe("App Typora-like WYSIWYG editing mode", () => {
       configurable: true,
       value: 1024,
     });
-    fileStoreState.currentFile = {
-      name: "first.md",
-      path: "/workspace/first.md",
-      createdAt: new Date("2026-01-01T00:00:00.000Z"),
-      updatedAt: new Date("2026-01-01T00:00:00.000Z"),
-      size: 10,
-    };
+    fileStoreState.currentFile = activeFile();
     wysiwygMountState.mountCount = 0;
     editorStoreState.markdown = "# Safe document";
     editorStoreState.currentFilePath = undefined;
@@ -181,21 +161,17 @@ describe("App Typora-like WYSIWYG editing mode", () => {
     expect(wysiwygMountState.mountCount).toBe(2);
   });
 
-  it("opens publish preview from the desktop editing surface", () => {
+  it("does not expose publish preview from the desktop editing surface", () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole("button", { name: "发布预览" }));
-
-    expect(screen.getByTestId("markdown-preview")).toHaveAttribute(
-      "data-layout-mode",
-      "preview",
-    );
     expect(
-      screen.queryByTestId("wysiwyg-markdown-editor"),
+      screen.queryByRole("button", { name: "发布预览" }),
     ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("markdown-preview")).not.toBeInTheDocument();
+    expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
   });
 
-  it("opens a real preview pane when mobile preview is selected", () => {
+  it("keeps mobile editing in the WYSIWYG surface without a preview switch", () => {
     Object.defineProperty(window, "innerWidth", {
       configurable: true,
       value: 500,
@@ -203,12 +179,9 @@ describe("App Typora-like WYSIWYG editing mode", () => {
 
     render(<App />);
 
-    fireEvent.click(screen.getByRole("button", { name: "移动预览" }));
-
-    expect(screen.getByTestId("markdown-preview")).toHaveAttribute(
-      "data-layout-mode",
-      "preview",
-    );
+    expect(screen.getByTestId("mobile-toolbar")).toBeInTheDocument();
+    expect(screen.queryByTestId("markdown-preview")).not.toBeInTheDocument();
+    expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
   });
 
   it("uses source editing by default for Markdown that WYSIWYG cannot safely round trip", () => {
@@ -220,6 +193,21 @@ describe("App Typora-like WYSIWYG editing mode", () => {
     expect(screen.getByTestId("markdown-source-editor")).toBeInTheDocument();
     expect(
       screen.queryByTestId("wysiwyg-markdown-editor"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows an empty selection state when a file workspace has no Markdown file selected", () => {
+    fileStoreState.currentFile = null;
+    editorStoreState.markdown = "";
+
+    render(<App />);
+
+    expect(screen.getByText("无选择文件")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("wysiwyg-markdown-editor"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("markdown-source-editor"),
     ).not.toBeInTheDocument();
   });
 });

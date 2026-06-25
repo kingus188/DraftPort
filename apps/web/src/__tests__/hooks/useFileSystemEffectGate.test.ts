@@ -75,14 +75,6 @@ vi.mock("../../hooks/useFileSystemEffects", () => ({
   useFileSystemEffects: mocks.useFileSystemEffectsMock,
 }));
 
-vi.mock("../../storage/StorageContext", () => ({
-  useStorageContext: () => ({
-    adapter: null,
-    ready: false,
-    type: "indexeddb" as const,
-  }),
-}));
-
 vi.mock("../../store/fileStore", () => ({
   useFileStore: mocks.useFileStoreMock,
 }));

@@ -5,7 +5,7 @@ const mocked = vi.hoisted(() => ({
   toastError: vi.fn(),
   parserRender: vi.fn(),
   createMarkdownParserMock: vi.fn(),
-  electronClipboardWriteText: vi.fn(),
+  desktopClipboardWriteText: vi.fn(),
 }));
 
 vi.mock("react-hot-toast", () => ({
@@ -37,7 +37,7 @@ describe("copyAsHtml", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocked.parserRender.mockReturnValue("<h1>Hello</h1>");
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "desktop", {
       value: undefined,
       configurable: true,
     });
@@ -59,15 +59,15 @@ describe("copyAsHtml", () => {
     expect(mocked.toastError).not.toHaveBeenCalled();
   });
 
-  it("prefers electron clipboard bridge in electron runtime", async () => {
+  it("prefers desktop clipboard bridge in desktop runtime", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     stubClipboard(writeText);
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "desktop", {
       configurable: true,
       value: {
-        isElectron: true,
+        isDesktop: true,
         clipboard: {
-          writeText: mocked.electronClipboardWriteText.mockResolvedValue({
+          writeText: mocked.desktopClipboardWriteText.mockResolvedValue({
             success: true,
           }),
         },
@@ -76,7 +76,7 @@ describe("copyAsHtml", () => {
 
     await copyAsHtml("# Hello");
 
-    expect(mocked.electronClipboardWriteText).toHaveBeenCalledWith(
+    expect(mocked.desktopClipboardWriteText).toHaveBeenCalledWith(
       "<h1>Hello</h1>",
     );
     expect(writeText).not.toHaveBeenCalled();
@@ -95,15 +95,15 @@ describe("copyAsHtml", () => {
     expect(writeText).toHaveBeenCalledWith("<h1>标题</h1>");
   });
 
-  it("falls back to navigator.clipboard when electron bridge fails", async () => {
+  it("falls back to navigator.clipboard when desktop bridge fails", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     stubClipboard(writeText);
-    Object.defineProperty(window, "electron", {
+    Object.defineProperty(window, "desktop", {
       configurable: true,
       value: {
-        isElectron: true,
+        isDesktop: true,
         clipboard: {
-          writeText: mocked.electronClipboardWriteText.mockResolvedValue({
+          writeText: mocked.desktopClipboardWriteText.mockResolvedValue({
             success: false,
             error: "bridge failed",
           }),
@@ -113,7 +113,7 @@ describe("copyAsHtml", () => {
 
     await copyAsHtml("# Hello");
 
-    expect(mocked.electronClipboardWriteText).toHaveBeenCalledTimes(1);
+    expect(mocked.desktopClipboardWriteText).toHaveBeenCalledTimes(1);
     expect(writeText).toHaveBeenCalledWith("<h1>Hello</h1>");
     expect(document.execCommand).not.toHaveBeenCalled();
     expect(mocked.toastSuccess).toHaveBeenCalledWith("已复制 HTML");

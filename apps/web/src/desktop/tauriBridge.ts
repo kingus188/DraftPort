@@ -1,7 +1,6 @@
 /**
- * Installs a Tauri-backed compatibility bridge for the existing desktop API.
- * The renderer still consumes `window.electron`; this file keeps that contract
- * stable while the native shell moves from Electron IPC to Tauri commands.
+ * Exposes the `window.desktop` API backed by Tauri commands, giving the
+ * renderer a single stable contract to reach the native shell.
  */
 
 type TauriInvoke = (command: string, payload?: unknown) => Promise<unknown>;
@@ -76,13 +75,13 @@ const COMMANDS = {
 } as const;
 
 /**
- * Installs `window.electron` only when Tauri injected IPC is available.
- * Existing Electron preloads win if they already created the bridge.
+ * Installs `window.desktop` only when Tauri injected IPC is available, and
+ * never overwrites a bridge that was already set up.
  */
-export function installTauriElectronBridge(
+export function installTauriDesktopBridge(
   options: TauriBridgeOptions = {},
 ): void {
-  if (window.electron || !window.__TAURI_INTERNALS__?.invoke) return;
+  if (window.desktop || !window.__TAURI_INTERNALS__?.invoke) return;
 
   const invoke = window.__TAURI_INTERNALS__.invoke;
   const listen = options.listen ?? window.__TAURI__?.event?.listen;
@@ -109,8 +108,8 @@ export function installTauriElectronBridge(
     }
   };
 
-  window.electron = {
-    isElectron: true,
+  window.desktop = {
+    isDesktop: true,
     platform: detectPlatform(),
     fs: {
       selectWorkspace: () => call(COMMANDS.selectWorkspace),

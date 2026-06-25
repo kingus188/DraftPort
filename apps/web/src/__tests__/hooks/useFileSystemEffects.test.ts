@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import type { ElectronAPI } from "../../hooks/useFileSystemHelpers";
+import type { DesktopAPI } from "../../hooks/useFileSystemHelpers";
 import { useFileSystemEffects } from "../../hooks/useFileSystemEffects";
+import { useFileStore } from "../../store/fileStore";
 
-const buildElectronMock = () => {
+const buildDesktopMock = () => {
   let refreshCallback: (() => void) | undefined;
   let menuNewFileCallback: (() => void) | undefined;
   let menuOpenRecentItemCallback:
@@ -57,7 +58,7 @@ const buildElectronMock = () => {
   };
 
   return {
-    electron: { fs },
+    desktop: { fs },
     fs,
     getRefreshCallback: () => refreshCallback,
     getMenuNewFileCallback: () => menuNewFileCallback,
@@ -68,6 +69,17 @@ const buildElectronMock = () => {
 describe("useFileSystemEffects", () => {
   afterEach(() => {
     vi.clearAllMocks();
+    useFileStore.setState({
+      workspacePath: null,
+      files: [],
+      currentFile: null,
+      isLoading: false,
+      isSaving: false,
+      lastSavedContent: "",
+      lastSavedAt: null,
+      isDirty: false,
+      isRestoring: false,
+    });
     if (
       typeof window !== "undefined" &&
       window.localStorage &&
@@ -77,14 +89,14 @@ describe("useFileSystemEffects", () => {
     }
   });
 
-  it("单实例下正确注册并清理 Electron 监听器", async () => {
+  it("单实例下正确注册并清理 Desktop 监听器", async () => {
     const {
-      electron,
+      desktop,
       fs,
       getRefreshCallback,
       getMenuNewFileCallback,
       getMenuOpenRecentItemCallback,
-    } = buildElectronMock();
+    } = buildDesktopMock();
 
     const refreshFiles = vi.fn(async () => {});
     const createFile = vi.fn(async () => {});
@@ -92,10 +104,7 @@ describe("useFileSystemEffects", () => {
 
     const params = {
       enabled: true,
-      electron: electron as ElectronAPI,
-      adapter: null,
-      storageReady: false,
-      storageType: "indexeddb" as const,
+      desktop: desktop as DesktopAPI,
       currentFile: null,
       markdown: "",
       theme: "default",
@@ -109,12 +118,7 @@ describe("useFileSystemEffects", () => {
       createFile,
       saveFile: vi.fn(async () => {}),
       selectWorkspace: vi.fn(async () => {}),
-      setCurrentFile: vi.fn(),
-      setMarkdown: vi.fn(),
       setIsDirty: vi.fn(),
-      setLastSavedContent: vi.fn(),
-      setLoading: vi.fn(),
-      setWorkspacePath: vi.fn(),
     };
 
     const mounted = renderHook(() => useFileSystemEffects(params));

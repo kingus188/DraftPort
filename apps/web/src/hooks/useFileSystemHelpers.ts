@@ -1,7 +1,6 @@
 import type { FileItem, TreeItem } from "../store/fileTypes";
-import type { FileItem as AdapterFileItem } from "../storage/types";
 
-export interface ElectronFileItem {
+export interface DesktopFileItem {
   name: string;
   path: string;
   createdAt: string;
@@ -10,10 +9,10 @@ export interface ElectronFileItem {
   title?: string;
   themeName?: string;
   isDirectory?: boolean;
-  children?: ElectronFileItem[];
+  children?: DesktopFileItem[];
 }
 
-export interface ElectronAPI {
+export interface DesktopAPI {
   fs: {
     selectWorkspace: () => Promise<{
       success: boolean;
@@ -23,7 +22,7 @@ export interface ElectronAPI {
     setWorkspace: (dir: string) => Promise<{ success: boolean; path?: string }>;
     listFiles: (
       dir?: string,
-    ) => Promise<{ success: boolean; files?: ElectronFileItem[] }>;
+    ) => Promise<{ success: boolean; files?: DesktopFileItem[] }>;
     readFile: (
       path: string,
     ) => Promise<{ success: boolean; content?: string; error?: string }>;
@@ -116,11 +115,11 @@ export interface RecentItemRecord {
 export const WORKSPACE_KEY = "draftport-workspace-path";
 export const LAST_FILE_KEY = "draftport-last-file-path";
 
-export const getElectron = (): ElectronAPI | null => {
-  return window.electron as unknown as ElectronAPI | null;
+export const getDesktopBridge = (): DesktopAPI | null => {
+  return window.desktop as unknown as DesktopAPI | null;
 };
 
-export function convertToTreeItems(items: ElectronFileItem[]): TreeItem[] {
+export function convertToTreeItems(items: DesktopFileItem[]): TreeItem[] {
   return items.map((entry) => {
     if (entry.isDirectory && entry.children) {
       return {
@@ -145,35 +144,6 @@ export function convertToTreeItems(items: ElectronFileItem[]): TreeItem[] {
   });
 }
 
-export function convertAdapterFilesToTreeItems(
-  items: AdapterFileItem[],
-): TreeItem[] {
-  return items.map((entry) => {
-    if (entry.meta?.isDirectory && Array.isArray(entry.meta?.children)) {
-      return {
-        name: entry.name,
-        path: entry.path,
-        createdAt: entry.updatedAt ? new Date(entry.updatedAt) : new Date(),
-        updatedAt: entry.updatedAt ? new Date(entry.updatedAt) : new Date(),
-        isDirectory: true as const,
-        children: convertAdapterFilesToTreeItems(
-          entry.meta.children as AdapterFileItem[],
-        ),
-      };
-    }
-    return {
-      name: entry.name,
-      path: entry.path,
-      createdAt: entry.updatedAt ? new Date(entry.updatedAt) : new Date(),
-      updatedAt: entry.updatedAt ? new Date(entry.updatedAt) : new Date(),
-      size: entry.size ?? 0,
-      title: (entry.meta?.title as string) || undefined,
-      themeName: (entry.meta?.themeName as string) || undefined,
-      isDirectory: false as const,
-    };
-  });
-}
-
 export function flattenFiles(items: TreeItem[]): FileItem[] {
   const result: FileItem[] = [];
   for (const item of items) {
@@ -184,6 +154,27 @@ export function flattenFiles(items: TreeItem[]): FileItem[] {
     }
   }
   return result;
+}
+
+/** Returns whether a file tree item is a Markdown document DraftPort can open. */
+export function isMarkdownFile(file: FileItem): boolean {
+  return file.name.toLowerCase().endsWith(".md");
+}
+
+/**
+ * Chooses the restored Markdown file, preferring a valid persisted path before
+ * falling back to the first Markdown file in the current tree order.
+ */
+export function findDefaultMarkdownFile(
+  items: TreeItem[],
+  lastPath?: string | null,
+): FileItem | null {
+  const markdownFiles = flattenFiles(items).filter(isMarkdownFile);
+  if (!markdownFiles.length) return null;
+  if (!lastPath) return markdownFiles[0];
+  return (
+    markdownFiles.find((file) => file.path === lastPath) ?? markdownFiles[0]
+  );
 }
 
 export function splitPath(filePath: string): { dir: string; sep: string } {

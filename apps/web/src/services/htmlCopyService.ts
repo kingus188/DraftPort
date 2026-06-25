@@ -35,14 +35,14 @@ export function sanitizeForExternalHtml(html: string): string {
   return body.innerHTML;
 }
 
-const copyViaElectronClipboard = async (text: string): Promise<boolean> => {
-  const writeText = window.electron?.clipboard?.writeText;
+const copyViaDesktopClipboard = async (text: string): Promise<boolean> => {
+  const writeText = window.desktop?.clipboard?.writeText;
   if (!writeText) return false;
   try {
     const result = await writeText(text);
     return result.success;
   } catch (error) {
-    console.error("Electron 剪贴板写入失败:", error);
+    console.error("Desktop 剪贴板写入失败:", error);
     return false;
   }
 };
@@ -84,7 +84,7 @@ export async function copyAsHtml(markdown: string): Promise<void> {
   const html = sanitizeForExternalHtml(rawHtml);
 
   const copied =
-    (window.electron?.isElectron && (await copyViaElectronClipboard(html))) ||
+    (window.desktop?.isDesktop && (await copyViaDesktopClipboard(html))) ||
     (await copyViaNavigatorClipboard(html)) ||
     copyViaExecCommand(html);
 

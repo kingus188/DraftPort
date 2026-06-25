@@ -1,5 +1,5 @@
-interface ElectronAPI {
-  isElectron: boolean;
+interface DesktopAPI {
+  isDesktop: boolean;
   platform: string;
   fs: {
     selectWorkspace: () => Promise<{
@@ -126,7 +126,7 @@ interface RecentItemRecord {
 
 declare global {
   interface Window {
-    electron?: ElectronAPI;
+    desktop?: DesktopAPI;
   }
 }
 
