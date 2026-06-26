@@ -1,5 +1,6 @@
 // Verifies that the desktop read-only workspace mode removes editing chrome from the app shell.
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../App";
 
@@ -76,7 +77,7 @@ describe("App read-only workspace mode", () => {
   });
 
   it("uses WYSIWYG editing without a permanent preview in the balanced desktop layout", () => {
-    render(<App />);
+    render(<App />, { wrapper: MemoryRouter });
 
     expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
     expect(screen.queryByTestId("markdown-editor")).not.toBeInTheDocument();
@@ -89,7 +90,7 @@ describe("App read-only workspace mode", () => {
   it("ignores restored read-only layout and keeps WYSIWYG editing", () => {
     localStorage.setItem("draftport-preview-layout-mode", "preview");
 
-    render(<App />);
+    render(<App />, { wrapper: MemoryRouter });
 
     expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
     expect(screen.queryByTestId("markdown-editor")).not.toBeInTheDocument();
@@ -106,7 +107,7 @@ describe("App read-only workspace mode", () => {
     });
     localStorage.setItem("draftport-preview-layout-mode", "preview");
 
-    render(<App />);
+    render(<App />, { wrapper: MemoryRouter });
 
     expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
     expect(screen.queryByTestId("markdown-editor")).not.toBeInTheDocument();

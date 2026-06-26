@@ -1,6 +1,7 @@
 // Locks the Typora-like editor contract at the app shell level.
 // The app should edit rendered Markdown by default and expose source editing via Ctrl+/.
 import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../App";
 import type { FileItem } from "../../store/fileTypes";
@@ -113,7 +114,7 @@ describe("App Typora-like WYSIWYG editing mode", () => {
   });
 
   it("uses the rendered WYSIWYG editor as the default desktop editing surface", () => {
-    render(<App />);
+    render(<App />, { wrapper: MemoryRouter });
 
     expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
     expect(
@@ -126,7 +127,7 @@ describe("App Typora-like WYSIWYG editing mode", () => {
   });
 
   it("toggles between WYSIWYG and Markdown source editing with Ctrl+/", () => {
-    render(<App />);
+    render(<App />, { wrapper: MemoryRouter });
 
     fireEvent.keyDown(document, { key: "/", ctrlKey: true });
 
@@ -144,7 +145,7 @@ describe("App Typora-like WYSIWYG editing mode", () => {
   });
 
   it("remounts the WYSIWYG editor when the active file changes", () => {
-    const { rerender } = render(<App />);
+    const { rerender } = render(<App />, { wrapper: MemoryRouter });
 
     expect(wysiwygMountState.mountCount).toBe(1);
 
@@ -156,13 +157,13 @@ describe("App Typora-like WYSIWYG editing mode", () => {
       size: 20,
     };
 
-    rerender(<App />);
+    rerender(<App />, { wrapper: MemoryRouter });
 
     expect(wysiwygMountState.mountCount).toBe(2);
   });
 
   it("does not expose publish preview from the desktop editing surface", () => {
-    render(<App />);
+    render(<App />, { wrapper: MemoryRouter });
 
     expect(
       screen.queryByRole("button", { name: "发布预览" }),
@@ -177,7 +178,7 @@ describe("App Typora-like WYSIWYG editing mode", () => {
       value: 500,
     });
 
-    render(<App />);
+    render(<App />, { wrapper: MemoryRouter });
 
     expect(screen.getByTestId("mobile-toolbar")).toBeInTheDocument();
     expect(screen.queryByTestId("markdown-preview")).not.toBeInTheDocument();
@@ -188,7 +189,7 @@ describe("App Typora-like WYSIWYG editing mode", () => {
     editorStoreState.markdown =
       "Inline math $E=mc^2$\n\n```mermaid\ngraph TD\nA-->B\n```";
 
-    render(<App />);
+    render(<App />, { wrapper: MemoryRouter });
 
     expect(screen.getByTestId("markdown-source-editor")).toBeInTheDocument();
     expect(
@@ -200,7 +201,7 @@ describe("App Typora-like WYSIWYG editing mode", () => {
     fileStoreState.currentFile = null;
     editorStoreState.markdown = "";
 
-    render(<App />);
+    render(<App />, { wrapper: MemoryRouter });
 
     expect(screen.getByText("无选择文件")).toBeInTheDocument();
     expect(

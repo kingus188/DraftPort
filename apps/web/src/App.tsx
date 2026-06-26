@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Toaster } from "react-hot-toast";
+import { Route, Routes, useLocation } from "react-router-dom";
 import { Header } from "./components/Header/Header";
 import { FileSidebar } from "./components/Sidebar/FileSidebar";
 import { MarkdownEditor } from "./components/Editor/MarkdownEditor";
@@ -17,6 +18,9 @@ import "./App.css";
 
 import { Loader2 } from "lucide-react";
 import { useFileStore } from "./store/fileStore";
+import { SchedulePage } from "./components/WorkspaceViews/SchedulePage";
+import { MemoPage } from "./components/WorkspaceViews/MemoPage";
+import { VersionTimelinePage } from "./components/WorkspaceViews/VersionTimelinePage";
 import { platform } from "./lib/platformAdapter";
 
 const Welcome = lazy(() =>
@@ -65,6 +69,9 @@ function App() {
   const markdown = useEditorStore((state) => state.markdown);
   const storedFilePath = useEditorStore((state) => state.currentFilePath);
   const currentFilePath = useFileStore((state) => state.currentFile?.path);
+  // The memo collection is a standalone subsystem: it hides the file tree and
+  // takes the full width.
+  const isMemosRoute = useLocation().pathname === "/memos";
   const [showThemePanel, setShowThemePanel] = useState(false);
   const [editorMode, setEditorMode] = useState<EditorMode>("wysiwyg");
   const canUseWysiwygEditor = canUseWysiwygMarkdown(markdown);
@@ -174,12 +181,14 @@ function App() {
   }, [showHistory]);
 
   const mainClass = "app-main";
+  const sidebarVisible = showHistory && !isMemosRoute;
+  const effectiveHistoryWidth = isMemosRoute ? "0px" : historyWidth;
   const mainStyle = useMemo(
     () =>
       ({
-        "--history-width": historyWidth,
+        "--history-width": effectiveHistoryWidth,
       }) as CSSProperties,
-    [historyWidth],
+    [effectiveHistoryWidth],
   );
   // Desktop 模式：强制选择工作区
   if (isDesktop && !workspacePath) {
@@ -265,28 +274,32 @@ function App() {
           }}
         />
         <Header />
-        <button
-          className={`history-toggle ${showHistory ? "" : "is-collapsed"}`}
-          onClick={() => setShowHistory((prev) => !prev)}
-          aria-label={showHistory ? "隐藏列表" : "显示列表"}
-        >
-          <span className="sr-only">
-            {showHistory ? "隐藏列表" : "显示列表"}
-          </span>
-        </button>
+        {!isMemosRoute && (
+          <button
+            className={`history-toggle ${sidebarVisible ? "" : "is-collapsed"}`}
+            onClick={() => setShowHistory((prev) => !prev)}
+            aria-label={sidebarVisible ? "隐藏列表" : "显示列表"}
+          >
+            <span className="sr-only">
+              {sidebarVisible ? "隐藏列表" : "显示列表"}
+            </span>
+          </button>
+        )}
         <main
           className={mainClass}
           style={mainStyle}
-          data-show-history={showHistory}
+          data-show-history={sidebarVisible}
         >
-          <div
-            className={`history-pane ${showHistory ? "is-visible" : "is-hidden"}`}
-            aria-hidden={!showHistory}
-          >
-            <div className="history-pane__content">
-              <FileSidebar />
+          {!isMemosRoute && (
+            <div
+              className={`history-pane ${sidebarVisible ? "is-visible" : "is-hidden"}`}
+              aria-hidden={!sidebarVisible}
+            >
+              <div className="history-pane__content">
+                <FileSidebar />
+              </div>
             </div>
-          </div>
+          )}
           <div className="workspace">
             <div className="editor-pane" data-editor-mode={activeEditorMode}>
               {/* 存储未就绪或文件/历史加载中显示 loading */}
@@ -295,14 +308,26 @@ function App() {
                   <Loader2 className="animate-spin" size={24} />
                   <p>正在加载文章</p>
                 </div>
-              ) : hasNoSelectedMarkdown ? (
-                <div className="workspace-empty-selection">
-                  <p>无选择文件</p>
-                </div>
-              ) : activeEditorMode === "wysiwyg" ? (
-                <WysiwygMarkdownEditor key={wysiwygDocumentKey} />
               ) : (
-                <MarkdownEditor />
+                <Routes>
+                  <Route path="/schedule" element={<SchedulePage />} />
+                  <Route path="/memos" element={<MemoPage />} />
+                  <Route path="/history" element={<VersionTimelinePage />} />
+                  <Route
+                    path="*"
+                    element={
+                      hasNoSelectedMarkdown ? (
+                        <div className="workspace-empty-selection">
+                          <p>无选择文件</p>
+                        </div>
+                      ) : activeEditorMode === "wysiwyg" ? (
+                        <WysiwygMarkdownEditor key={wysiwygDocumentKey} />
+                      ) : (
+                        <MarkdownEditor />
+                      )
+                    }
+                  />
+                </Routes>
               )}
             </div>
           </div>

@@ -5,14 +5,11 @@ import "./Header.css";
 const ThemePanel = lazy(() =>
   import("../Theme/ThemePanel").then((m) => ({ default: m.ThemePanel })),
 );
-const VersionTimelinePanel = lazy(() =>
-  import("../VersionTimeline/VersionTimelinePanel").then((m) => ({
-    default: m.VersionTimelinePanel,
-  })),
-);
 import {
   Palette,
   History,
+  CalendarClock,
+  StickyNote,
   Send,
   Code,
   BookOpenText,
@@ -20,6 +17,7 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useUITheme } from "../../hooks/useUITheme";
 import { useWindowControls } from "../../hooks/useWindowControls";
 import { resolveAppAssetPath } from "../../utils/assetPath";
@@ -81,7 +79,10 @@ export function Header() {
   const { copyToWechat, copyToZhihu, copyToJuejin, copyAsHtml } =
     useEditorStore();
   const [showThemePanel, setShowThemePanel] = useState(false);
-  const [showVersionPanel, setShowVersionPanel] = useState(false);
+  const navigate = useNavigate();
+  const pathname = useLocation().pathname;
+  // Each nav target toggles: clicking the active one returns to the editor.
+  const go = (path: string) => navigate(pathname === path ? "/" : path);
   const uiTheme = useUITheme((state) => state.theme);
   const setTheme = useUITheme((state) => state.setTheme);
   const logoSrc = resolveAppAssetPath(
@@ -114,12 +115,31 @@ export function Header() {
               )}
             </button>
             <button
-              className="btn-secondary"
-              onClick={() => setShowVersionPanel(true)}
+              className={`btn-secondary ${pathname === "/history" ? "is-active" : ""}`}
+              onClick={() => go("/history")}
+              aria-pressed={pathname === "/history"}
               aria-label="版本时间线"
             >
               <History size={18} strokeWidth={2} />
               <span>版本</span>
+            </button>
+            <button
+              className={`btn-secondary ${pathname === "/schedule" ? "is-active" : ""}`}
+              onClick={() => go("/schedule")}
+              aria-pressed={pathname === "/schedule"}
+              aria-label="发布排期"
+            >
+              <CalendarClock size={18} strokeWidth={2} />
+              <span>排期</span>
+            </button>
+            <button
+              className={`btn-secondary ${pathname === "/memos" ? "is-active" : ""}`}
+              onClick={() => go("/memos")}
+              aria-pressed={pathname === "/memos"}
+              aria-label="素材收集"
+            >
+              <StickyNote size={18} strokeWidth={2} />
+              <span>素材</span>
             </button>
             <button
               className="btn-secondary"
@@ -164,13 +184,6 @@ export function Header() {
         <ThemePanel
           open={showThemePanel}
           onClose={() => setShowThemePanel(false)}
-        />
-      </Suspense>
-
-      <Suspense fallback={null}>
-        <VersionTimelinePanel
-          open={showVersionPanel}
-          onClose={() => setShowVersionPanel(false)}
         />
       </Suspense>
     </>

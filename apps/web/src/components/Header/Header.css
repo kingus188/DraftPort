@@ -243,6 +243,12 @@
   border-color: var(--border-color);
 }
 
+.btn-secondary.is-active {
+  background: var(--bg-secondary);
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
 .btn-secondary svg {
   width: 18px;
   height: 18px;

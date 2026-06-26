@@ -57,6 +57,10 @@
 }
 
 .workspace {
+  /* Always sit in the content track. On the memos route the history pane is
+     not rendered, so without this the lone workspace auto-places into the
+     collapsed first column and the editor only gets its 360px min-width. */
+  grid-column: 2;
   display: flex;
   gap: 0;
   height: 100%;

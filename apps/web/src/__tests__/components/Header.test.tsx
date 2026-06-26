@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { Header } from "../../components/Header/Header";
 import { useWindowControls } from "../../hooks/useWindowControls";
 import { useUITheme } from "../../hooks/useUITheme";
@@ -103,7 +104,7 @@ describe("Header", () => {
   });
 
   it("renders a compact publishing toolbar with minimal brand identity", () => {
-    render(<Header />);
+    render(<Header />, { wrapper: MemoryRouter });
 
     expect(screen.getByAltText("DraftPort Logo")).toBeInTheDocument();
     expect(screen.getByText("DraftPort")).toBeInTheDocument();
@@ -128,7 +129,7 @@ describe("Header", () => {
       close: mockClose,
     });
 
-    render(<Header />);
+    render(<Header />, { wrapper: MemoryRouter });
 
     expect(screen.getByText("DraftPort")).toBeInTheDocument();
     expect(document.querySelector(".app-header")).not.toHaveStyle({
@@ -137,7 +138,7 @@ describe("Header", () => {
   });
 
   it("toggles theme interaction", () => {
-    render(<Header />);
+    render(<Header />, { wrapper: MemoryRouter });
 
     const themeBtn = screen.getByTitle("切换到暗色模式");
     fireEvent.click(themeBtn);
@@ -145,28 +146,28 @@ describe("Header", () => {
   });
 
   it("calls copyToWechat action", () => {
-    render(<Header />);
+    render(<Header />, { wrapper: MemoryRouter });
 
     fireEvent.click(screen.getByText("复制到公众号"));
     expect(mockCopyToWechat).toHaveBeenCalled();
   });
 
   it("calls copyToZhihu action", () => {
-    render(<Header />);
+    render(<Header />, { wrapper: MemoryRouter });
 
     fireEvent.click(screen.getByText("复制到知乎"));
     expect(mockCopyToZhihu).toHaveBeenCalled();
   });
 
   it("calls copyToJuejin action", () => {
-    render(<Header />);
+    render(<Header />, { wrapper: MemoryRouter });
 
     fireEvent.click(screen.getByText("复制到掘金"));
     expect(mockCopyToJuejin).toHaveBeenCalled();
   });
 
   it("calls copyAsHtml action", () => {
-    render(<Header />);
+    render(<Header />, { wrapper: MemoryRouter });
 
     fireEvent.click(screen.getByRole("button", { name: "HTML" }));
     expect(mockCopyAsHtml).toHaveBeenCalled();
@@ -183,7 +184,7 @@ describe("Header", () => {
       close: mockClose,
     });
 
-    render(<Header />);
+    render(<Header />, { wrapper: MemoryRouter });
 
     expect(screen.queryByLabelText("最小化")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("关闭")).not.toBeInTheDocument();
@@ -200,7 +201,7 @@ describe("Header", () => {
       close: mockClose,
     });
 
-    render(<Header />);
+    render(<Header />, { wrapper: MemoryRouter });
 
     expect(screen.getByLabelText("最小化")).toBeInTheDocument();
     expect(screen.getByLabelText("最大化")).toBeInTheDocument();
@@ -212,20 +213,20 @@ describe("Header", () => {
   });
 
   it("does not expose manual header visibility switching", () => {
-    render(<Header />);
+    render(<Header />, { wrapper: MemoryRouter });
 
     expect(screen.queryByLabelText("隐藏标题栏")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("显示标题栏")).not.toBeInTheDocument();
   });
 
   it("does not render floating toolbar buttons", () => {
-    render(<Header />);
+    render(<Header />, { wrapper: MemoryRouter });
 
     expect(document.querySelector(".floating-toolbar")).not.toBeInTheDocument();
   });
 
   it("does not persist header visibility state", async () => {
-    render(<Header />);
+    render(<Header />, { wrapper: MemoryRouter });
 
     await waitFor(() => {
       expect(storageMock.setItem).not.toHaveBeenCalled();
