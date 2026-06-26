@@ -22,6 +22,7 @@ import { SchedulePage } from "./components/WorkspaceViews/SchedulePage";
 import { MemoPage } from "./components/WorkspaceViews/MemoPage";
 import { VersionTimelinePage } from "./components/WorkspaceViews/VersionTimelinePage";
 import { platform } from "./lib/platformAdapter";
+import { OutlinePanel } from "./outline/OutlinePanel";
 
 const Welcome = lazy(() =>
   import("./components/Welcome/Welcome").then((m) => ({ default: m.Welcome })),
@@ -73,6 +74,7 @@ function App() {
   // takes the full width.
   const isMemosRoute = useLocation().pathname === "/memos";
   const [showThemePanel, setShowThemePanel] = useState(false);
+  const [sidebarView, setSidebarView] = useState<"files" | "outline">("files");
   const [editorMode, setEditorMode] = useState<EditorMode>("wysiwyg");
   const canUseWysiwygEditor = canUseWysiwygMarkdown(markdown);
   const activeEditorMode = canUseWysiwygEditor ? editorMode : "source";
@@ -296,7 +298,29 @@ function App() {
               aria-hidden={!sidebarVisible}
             >
               <div className="history-pane__content">
-                <FileSidebar />
+                <div className="sidebar-switch" role="tablist">
+                  <button
+                    role="tab"
+                    aria-selected={sidebarView === "files"}
+                    className={sidebarView === "files" ? "is-active" : ""}
+                    onClick={() => setSidebarView("files")}
+                  >
+                    文件
+                  </button>
+                  <button
+                    role="tab"
+                    aria-selected={sidebarView === "outline"}
+                    className={sidebarView === "outline" ? "is-active" : ""}
+                    onClick={() => setSidebarView("outline")}
+                  >
+                    大纲
+                  </button>
+                </div>
+                {sidebarView === "files" ? (
+                  <FileSidebar />
+                ) : (
+                  <OutlinePanel markdown={markdown} />
+                )}
               </div>
             </div>
           )}
