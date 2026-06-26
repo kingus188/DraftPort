@@ -24,19 +24,62 @@ import "./WysiwygMarkdownEditor.css";
 const UNSAFE_WYSIWYG_MARKDOWN_PATTERNS: RegExp[] = [
   /(^|\n)>\s*\[!(TIP|NOTE|IMPORTANT|WARNING|CAUTION)\]/i,
   /==[^=\n]+==/,
-  /(^|[^~])~[^~\n]+~/,
   /\^[^^\n]+\^/,
   /\+\+[^+\n]+\+\+/,
   /^\[toc\]$/im,
 ];
+
+const DIGIT_PATTERN = /\d/;
+
+/** Returns whether a tilde is part of prose such as a numeric range or GFM strikethrough. */
+function isProseTilde(markdown: string, index: number): boolean {
+  const previous = markdown[index - 1] ?? "";
+  const next = markdown[index + 1] ?? "";
+
+  return (
+    previous === "~" ||
+    next === "~" ||
+    (DIGIT_PATTERN.test(previous) && DIGIT_PATTERN.test(next))
+  );
+}
+
+/** Detects single-tilde subscript syntax without treating numeric ranges like 04~08 as unsafe. */
+function hasUnsafeSingleTildeSpan(markdown: string): boolean {
+  let openingIndex = -1;
+
+  for (let index = 0; index < markdown.length; index += 1) {
+    const char = markdown[index];
+    if (char === "\n") {
+      openingIndex = -1;
+      continue;
+    }
+
+    if (char !== "~" || isProseTilde(markdown, index)) {
+      continue;
+    }
+
+    if (openingIndex === -1) {
+      openingIndex = index;
+      continue;
+    }
+
+    if (index > openingIndex + 1) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 /**
  * Returns whether Milkdown can be the default editor without risking loss of
  * DraftPort-specific Markdown extensions during serialization.
  */
 export function canUseWysiwygMarkdown(markdown: string): boolean {
-  return !UNSAFE_WYSIWYG_MARKDOWN_PATTERNS.some((pattern) =>
-    pattern.test(markdown),
+  return (
+    !UNSAFE_WYSIWYG_MARKDOWN_PATTERNS.some((pattern) =>
+      pattern.test(markdown),
+    ) && !hasUnsafeSingleTildeSpan(markdown)
   );
 }
 

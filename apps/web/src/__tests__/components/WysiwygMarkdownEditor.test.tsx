@@ -238,7 +238,16 @@ describe("canUseWysiwygMarkdown", () => {
 
   it("rejects DraftPort-specific Markdown that should stay in source mode", () => {
     expect(canUseWysiwygMarkdown("> [!WARNING]\n> be careful")).toBe(false);
+    expect(canUseWysiwygMarkdown("H~2~O")).toBe(false);
     expect(canUseWysiwygMarkdown("H~2~O and ==highlight==")).toBe(false);
+  });
+
+  it("allows numeric ranges that use tilde as prose punctuation", () => {
+    expect(
+      canUseWysiwygMarkdown(
+        "04~08 五个工程断点逐个拆 → 09~10 两篇检索/收藏型扩流量",
+      ),
+    ).toBe(true);
   });
 
   it("allows math, Mermaid, and emoji after the corresponding Milkdown plugins are installed", () => {
