@@ -11,7 +11,6 @@ import {
   Check,
   RefreshCw,
 } from "lucide-react";
-import { SidebarFooter } from "./SidebarFooter";
 import {
   DeleteFileModal,
   DeleteFolderModal,
@@ -365,8 +364,6 @@ export function FileSidebar() {
           )}
         </div>
       </div>
-
-      <SidebarFooter />
 
       {state.menuOpen && (
         <ContextMenu

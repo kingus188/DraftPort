@@ -7,10 +7,6 @@ import { FileSidebar } from "../../components/Sidebar/FileSidebar";
 const mockRefreshFiles = vi.fn(async () => undefined);
 const mockUseSidebarState = vi.fn();
 
-vi.mock("../../components/Sidebar/SidebarFooter", () => ({
-  SidebarFooter: () => <div data-testid="sidebar-footer" />,
-}));
-
 vi.mock("../../components/Sidebar/useSidebarState", () => ({
   FILE_DRAG_TYPE: "application/x-draftport-file",
   FOLDER_DRAG_TYPE: "application/x-draftport-folder",
