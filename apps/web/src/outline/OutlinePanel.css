@@ -3,8 +3,8 @@
   flex-direction: column;
   overflow-y: auto;
   height: 100%;
-  padding: 6px 8px;
-  gap: 1px;
+  padding: 8px 16px 16px 8px;
+  gap: 2px;
 }
 .outline-panel--empty {
   padding: 24px 16px;
@@ -18,10 +18,10 @@
   border: none;
   background: none;
   cursor: pointer;
-  padding: 6px 10px;
+  padding: 7px 12px;
   border-radius: var(--radius-md);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.55;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -42,7 +42,7 @@
 .outline-row[data-level="5"],
 .outline-row[data-level="6"] {
   color: var(--text-tertiary);
-  font-size: 12px;
+  font-size: 13px;
 }
 .outline-row:hover {
   background: var(--bg-hover);
