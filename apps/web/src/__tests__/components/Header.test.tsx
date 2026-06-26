@@ -146,10 +146,10 @@ describe("Header", () => {
     expect(screen.getByRole("button", { name: "HTML" })).toBeInTheDocument();
   });
 
-  it("hides publishing actions and theme on the memos view", () => {
-    renderAt("/memos");
+  it("hides publishing actions and theme on the version timeline view", () => {
+    renderAt("/history");
 
-    // 发布与主题在素材视图无意义,应隐藏
+    // 发布与主题在版本视图无意义,应隐藏
     expect(screen.queryByText("复制到公众号")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "更多复制方式" }),
@@ -160,20 +160,9 @@ describe("Header", () => {
 
     // 导航与外观切换常驻
     expect(
-      screen.getByRole("button", { name: "素材收集" }),
-    ).toBeInTheDocument();
-    expect(
       screen.getByRole("button", { name: "版本时间线" }),
     ).toBeInTheDocument();
     expect(screen.getByTitle("切换到暗色模式")).toBeInTheDocument();
-  });
-
-  it("hides publishing actions on schedule and history views", () => {
-    renderAt("/schedule");
-    expect(screen.queryByText("复制到公众号")).not.toBeInTheDocument();
-
-    renderAt("/history");
-    expect(screen.queryByText("复制到公众号")).not.toBeInTheDocument();
   });
 
   it("keeps the minimal brand visible on macOS", () => {

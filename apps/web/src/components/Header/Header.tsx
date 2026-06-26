@@ -8,8 +8,6 @@ const ThemePanel = lazy(() =>
 import {
   Palette,
   History,
-  CalendarClock,
-  StickyNote,
   Send,
   Code,
   BookOpenText,
@@ -20,7 +18,7 @@ import {
 } from "lucide-react";
 
 // 工作区视图各有自己的路由,其余路径都视为编辑器态。
-const WORKSPACE_ROUTES = ["/memos", "/schedule", "/history"];
+const WORKSPACE_ROUTES = ["/history"];
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUITheme } from "../../hooks/useUITheme";
 import { useWindowControls } from "../../hooks/useWindowControls";
@@ -143,24 +141,6 @@ export function Header() {
             >
               <History size={18} strokeWidth={2} />
               <span>版本</span>
-            </button>
-            <button
-              className={`btn-secondary ${pathname === "/schedule" ? "is-active" : ""}`}
-              onClick={() => go("/schedule")}
-              aria-pressed={pathname === "/schedule"}
-              aria-label="发布排期"
-            >
-              <CalendarClock size={18} strokeWidth={2} />
-              <span>排期</span>
-            </button>
-            <button
-              className={`btn-secondary ${pathname === "/memos" ? "is-active" : ""}`}
-              onClick={() => go("/memos")}
-              aria-pressed={pathname === "/memos"}
-              aria-label="素材收集"
-            >
-              <StickyNote size={18} strokeWidth={2} />
-              <span>素材</span>
             </button>
             {isEditorRoute && (
               <>
