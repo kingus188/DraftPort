@@ -1,7 +1,7 @@
 // Owns the Typora-like rendered Markdown editing surface.
 // The component keeps Markdown as DraftPort's storage format while Milkdown owns rendered editing.
 
-import { useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { defaultValueCtx, Editor, rootCtx } from "@milkdown/core";
 import { clipboard } from "@milkdown/plugin-clipboard";
 import { history } from "@milkdown/plugin-history";
@@ -13,6 +13,8 @@ import { nord } from "@milkdown/theme-nord";
 import { useUITheme } from "../../hooks/useUITheme";
 import { useEditorStore } from "../../store/editorStore";
 import { useThemeStore } from "../../store/themeStore";
+import { onOutlineJump } from "../../outline/outlineBus";
+import { useHeadingScrollSpy } from "../../outline/useHeadingScrollSpy";
 import "./WysiwygMarkdownEditor.css";
 
 const UNSAFE_WYSIWYG_MARKDOWN_PATTERNS: RegExp[] = [
@@ -100,8 +102,35 @@ export function WysiwygMarkdownEditor() {
     [customCSS, getThemeCSS, themeId, uiTheme],
   );
 
+  // 大纲适配器:用回调 ref 取表面元素,确保挂载后 hook 拿到非空容器。
+  const [surfaceEl, setSurfaceEl] = useState<HTMLDivElement | null>(null);
+  const getHeadings = useCallback(
+    () =>
+      Array.from(
+        surfaceEl?.querySelectorAll<HTMLElement>("h1, h2, h3, h4, h5, h6") ??
+          [],
+      ),
+    [surfaceEl],
+  );
+
+  // 点击大纲 → 滚到第 index 个标题节点。
+  useEffect(
+    () =>
+      onOutlineJump((index) => {
+        getHeadings()[index]?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }),
+    [getHeadings],
+  );
+
+  // 滚动 WYSIWYG → 上报当前标题给大纲高亮。
+  useHeadingScrollSpy(surfaceEl, getHeadings);
+
   return (
     <div
+      ref={setSurfaceEl}
       className="wysiwyg-markdown-editor"
       data-testid="wysiwyg-markdown-editor"
     >
