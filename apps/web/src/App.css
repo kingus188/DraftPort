@@ -256,29 +256,38 @@
 }
 
 /* 左栏文件树 / 大纲 切换 */
+/* 左对齐文字标签 + 激活下划线,与下方大纲共用 16px 左边缘,避免居中/靠左轴线打架。 */
 .sidebar-switch {
   display: flex;
-  gap: 4px;
-  padding: 8px 12px 6px;
+  gap: 20px;
+  padding: 10px 16px 0;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--border-light);
 }
 .sidebar-switch button {
-  flex: 1;
+  position: relative;
   border: none;
   background: none;
   cursor: pointer;
-  padding: 5px 0;
+  padding: 4px 0 8px;
   font-size: 13px;
   color: var(--text-secondary);
-  border-radius: var(--radius-md);
-  transition:
-    background-color 0.15s ease,
-    color 0.15s ease;
+  transition: color 0.15s ease;
 }
 .sidebar-switch button:hover {
   color: var(--text-primary);
 }
 .sidebar-switch button.is-active {
-  color: var(--text-primary);
-  background: var(--bg-hover);
+  color: var(--accent-primary);
   font-weight: 600;
+}
+.sidebar-switch button.is-active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent-primary);
 }

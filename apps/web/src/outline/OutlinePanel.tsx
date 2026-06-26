@@ -26,7 +26,7 @@ export function OutlinePanel({ markdown }: OutlinePanelProps) {
           key={item.index}
           className={`outline-row ${item.index === activeIndex ? "is-active" : ""}`}
           data-level={item.level}
-          style={{ paddingLeft: `${(item.level - 1) * 12 + 12}px` }}
+          style={{ paddingLeft: `${(item.level - 1) * 12 + 8}px` }}
           onClick={() => emitOutlineJump(item.index)}
           title={item.text}
         >
