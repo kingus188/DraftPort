@@ -1,6 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
+
+const renderAt = (path: string) =>
+  render(<Header />, {
+    wrapper: ({ children }: { children: ReactNode }) => (
+      <MemoryRouter initialEntries={[path]}>{children}</MemoryRouter>
+    ),
+  });
+
+const openCopyMenu = () =>
+  fireEvent.click(screen.getByRole("button", { name: "更多复制方式" }));
 import { Header } from "../../components/Header/Header";
 import { useWindowControls } from "../../hooks/useWindowControls";
 import { useUITheme } from "../../hooks/useUITheme";
@@ -112,10 +123,57 @@ describe("Header", () => {
       screen.queryByText("公众号 Markdown 排版编辑器"),
     ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "主题" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "HTML" })).toBeInTheDocument();
+    // 公众号是主操作,直接可见
+    expect(screen.getByText("复制到公众号")).toBeInTheDocument();
+    // 次要复制项收进下拉,默认折叠
+    expect(
+      screen.getByRole("button", { name: "更多复制方式" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("复制到知乎")).not.toBeInTheDocument();
+    expect(screen.queryByText("复制到掘金")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "HTML" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("reveals secondary copy targets after opening the copy menu", () => {
+    render(<Header />, { wrapper: MemoryRouter });
+
+    openCopyMenu();
+
     expect(screen.getByText("复制到知乎")).toBeInTheDocument();
     expect(screen.getByText("复制到掘金")).toBeInTheDocument();
-    expect(screen.getByText("复制到公众号")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "HTML" })).toBeInTheDocument();
+  });
+
+  it("hides publishing actions and theme on the memos view", () => {
+    renderAt("/memos");
+
+    // 发布与主题在素材视图无意义,应隐藏
+    expect(screen.queryByText("复制到公众号")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "更多复制方式" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "主题" }),
+    ).not.toBeInTheDocument();
+
+    // 导航与外观切换常驻
+    expect(
+      screen.getByRole("button", { name: "素材收集" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "版本时间线" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTitle("切换到暗色模式")).toBeInTheDocument();
+  });
+
+  it("hides publishing actions on schedule and history views", () => {
+    renderAt("/schedule");
+    expect(screen.queryByText("复制到公众号")).not.toBeInTheDocument();
+
+    renderAt("/history");
+    expect(screen.queryByText("复制到公众号")).not.toBeInTheDocument();
   });
 
   it("keeps the minimal brand visible on macOS", () => {
@@ -155,6 +213,7 @@ describe("Header", () => {
   it("calls copyToZhihu action", () => {
     render(<Header />, { wrapper: MemoryRouter });
 
+    openCopyMenu();
     fireEvent.click(screen.getByText("复制到知乎"));
     expect(mockCopyToZhihu).toHaveBeenCalled();
   });
@@ -162,6 +221,7 @@ describe("Header", () => {
   it("calls copyToJuejin action", () => {
     render(<Header />, { wrapper: MemoryRouter });
 
+    openCopyMenu();
     fireEvent.click(screen.getByText("复制到掘金"));
     expect(mockCopyToJuejin).toHaveBeenCalled();
   });
@@ -169,6 +229,7 @@ describe("Header", () => {
   it("calls copyAsHtml action", () => {
     render(<Header />, { wrapper: MemoryRouter });
 
+    openCopyMenu();
     fireEvent.click(screen.getByRole("button", { name: "HTML" }));
     expect(mockCopyAsHtml).toHaveBeenCalled();
   });

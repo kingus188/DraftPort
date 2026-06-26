@@ -255,6 +255,71 @@
   opacity: 0.8;
 }
 
+/* 复制拆分按钮:公众号主操作 + 次要复制项下拉 */
+.copy-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.copy-group .btn-primary {
+  min-width: 140px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.copy-menu-toggle {
+  width: 32px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -1px;
+}
+
+.copy-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 6px;
+  background: var(--bg-primary);
+  border: var(--border-width) solid var(--border-light);
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+}
+
+.copy-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.copy-menu__item:hover {
+  background: var(--bg-hover);
+  color: var(--accent-primary);
+}
+
+.copy-menu__item svg {
+  width: 18px;
+  height: 18px;
+  opacity: 0.8;
+}
+
 /* 图标按钮 */
 .btn-icon {
   display: flex;

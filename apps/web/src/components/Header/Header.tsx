@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { useEditorStore } from "../../store/editorStore";
 import "./Header.css";
 
@@ -16,7 +16,11 @@ import {
   Gem,
   Sun,
   Moon,
+  ChevronDown,
 } from "lucide-react";
+
+// 工作区视图各有自己的路由,其余路径都视为编辑器态。
+const WORKSPACE_ROUTES = ["/memos", "/schedule", "/history"];
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUITheme } from "../../hooks/useUITheme";
 import { useWindowControls } from "../../hooks/useWindowControls";
@@ -79,10 +83,27 @@ export function Header() {
   const { copyToWechat, copyToZhihu, copyToJuejin, copyAsHtml } =
     useEditorStore();
   const [showThemePanel, setShowThemePanel] = useState(false);
+  const [copyMenuOpen, setCopyMenuOpen] = useState(false);
+  const copyMenuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const pathname = useLocation().pathname;
   // Each nav target toggles: clicking the active one returns to the editor.
   const go = (path: string) => navigate(pathname === path ? "/" : path);
+  // 发布与主题只在编辑器态有意义,工作区视图隐藏整组。
+  const isEditorRoute = !WORKSPACE_ROUTES.includes(pathname);
+
+  // 关闭下拉:点击菜单外部,或切换视图时。
+  useEffect(() => setCopyMenuOpen(false), [pathname]);
+  useEffect(() => {
+    if (!copyMenuOpen) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!copyMenuRef.current?.contains(event.target as Node)) {
+        setCopyMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [copyMenuOpen]);
   const uiTheme = useUITheme((state) => state.theme);
   const setTheme = useUITheme((state) => state.setTheme);
   const logoSrc = resolveAppAssetPath(
@@ -141,38 +162,69 @@ export function Header() {
               <StickyNote size={18} strokeWidth={2} />
               <span>素材</span>
             </button>
-            <button
-              className="btn-secondary"
-              onClick={() => setShowThemePanel(true)}
-              aria-label="主题"
-            >
-              <Palette size={18} strokeWidth={2} />
-              <span>主题</span>
-            </button>
+            {isEditorRoute && (
+              <>
+                <button
+                  className="btn-secondary"
+                  onClick={() => setShowThemePanel(true)}
+                  aria-label="主题"
+                >
+                  <Palette size={18} strokeWidth={2} />
+                  <span>主题</span>
+                </button>
 
-            <button
-              className="btn-secondary"
-              onClick={copyAsHtml}
-              aria-label="HTML"
-            >
-              <Code size={18} strokeWidth={2} />
-              <span>HTML</span>
-            </button>
+                <div className="copy-group" ref={copyMenuRef}>
+                  <button className="btn-primary" onClick={copyToWechat}>
+                    <Send size={18} strokeWidth={2} />
+                    <span>复制到公众号</span>
+                  </button>
+                  <button
+                    className="btn-icon-only copy-menu-toggle"
+                    onClick={() => setCopyMenuOpen((open) => !open)}
+                    aria-label="更多复制方式"
+                    aria-expanded={copyMenuOpen}
+                  >
+                    <ChevronDown size={18} strokeWidth={2} />
+                  </button>
 
-            <button className="btn-secondary" onClick={copyToZhihu}>
-              <BookOpenText size={18} strokeWidth={2} />
-              <span>复制到知乎</span>
-            </button>
-
-            <button className="btn-secondary" onClick={copyToJuejin}>
-              <Gem size={18} strokeWidth={2} />
-              <span>复制到掘金</span>
-            </button>
-
-            <button className="btn-primary" onClick={copyToWechat}>
-              <Send size={18} strokeWidth={2} />
-              <span>复制到公众号</span>
-            </button>
+                  {copyMenuOpen && (
+                    <div className="copy-menu" role="menu">
+                      <button
+                        className="copy-menu__item"
+                        onClick={() => {
+                          copyAsHtml();
+                          setCopyMenuOpen(false);
+                        }}
+                        aria-label="HTML"
+                      >
+                        <Code size={18} strokeWidth={2} />
+                        <span>HTML</span>
+                      </button>
+                      <button
+                        className="copy-menu__item"
+                        onClick={() => {
+                          copyToZhihu();
+                          setCopyMenuOpen(false);
+                        }}
+                      >
+                        <BookOpenText size={18} strokeWidth={2} />
+                        <span>复制到知乎</span>
+                      </button>
+                      <button
+                        className="copy-menu__item"
+                        onClick={() => {
+                          copyToJuejin();
+                          setCopyMenuOpen(false);
+                        }}
+                      >
+                        <Gem size={18} strokeWidth={2} />
+                        <span>复制到掘金</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Windows 自定义标题栏按钮 */}
