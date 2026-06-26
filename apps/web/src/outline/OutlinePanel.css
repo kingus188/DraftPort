@@ -1,0 +1,32 @@
+.outline-panel {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  height: 100%;
+  padding: 8px 0;
+}
+.outline-panel--empty {
+  padding: 16px;
+  color: var(--text-secondary, #888);
+  font-size: 13px;
+}
+.outline-row {
+  text-align: left;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 4px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary, #333);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.outline-row:hover {
+  background: var(--hover-bg, rgba(0, 0, 0, 0.04));
+}
+.outline-row.is-active {
+  color: var(--accent, #07c160);
+  font-weight: 600;
+}
