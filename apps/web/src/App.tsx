@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Toaster } from "react-hot-toast";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { Header } from "./components/Header/Header";
 import { FileSidebar } from "./components/Sidebar/FileSidebar";
 import { MarkdownEditor } from "./components/Editor/MarkdownEditor";
@@ -18,9 +18,6 @@ import "./App.css";
 
 import { Loader2 } from "lucide-react";
 import { useFileStore } from "./store/fileStore";
-import { SchedulePage } from "./components/WorkspaceViews/SchedulePage";
-import { MemoPage } from "./components/WorkspaceViews/MemoPage";
-import { VersionTimelinePage } from "./components/WorkspaceViews/VersionTimelinePage";
 import { platform } from "./lib/platformAdapter";
 import { OutlinePanel } from "./outline/OutlinePanel";
 
@@ -70,9 +67,6 @@ function App() {
   const markdown = useEditorStore((state) => state.markdown);
   const storedFilePath = useEditorStore((state) => state.currentFilePath);
   const currentFilePath = useFileStore((state) => state.currentFile?.path);
-  // The memo collection is a standalone subsystem: it hides the file tree and
-  // takes the full width.
-  const isMemosRoute = useLocation().pathname === "/memos";
   const [showThemePanel, setShowThemePanel] = useState(false);
   const [sidebarView, setSidebarView] = useState<"files" | "outline">("files");
   const [editorMode, setEditorMode] = useState<EditorMode>("wysiwyg");
@@ -183,8 +177,8 @@ function App() {
   }, [showHistory]);
 
   const mainClass = "app-main";
-  const sidebarVisible = showHistory && !isMemosRoute;
-  const effectiveHistoryWidth = isMemosRoute ? "0px" : historyWidth;
+  const sidebarVisible = showHistory;
+  const effectiveHistoryWidth = historyWidth;
   const mainStyle = useMemo(
     () =>
       ({
@@ -276,54 +270,50 @@ function App() {
           }}
         />
         <Header />
-        {!isMemosRoute && (
-          <button
-            className={`history-toggle ${sidebarVisible ? "" : "is-collapsed"}`}
-            onClick={() => setShowHistory((prev) => !prev)}
-            aria-label={sidebarVisible ? "隐藏列表" : "显示列表"}
-          >
-            <span className="sr-only">
-              {sidebarVisible ? "隐藏列表" : "显示列表"}
-            </span>
-          </button>
-        )}
+        <button
+          className={`history-toggle ${sidebarVisible ? "" : "is-collapsed"}`}
+          onClick={() => setShowHistory((prev) => !prev)}
+          aria-label={sidebarVisible ? "隐藏列表" : "显示列表"}
+        >
+          <span className="sr-only">
+            {sidebarVisible ? "隐藏列表" : "显示列表"}
+          </span>
+        </button>
         <main
           className={mainClass}
           style={mainStyle}
           data-show-history={sidebarVisible}
         >
-          {!isMemosRoute && (
-            <div
-              className={`history-pane ${sidebarVisible ? "is-visible" : "is-hidden"}`}
-              aria-hidden={!sidebarVisible}
-            >
-              <div className="history-pane__content">
-                <div className="sidebar-switch" role="tablist">
-                  <button
-                    role="tab"
-                    aria-selected={sidebarView === "files"}
-                    className={sidebarView === "files" ? "is-active" : ""}
-                    onClick={() => setSidebarView("files")}
-                  >
-                    文件
-                  </button>
-                  <button
-                    role="tab"
-                    aria-selected={sidebarView === "outline"}
-                    className={sidebarView === "outline" ? "is-active" : ""}
-                    onClick={() => setSidebarView("outline")}
-                  >
-                    大纲
-                  </button>
-                </div>
-                {sidebarView === "files" ? (
-                  <FileSidebar />
-                ) : (
-                  <OutlinePanel markdown={markdown} />
-                )}
+          <div
+            className={`history-pane ${sidebarVisible ? "is-visible" : "is-hidden"}`}
+            aria-hidden={!sidebarVisible}
+          >
+            <div className="history-pane__content">
+              <div className="sidebar-switch" role="tablist">
+                <button
+                  role="tab"
+                  aria-selected={sidebarView === "files"}
+                  className={sidebarView === "files" ? "is-active" : ""}
+                  onClick={() => setSidebarView("files")}
+                >
+                  文件
+                </button>
+                <button
+                  role="tab"
+                  aria-selected={sidebarView === "outline"}
+                  className={sidebarView === "outline" ? "is-active" : ""}
+                  onClick={() => setSidebarView("outline")}
+                >
+                  大纲
+                </button>
               </div>
+              {sidebarView === "files" ? (
+                <FileSidebar />
+              ) : (
+                <OutlinePanel markdown={markdown} />
+              )}
             </div>
-          )}
+          </div>
           <div className="workspace">
             <div className="editor-pane" data-editor-mode={activeEditorMode}>
               {/* 存储未就绪或文件/历史加载中显示 loading */}
@@ -334,9 +324,6 @@ function App() {
                 </div>
               ) : (
                 <Routes>
-                  <Route path="/schedule" element={<SchedulePage />} />
-                  <Route path="/memos" element={<MemoPage />} />
-                  <Route path="/history" element={<VersionTimelinePage />} />
                   <Route
                     path="*"
                     element={

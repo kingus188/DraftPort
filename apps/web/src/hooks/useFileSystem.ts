@@ -22,24 +22,9 @@ import {
 } from "./useFileSystemHelpers";
 import { useFileSystemFolderActions } from "./useFileSystemFolderActions";
 import { useFileSystemEffects } from "./useFileSystemEffects";
-import { useVersionStore } from "../store/versionStore";
-import type { DocumentVersion, VersionContent } from "../store/versionTypes";
 
 interface UseFileSystemOptions {
   enableEffects?: boolean;
-}
-
-/** Snapshot of the live editor/theme state used to cut a version. */
-function captureVersionContent(file: FileItem): VersionContent {
-  const { markdown } = useEditorStore.getState();
-  const { themeId, themeName, customCSS } = useThemeStore.getState();
-  return {
-    markdown,
-    theme: themeId,
-    themeName,
-    customCSS,
-    title: file.title || stripMarkdownExtension(file.name),
-  };
 }
 
 /**
@@ -151,8 +136,6 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
         useThemeStore.getState().selectTheme(parsed.theme);
         setLastSavedContent(content);
         setIsDirty(false);
-        // 切换文档时把该文档的版本时间线载入面板。
-        void useVersionStore.getState().load(file.path);
       } else {
         toast.error("无法读取文件");
       }
@@ -310,12 +293,6 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
         setLastSavedContent(fullContent);
         setLastSavedAt(new Date());
         setIsDirty(false);
-        // 每次成功保存切一个自动版本(cut 内部去重,内容未变则跳过)。
-        void useVersionStore.getState().cut({
-          docKey: currentFile.path,
-          content: captureVersionContent(currentFile),
-          kind: "auto",
-        });
         if (showToast) toast.success("已保存");
       } else {
         toast.error("保存失败: " + errorMsg);
@@ -397,35 +374,6 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
     [refreshFiles, currentFile, setMarkdown, desktop],
   );
 
-  const restoreVersion = useCallback(
-    async (version: DocumentVersion) => {
-      const file = useFileStore.getState().currentFile;
-      if (!file) return;
-      // 恢复前先快照当前态,保证恢复可回退(非破坏)。
-      await useVersionStore.getState().cut({
-        docKey: file.path,
-        content: captureVersionContent(file),
-        kind: "auto",
-      });
-      setMarkdown(version.markdown);
-      useThemeStore.getState().selectTheme(version.theme);
-      useThemeStore.getState().setCustomCSS(version.customCSS ?? "");
-      await saveFile();
-    },
-    [setMarkdown, saveFile],
-  );
-
-  const markMilestone = useCallback(async (label: string) => {
-    const file = useFileStore.getState().currentFile;
-    if (!file) return;
-    await useVersionStore.getState().cut({
-      docKey: file.path,
-      content: captureVersionContent(file),
-      kind: "milestone",
-      label: label.trim() || "里程碑",
-    });
-  }, []);
-
   const folderActions = useFileSystemFolderActions({
     desktop,
     refreshFiles,
@@ -470,8 +418,6 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
     updateFileTitle,
     renameFile: updateFileTitle,
     deleteFile,
-    restoreVersion,
-    markMilestone,
     ...folderActions,
     flattenFiles,
   };

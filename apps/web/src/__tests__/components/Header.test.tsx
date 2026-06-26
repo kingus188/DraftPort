@@ -114,7 +114,7 @@ describe("Header", () => {
     vi.unstubAllGlobals();
   });
 
-  it("renders a compact publishing toolbar with minimal brand identity", () => {
+  it("renders only editor-focused top-level actions", () => {
     render(<Header />, { wrapper: MemoryRouter });
 
     expect(screen.getByAltText("DraftPort Logo")).toBeInTheDocument();
@@ -123,9 +123,7 @@ describe("Header", () => {
       screen.queryByText("公众号 Markdown 排版编辑器"),
     ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "主题" })).toBeInTheDocument();
-    // 公众号是主操作,直接可见
     expect(screen.getByText("复制到公众号")).toBeInTheDocument();
-    // 次要复制项收进下拉,默认折叠
     expect(
       screen.getByRole("button", { name: "更多复制方式" }),
     ).toBeInTheDocument();
@@ -133,6 +131,16 @@ describe("Header", () => {
     expect(screen.queryByText("复制到掘金")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "HTML" }),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole("button", { name: "版本时间线" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "发布排期" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "素材收集" }),
     ).not.toBeInTheDocument();
   });
 
@@ -146,35 +154,27 @@ describe("Header", () => {
     expect(screen.getByRole("button", { name: "HTML" })).toBeInTheDocument();
   });
 
-  it("hides publishing actions and theme on the memos view", () => {
-    renderAt("/memos");
+  it.each(["/history", "/schedule", "/memos"])(
+    "keeps editor actions visible on legacy workspace URL %s",
+    (path) => {
+      renderAt(path);
 
-    // 发布与主题在素材视图无意义,应隐藏
-    expect(screen.queryByText("复制到公众号")).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "更多复制方式" }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "主题" }),
-    ).not.toBeInTheDocument();
-
-    // 导航与外观切换常驻
-    expect(
-      screen.getByRole("button", { name: "素材收集" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "版本时间线" }),
-    ).toBeInTheDocument();
-    expect(screen.getByTitle("切换到暗色模式")).toBeInTheDocument();
-  });
-
-  it("hides publishing actions on schedule and history views", () => {
-    renderAt("/schedule");
-    expect(screen.queryByText("复制到公众号")).not.toBeInTheDocument();
-
-    renderAt("/history");
-    expect(screen.queryByText("复制到公众号")).not.toBeInTheDocument();
-  });
+      expect(screen.getByRole("button", { name: "主题" })).toBeInTheDocument();
+      expect(screen.getByText("复制到公众号")).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "更多复制方式" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "版本时间线" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "发布排期" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "素材收集" }),
+      ).not.toBeInTheDocument();
+    },
+  );
 
   it("keeps the minimal brand visible on macOS", () => {
     vi.mocked(useWindowControls).mockReturnValue({

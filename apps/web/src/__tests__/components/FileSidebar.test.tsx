@@ -115,6 +115,6 @@ describe("FileSidebar", () => {
     );
     const headerRule = sidebarStyles.match(/\.fs-header\s*{[^}]+}/)?.[0] ?? "";
 
-    expect(headerRule).toContain("padding: 44px 24px 8px;");
+    expect(headerRule).toContain("padding: 16px 16px 4px;");
   });
 });

@@ -3,6 +3,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ReactNode } from "react";
 import App from "../../App";
 import type { FileItem } from "../../store/fileTypes";
 
@@ -26,6 +27,13 @@ const activeFile = (): FileItem => ({
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
   size: 10,
 });
+
+const renderAppAt = (path: string) =>
+  render(<App />, {
+    wrapper: ({ children }: { children: ReactNode }) => (
+      <MemoryRouter initialEntries={[path]}>{children}</MemoryRouter>
+    ),
+  });
 
 const wysiwygMountState = vi.hoisted(() => ({
   mountCount: 0,
@@ -223,5 +231,17 @@ describe("App Typora-like WYSIWYG editing mode", () => {
     expect(
       screen.queryByTestId("markdown-source-editor"),
     ).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["/history", "版本时间线"],
+    ["/schedule", "发布排期"],
+    ["/memos", "素材收集"],
+  ])("treats removed workspace URL %s as the editor surface", (path, title) => {
+    renderAppAt(path);
+
+    expect(screen.getByTestId("file-sidebar")).toBeInTheDocument();
+    expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
+    expect(screen.queryByText(title)).not.toBeInTheDocument();
   });
 });

@@ -80,7 +80,7 @@ describe("App read-only workspace mode", () => {
     render(<App />, { wrapper: MemoryRouter });
 
     expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
-    expect(screen.queryByTestId("markdown-editor")).not.toBeInTheDocument();
+    expect(screen.getByTestId("markdown-editor")).not.toBeVisible();
     expect(screen.queryByTestId("markdown-preview")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("separator", { name: "调整预览面板宽度" }),
@@ -93,7 +93,7 @@ describe("App read-only workspace mode", () => {
     render(<App />, { wrapper: MemoryRouter });
 
     expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
-    expect(screen.queryByTestId("markdown-editor")).not.toBeInTheDocument();
+    expect(screen.getByTestId("markdown-editor")).not.toBeVisible();
     expect(screen.queryByTestId("markdown-preview")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("separator", { name: "调整预览面板宽度" }),
@@ -110,7 +110,7 @@ describe("App read-only workspace mode", () => {
     render(<App />, { wrapper: MemoryRouter });
 
     expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
-    expect(screen.queryByTestId("markdown-editor")).not.toBeInTheDocument();
+    expect(screen.getByTestId("markdown-editor")).not.toBeVisible();
     expect(screen.queryByTestId("markdown-preview")).not.toBeInTheDocument();
   });
 });
