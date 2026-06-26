@@ -3,30 +3,55 @@
   flex-direction: column;
   overflow-y: auto;
   height: 100%;
-  padding: 8px 0;
+  padding: 6px 8px;
+  gap: 1px;
 }
 .outline-panel--empty {
-  padding: 16px;
-  color: var(--text-secondary, #888);
+  padding: 24px 16px;
+  color: var(--text-tertiary);
   font-size: 13px;
+  text-align: center;
 }
 .outline-row {
+  position: relative;
   text-align: left;
   border: none;
   background: none;
   cursor: pointer;
-  padding: 4px 12px;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
   font-size: 13px;
   line-height: 1.5;
-  color: var(--text-primary, #333);
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+/* 一级标题更突出,层级越深越淡,靠字色而非缩进单独承担层级感。 */
+.outline-row[data-level="1"] {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.outline-row[data-level="2"] {
+  color: var(--text-primary);
+}
+.outline-row[data-level="4"],
+.outline-row[data-level="5"],
+.outline-row[data-level="6"] {
+  color: var(--text-tertiary);
+  font-size: 12px;
 }
 .outline-row:hover {
-  background: var(--hover-bg, rgba(0, 0, 0, 0.04));
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
+/* 当前所在标题:绿色左强调条 + 极淡绿底,呼应正文章节标题的竖条。 */
 .outline-row.is-active {
-  color: var(--accent, #07c160);
+  color: var(--accent-primary);
   font-weight: 600;
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  box-shadow: inset 2px 0 0 var(--accent-primary);
 }
