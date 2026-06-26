@@ -78,6 +78,14 @@
   font-family: var(--font-mono);
 }
 
+/* Keep editable GFM tables visually continuous even when theme CSS is injected later. */
+.wysiwyg-markdown-editor #draftport .ProseMirror table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
 [data-ui-theme="dark"] .wysiwyg-markdown-editor {
   background: #1e1e1e;
 }

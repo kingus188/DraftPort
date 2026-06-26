@@ -90,9 +90,25 @@
   /* 允许浏览器合成斜体 */
 }
 
-/* 表格容器横向滚动（主题 CSS 可能缺失此规则） */
+/* 表格容器横向滚动（仅 markdown 解析出的表格带此外层） */
 #draftport .table-container {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/*
+ * 表格布局：直接作用于 table，覆盖 markdown 管道表格与报告类原始 HTML 表格
+ * （后者不带 .table-container 外层，且单元格常带 inline 样式）。
+ * 报告表格会在 table/td 上写 inline 的 border-spacing、word-break 等，inline 优先级
+ * 高于任何外部选择器，因此这里必须用 !important 才能压过，统一成主题表格观感：
+ * - collapse + spacing:0 消除单元格间距导致的“双边框/宽边框”
+ */
+.preview-content #draftport table {
+  width: auto !important;
+  min-width: 100%;
+  table-layout: auto !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
 }
 
 /* 强制图片自适应，修复浏览器存储模式下图片过大的问题 */

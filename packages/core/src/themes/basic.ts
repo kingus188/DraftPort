@@ -280,6 +280,8 @@ export const basicTheme = `/* 默认样式，最佳实践 */
 #draftport table {
   display: table;
   text-align: left;
+  border-collapse: collapse;
+  border-spacing: 0;
 }
 #draftport tbody {
   border: 0;

@@ -42,6 +42,36 @@ describe("responsive shell chrome styles", () => {
     expect(css).not.toContain(".preview-device-actions");
   });
 
+  it("keeps table borders collapsed across theme, preview, and WYSIWYG surfaces", () => {
+    const basicTheme = readWorkspaceStyle(
+      "../../packages/core/src/themes/basic.ts",
+    );
+    const previewCss = readWorkspaceStyle(
+      "src/components/Preview/MarkdownPreview.css",
+    );
+    const wysiwygCss = readWorkspaceStyle(
+      "src/components/Editor/WysiwygMarkdownEditor.css",
+    );
+
+    const baseTableRule = getRuleBody(basicTheme, "#draftport table");
+    expect(baseTableRule).toContain("border-collapse: collapse");
+    expect(baseTableRule).toContain("border-spacing: 0");
+
+    expect(getRuleBody(previewCss, "#draftport .table-container")).toContain(
+      "overflow-x: auto",
+    );
+    expect(
+      getRuleBody(previewCss, ".preview-content #draftport table"),
+    ).toContain("border-collapse: collapse");
+
+    const wysiwygTableRule = getRuleBody(
+      wysiwygCss,
+      ".wysiwyg-markdown-editor #draftport .ProseMirror table",
+    );
+    expect(wysiwygTableRule).toContain("border-collapse: collapse");
+    expect(wysiwygTableRule).toContain("border-spacing: 0");
+  });
+
   it("keeps collapsed history width respected on narrower desktop windows", () => {
     const css = readWorkspaceStyle("src/App.css");
 
