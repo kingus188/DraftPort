@@ -470,7 +470,8 @@ export function useSidebarState() {
   const handleFileClick = useCallback(
     async (file: FileItem) => {
       await openFile(file);
-      await refreshRecentItems();
+      // file_open records recent history in Tauri; defer reloading that sort input
+      // so selecting a file does not reshuffle the visible tree immediately.
       const parentPath = resolveParentFolderPath(file.path, workspacePath);
       setActiveFolder(parentPath);
 
@@ -482,7 +483,7 @@ export function useSidebarState() {
         });
       }
     },
-    [openFile, refreshRecentItems, workspacePath],
+    [openFile, workspacePath],
   );
 
   const handleRootFolderClick = useCallback(() => {

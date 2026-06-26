@@ -220,13 +220,13 @@
 }
 
 .fs-item.active {
-  background: #e8f7ee;
+  background: transparent;
   border-color: transparent;
   box-shadow: none;
 }
 
 .fs-item.active .fs-title {
-  color: #0b7f45;
+  color: var(--tree-selection-fg);
 }
 
 .fs-item.dragging {
@@ -288,7 +288,7 @@
 }
 
 .fs-item.active .fs-theme-info {
-  color: var(--accent-primary);
+  color: var(--tree-selection-fg);
 }
 
 /* Rename UI - Web Style */
@@ -584,8 +584,9 @@
 }
 
 .fs-folder.active {
-  background: color-mix(in srgb, var(--accent-primary) 11%, transparent);
-  color: var(--accent-primary);
+  background: transparent;
+  color: var(--tree-selection-fg);
+  box-shadow: none;
 }
 
 .fs-folder-icon {
@@ -618,24 +619,22 @@
 }
 
 .fs-folder.active .fs-folder-count {
-  color: #0b7f45;
-  background: color-mix(in srgb, var(--accent-primary) 16%, #ffffff);
+  color: var(--tree-selection-fg);
+  background: transparent;
 }
 
 /* ========================================
    文件树层级缩进
    ======================================== */
 .file-sidebar {
-  /* 缩进 40 + 子项内边距 12 = 52，与文件夹名称起点对齐
-     （文件夹左内边距 12 + chevron 14 + gap 6 + 图标 14 + gap 6 = 52），层级归属清晰 */
-  --tree-indent: 40px;
+  --tree-selection-fg: var(--accent-primary);
 }
 
 .fs-folder-children {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding-left: var(--tree-indent);
+  padding-left: 0;
   padding-top: 4px;
   margin: 0;
   overflow: visible;
@@ -654,6 +653,14 @@
 
 .fs-folder {
   padding: 10px 12px;
+}
+
+.fs-folder {
+  padding-left: calc(12px + var(--tree-indent-offset, 0px));
+}
+
+.fs-item {
+  padding-left: calc(52px + var(--tree-indent-offset, 0px));
 }
 
 /* 子菜单样式 - 保持不变 */

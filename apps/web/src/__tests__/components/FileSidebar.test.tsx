@@ -3,9 +3,31 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FileSidebar } from "../../components/Sidebar/FileSidebar";
+import type { FileItem, FolderItem } from "../../store/fileTypes";
 
 const mockRefreshFiles = vi.fn(async () => undefined);
 const mockUseSidebarState = vi.fn();
+
+const makeFile = (name: string, path: string): FileItem => ({
+  name,
+  path,
+  createdAt: new Date("2026-01-01"),
+  updatedAt: new Date("2026-01-01"),
+  size: 100,
+});
+
+const makeFolder = (
+  name: string,
+  path: string,
+  children: FolderItem["children"],
+): FolderItem => ({
+  name,
+  path,
+  createdAt: new Date("2026-01-01"),
+  updatedAt: new Date("2026-01-01"),
+  isDirectory: true,
+  children,
+});
 
 vi.mock("../../components/Sidebar/useSidebarState", () => ({
   FILE_DRAG_TYPE: "application/x-draftport-file",
@@ -116,5 +138,89 @@ describe("FileSidebar", () => {
     const headerRule = sidebarStyles.match(/\.fs-header\s*{[^}]+}/)?.[0] ?? "";
 
     expect(headerRule).toContain("padding: 16px 16px 4px;");
+  });
+
+  it("marks tree rows with depth so nested files and folders render indented", () => {
+    const nestedFile = makeFile("note.md", "/workspace/docs/note.md");
+    const nestedFolder = makeFolder("drafts", "/workspace/docs/drafts", []);
+    const rootFile = makeFile("root.md", "/workspace/root.md");
+    const rootFolder = makeFolder("docs", "/workspace/docs", [
+      nestedFolder,
+      nestedFile,
+    ]);
+
+    mockUseSidebarState.mockReturnValue({
+      ...mockUseSidebarState(),
+      filteredItems: [rootFolder, rootFile],
+    });
+
+    render(<FileSidebar />);
+
+    expect(screen.getByText("docs").closest(".fs-folder")).toHaveAttribute(
+      "data-tree-depth",
+      "1",
+    );
+    expect(screen.getByText("root").closest(".fs-item")).toHaveAttribute(
+      "data-tree-depth",
+      "1",
+    );
+    expect(screen.getByText("drafts").closest(".fs-folder")).toHaveAttribute(
+      "data-tree-depth",
+      "2",
+    );
+    expect(screen.getByText("note").closest(".fs-item")).toHaveAttribute(
+      "data-tree-depth",
+      "2",
+    );
+  });
+
+  it("keeps tree indentation compact while aligning same-depth titles", () => {
+    const sidebarStyles = readFileSync(
+      "src/components/Sidebar/FileSidebar.css",
+      "utf8",
+    );
+    const componentSource = readFileSync(
+      "src/components/Sidebar/FileSidebar.tsx",
+      "utf8",
+    );
+
+    expect(componentSource).toContain("const TREE_INDENT_STEP_PX = 5.5;");
+    expect(sidebarStyles).toContain(
+      "padding-left: calc(12px + var(--tree-indent-offset, 0px));",
+    );
+    expect(sidebarStyles).toContain(
+      "padding-left: calc(52px + var(--tree-indent-offset, 0px));",
+    );
+  });
+
+  it("highlights active text without row backgrounds or shadows", () => {
+    const sidebarStyles = readFileSync(
+      "src/components/Sidebar/FileSidebar.css",
+      "utf8",
+    );
+
+    const fileActiveRule =
+      sidebarStyles.match(/\.fs-item\.active\s*{[^}]+}/)?.[0] ?? "";
+    const folderActiveRule =
+      sidebarStyles.match(/\.fs-folder\.active\s*{[^}]+}/)?.[0] ?? "";
+    const fileTitleRule =
+      sidebarStyles.match(/\.fs-item\.active \.fs-title\s*{[^}]+}/)?.[0] ?? "";
+    const fileThemeRule =
+      sidebarStyles.match(/\.fs-item\.active \.fs-theme-info\s*{[^}]+}/)?.[0] ??
+      "";
+    const folderCountRule =
+      sidebarStyles.match(
+        /\.fs-folder\.active \.fs-folder-count\s*{[^}]+}/,
+      )?.[0] ?? "";
+
+    expect(fileActiveRule).toContain("background: transparent;");
+    expect(fileActiveRule).toContain("box-shadow: none;");
+    expect(folderActiveRule).toContain("background: transparent;");
+    expect(folderActiveRule).toContain("box-shadow: none;");
+    expect(fileTitleRule).toContain("var(--tree-selection-fg)");
+    expect(fileThemeRule).toContain("var(--tree-selection-fg)");
+    expect(folderActiveRule).toContain("var(--tree-selection-fg)");
+    expect(folderCountRule).toContain("color: var(--tree-selection-fg)");
+    expect(folderCountRule).toContain("background: transparent;");
   });
 });

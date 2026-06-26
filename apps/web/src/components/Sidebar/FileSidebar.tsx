@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import type { CSSProperties } from "react";
 import { useThemeStore } from "../../store/themeStore";
 import {
   Search,
@@ -38,6 +39,15 @@ const SORT_OPTIONS: { value: SortMode; label: string }[] = [
   { value: "name-desc", label: "名称降序" },
 ];
 
+const TREE_INDENT_STEP_PX = 5.5;
+
+/** Converts logical tree depth into the CSS offset used to indent each row. */
+function getTreeDepthStyle(depth: number): CSSProperties {
+  return {
+    "--tree-indent-offset": `${depth * TREE_INDENT_STEP_PX}px`,
+  } as CSSProperties;
+}
+
 /**
  * Renders the workspace file tree, folder controls, and file actions for local content navigation.
  */
@@ -76,10 +86,12 @@ export function FileSidebar() {
     };
   }, [showSortMenu]);
 
-  const renderFileItem = (file: FileItem) => (
+  const renderFileItem = (file: FileItem, depth: number) => (
     <div
       key={file.path}
       className={`fs-item ${state.currentFile?.path === file.path ? "active" : ""} ${state.draggingPath === file.path ? "dragging" : ""}`}
+      data-tree-depth={depth}
+      style={getTreeDepthStyle(depth)}
       onClick={() => state.handleFileClick(file)}
       onContextMenu={(e) => state.handleContextMenu(e, file)}
       draggable={state.isDragEnabled && state.renamingPath !== file.path}
@@ -147,13 +159,15 @@ export function FileSidebar() {
     </div>
   );
 
-  const renderFolderItem = (folder: FolderItem) => {
+  const renderFolderItem = (folder: FolderItem, depth: number) => {
     const isCollapsed = state.collapsedFolders.has(folder.path);
     const isActive = state.activeFolder === folder.path;
     return (
       <div key={folder.path} className="fs-folder-wrapper">
         <div
           className={`fs-folder ${isCollapsed ? "collapsed" : ""} ${isActive ? "active" : ""} ${state.dragOverTarget === folder.path ? "drop-target" : ""} ${state.draggingFolderPath === folder.path ? "dragging" : ""}`}
+          data-tree-depth={depth}
+          style={getTreeDepthStyle(depth)}
           onClick={() => state.toggleFolder(folder.path)}
           onContextMenu={(e) => state.handleFolderContextMenu(e, folder)}
           draggable={state.isDragEnabled}
@@ -190,8 +204,8 @@ export function FileSidebar() {
           <div className="fs-folder-children">
             {folder.children.map((child) =>
               child.isDirectory
-                ? renderFolderItem(child as FolderItem)
-                : renderFileItem(child as FileItem),
+                ? renderFolderItem(child as FolderItem, depth + 1)
+                : renderFileItem(child as FileItem, depth + 1),
             )}
           </div>
         )}
@@ -199,11 +213,11 @@ export function FileSidebar() {
     );
   };
 
-  const renderTreeItems = (items: TreeItem[]) => {
+  const renderTreeItems = (items: TreeItem[], depth = 1) => {
     return items.map((item) =>
       item.isDirectory
-        ? renderFolderItem(item as FolderItem)
-        : renderFileItem(item as FileItem),
+        ? renderFolderItem(item as FolderItem, depth)
+        : renderFileItem(item as FileItem, depth),
     );
   };
 
@@ -356,7 +370,7 @@ export function FileSidebar() {
           )}
           {state.filter
             ? (state.filteredItems as FileItem[]).map((file) =>
-                renderFileItem(file),
+                renderFileItem(file, 0),
               )
             : renderTreeItems(state.filteredItems as TreeItem[])}
           {state.filteredItems.length === 0 && (
