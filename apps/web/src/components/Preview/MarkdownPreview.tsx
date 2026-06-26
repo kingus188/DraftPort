@@ -21,7 +21,6 @@ import {
   getMermaidConfig,
   getThemedMermaidDiagram,
 } from "../../utils/mermaidConfig";
-import { renderTableBlocksForPreview } from "../../services/wechatTableRenderer";
 import { useFileStore } from "../../store/fileStore";
 import { materializePreviewImageSources } from "../../utils/previewImageSources";
 import "./MarkdownPreview.css";
@@ -182,22 +181,6 @@ export function MarkdownPreview() {
 
     return () => clearTimeout(timer);
   }, [html, isLargePreview, mermaidConfigKey, designerVars]);
-
-  // 表格渲染为图片：让预览效果与手机阅读体验一致
-  useEffect(() => {
-    if (isLargePreview || !previewRef.current || !html) return;
-
-    const tables = previewRef.current.querySelectorAll(".table-container");
-    if (tables.length === 0) return;
-
-    const timer = setTimeout(() => {
-      if (previewRef.current) {
-        renderTableBlocksForPreview(previewRef.current);
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [html, isLargePreview]);
 
   // 处理预览栏滚动事件
   const handlePreviewScroll = useCallback(() => {

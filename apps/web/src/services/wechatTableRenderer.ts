@@ -21,6 +21,7 @@ const TABLE_LAYOUT_STYLES = {
  */
 const applyTableLayoutStyles = (table: HTMLTableElement): void => {
   table.style.borderCollapse = "collapse";
+  table.style.borderSpacing = "0";
   table.style.tableLayout = "auto";
   table.style.width = "auto";
   table.style.minWidth = "100%";
@@ -33,45 +34,44 @@ const applyTableLayoutStyles = (table: HTMLTableElement): void => {
     el.style.lineHeight = TABLE_LAYOUT_STYLES.lineHeight;
     el.style.padding = TABLE_LAYOUT_STYLES.cellPadding;
     el.style.whiteSpace = "nowrap";
+    // 报告类原始 HTML 表格常在单元格上写 inline word-break:break-all，会把内容挤成竖排，
+    // 这里显式复位，配合 nowrap 让宽表格横向滚动
+    el.style.wordBreak = "normal";
+    el.style.overflowWrap = "normal";
     el.style.textAlign = "center";
   }
 };
 
 /**
- * 确保 .table-container 有 overflow-x:auto（自定义主题可能缺失此规则）
- * 直接写 inline style，不依赖主题 CSS 被 juice 内联
+ * 确保表格外层有 overflow-x:auto 的滚动容器。
+ * markdown 管道表格自带 .table-container；报告类原始 HTML 表格没有，这里补一层。
+ * 直接写 inline style，不依赖主题 CSS 被 juice 内联。
  */
-const ensureContainerScroll = (tableContainer: HTMLElement): void => {
-  tableContainer.style.overflowX = "auto";
-  tableContainer.style.setProperty("-webkit-overflow-scrolling", "touch");
-};
-
-/**
- * 复制流程入口：强制覆盖所有表格的布局参数
- * 在 wechatCopyService 中于 renderMermaidBlocks 之后、normalizeCopyContainer 之前调用
- */
-export const renderTableBlocks = async (
-  container: HTMLElement,
-): Promise<void> => {
-  const tableContainers =
-    container.querySelectorAll<HTMLElement>(".table-container");
-  for (const tc of tableContainers) {
-    ensureContainerScroll(tc);
-    const table = tc.querySelector("table");
-    if (table) applyTableLayoutStyles(table);
+const ensureScrollContainer = (table: HTMLTableElement): void => {
+  let wrapper = table.closest<HTMLElement>(".table-container");
+  if (!wrapper && table.parentNode) {
+    wrapper = table.ownerDocument.createElement("section");
+    wrapper.className = "table-container";
+    table.parentNode.insertBefore(wrapper, table);
+    wrapper.appendChild(table);
+  }
+  if (wrapper) {
+    wrapper.style.overflowX = "auto";
+    wrapper.style.setProperty("-webkit-overflow-scrolling", "touch");
   }
 };
 
 /**
- * 预览面板入口：强制覆盖表格布局参数，让用户看到与手机一致的效果
+ * 复制流程入口：强制覆盖所有表格的布局参数。
+ * 遍历全部 <table>（含报告类未被 .table-container 包裹的原始 HTML 表格），
+ * 在 wechatCopyService 中于 renderMermaidBlocks 之后、normalizeCopyContainer 之前调用。
  */
-export const renderTableBlocksForPreview = async (
+export const renderTableBlocks = async (
   container: HTMLElement,
 ): Promise<void> => {
-  const tables = container.querySelectorAll<HTMLTableElement>(
-    ".table-container table",
-  );
+  const tables = container.querySelectorAll<HTMLTableElement>("table");
   for (const table of tables) {
     applyTableLayoutStyles(table);
+    ensureScrollContainer(table);
   }
 };

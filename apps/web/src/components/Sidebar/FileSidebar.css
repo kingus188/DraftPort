@@ -197,7 +197,7 @@
   padding: 2px 16px 16px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   background: transparent;
   border-radius: 0 0 var(--radius-xl) var(--radius-xl);
 }
@@ -626,15 +626,17 @@
    文件树层级缩进
    ======================================== */
 .file-sidebar {
-  --tree-indent: 24px;
+  /* 缩进 40 + 子项内边距 12 = 52，与文件夹名称起点对齐
+     （文件夹左内边距 12 + chevron 14 + gap 6 + 图标 14 + gap 6 = 52），层级归属清晰 */
+  --tree-indent: 40px;
 }
 
 .fs-folder-children {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   padding-left: var(--tree-indent);
-  padding-top: 6px;
+  padding-top: 4px;
   margin: 0;
   overflow: visible;
 }
@@ -646,15 +648,8 @@
   /* 预留边框空间防止抖动 */
 }
 
-/* 为 Item 和 Folder Wrapper 增加间距 */
-.fs-item,
-.fs-folder-wrapper {
-  margin-bottom: 2px;
-}
-
 .fs-item {
   padding: 10px 12px;
-  /* 稍微减小高度，配合 margin */
 }
 
 .fs-folder {
