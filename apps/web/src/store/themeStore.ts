@@ -295,9 +295,10 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     clearDarkCssCache();
     set({ customThemes: nextCustomThemes });
 
-    // 如果是当前主题，更新名称
+    // 当前主题更新后要同步刷新运行态 CSS，WYSIWYG 编辑器订阅 customCSS 来重算主题样式。
     if (state.themeId === id) {
-      set({ themeName: updatedTheme.name });
+      set({ themeName: updatedTheme.name, customCSS: updatedTheme.css });
+      saveSelectedTheme(updatedTheme.id, updatedTheme.name);
     }
   },
 

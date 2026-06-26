@@ -47,6 +47,99 @@ interface MilkdownEditorInnerProps {
   onMarkdownChange: (markdown: string) => void;
 }
 
+const DRAFTPORT_SELECTOR_PATTERN = /#draftport(?![\w-])/;
+const DRAFTPORT_SELECTOR_REPLACE_PATTERN = /#draftport(?![\w-])/g;
+const HEADING_CONTENT_SELECTOR_PATTERN =
+  /(\.ProseMirror\s+h[1-6])\s+\.content(?=[:\s.#>[+~]|$)/g;
+const HEADING_CONTENT_SOURCE_PATTERN =
+  /#draftport\s+h[1-6]\s+\.content(?=[:\s.#>[+~]|$)/;
+const CSS_RULE_PATTERN = /([^{}]+)\{([^{}]*)\}/g;
+
+/**
+ * Converts a preview selector into the equivalent Milkdown selector.
+ *
+ * The preview renderer wraps heading text with `.content`, but Milkdown keeps
+ * heading text directly inside `h1`-`h6`. Content wrapper rules therefore map
+ * to the heading node itself so visual heading themes remain visible while editing.
+ */
+function adaptSelectorForWysiwyg(selector: string): string | null {
+  if (
+    !DRAFTPORT_SELECTOR_PATTERN.test(selector) ||
+    selector.includes("#draftport .ProseMirror")
+  ) {
+    return null;
+  }
+
+  return selector
+    .replace(DRAFTPORT_SELECTOR_REPLACE_PATTERN, "#draftport .ProseMirror")
+    .replace(HEADING_CONTENT_SELECTOR_PATTERN, "$1");
+}
+
+/**
+ * Removes flow-changing declarations when a preview heading `.content` rule is
+ * applied to the Milkdown heading element itself.
+ */
+function adaptRuleBodyForWysiwyg(selectorText: string, body: string): string {
+  if (!HEADING_CONTENT_SOURCE_PATTERN.test(selectorText)) {
+    return body;
+  }
+
+  const declarations = body
+    .split(";")
+    .map((declaration) => declaration.trim())
+    .filter(Boolean)
+    .map((declaration) => {
+      const displayMatch = declaration.match(/^display\s*:\s*(.+)$/i);
+      if (!displayMatch) return declaration;
+      return displayMatch[1].trim().toLowerCase() === "inline-block"
+        ? "display: table"
+        : null;
+    })
+    .filter((declaration): declaration is string => Boolean(declaration));
+
+  return declarations.length > 0 ? `${declarations.join("; ")};` : "";
+}
+
+/**
+ * Mirrors preview-scoped theme selectors onto Milkdown's editable ProseMirror tree.
+ *
+ * DraftPort themes are authored for preview HTML where content elements sit
+ * directly under `#draftport`. Milkdown inserts `.ProseMirror` between that
+ * scope and the editable Markdown nodes, so the editor needs matching selector
+ * copies while preserving the original CSS for preview and copy flows.
+ */
+function adaptThemeCssForWysiwyg(themeCss: string): string {
+  const adaptedRules: string[] = [];
+
+  themeCss.replace(
+    CSS_RULE_PATTERN,
+    (rule, selectorText: string, body: string) => {
+      const trimmedSelector = selectorText.trim();
+      if (!trimmedSelector || trimmedSelector.startsWith("@")) {
+        return rule;
+      }
+
+      const adaptedSelectors = selectorText
+        .split(",")
+        .map((selector) => adaptSelectorForWysiwyg(selector))
+        .filter((selector): selector is string => Boolean(selector));
+
+      if (adaptedSelectors.length > 0) {
+        const adaptedBody = adaptRuleBodyForWysiwyg(selectorText, body).trim();
+        adaptedRules.push(`${adaptedSelectors.join(",")} { ${adaptedBody} }`);
+      }
+
+      return rule;
+    },
+  );
+
+  if (adaptedRules.length === 0) {
+    return themeCss;
+  }
+
+  return `${themeCss}\n/* WYSIWYG theme adapter: mirror #draftport rules into Milkdown content. */\n${adaptedRules.join("\n")}`;
+}
+
 /**
  * Mounts Milkdown inside its provider and wires document changes back to Markdown.
  */
@@ -109,10 +202,11 @@ export function WysiwygMarkdownEditor() {
   const customCSS = useThemeStore((state) => state.customCSS);
   const getThemeCSS = useThemeStore((state) => state.getThemeCSS);
   const uiTheme = useUITheme((state) => state.theme);
-  const themeCss = useMemo(
-    () => getThemeCSS(themeId, uiTheme === "dark") || customCSS,
-    [customCSS, getThemeCSS, themeId, uiTheme],
-  );
+  const themeCss = useMemo(() => {
+    const activeThemeCss =
+      getThemeCSS(themeId, uiTheme === "dark") || customCSS;
+    return adaptThemeCssForWysiwyg(activeThemeCss);
+  }, [customCSS, getThemeCSS, themeId, uiTheme]);
 
   // 大纲适配器:用回调 ref 取表面元素,确保挂载后 hook 拿到非空容器。
   const [surfaceEl, setSurfaceEl] = useState<HTMLDivElement | null>(null);

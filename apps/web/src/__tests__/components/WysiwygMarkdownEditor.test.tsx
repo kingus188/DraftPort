@@ -68,7 +68,13 @@ vi.mock("@milkdown/core", () => ({
 }));
 
 vi.mock("@milkdown/react", () => ({
-  Milkdown: () => <div data-testid="milkdown-root" />,
+  Milkdown: () => (
+    <div data-testid="milkdown-root" className="ProseMirror">
+      <h1 data-testid="wysiwyg-heading">Rendered heading</h1>
+      <h2 data-testid="wysiwyg-subheading">Rendered subheading</h2>
+      <p data-testid="wysiwyg-paragraph">Rendered paragraph</p>
+    </div>
+  ),
   MilkdownProvider: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
@@ -128,10 +134,11 @@ vi.mock("../../store/themeStore", () => ({
   useThemeStore: (selector: (state: unknown) => unknown) =>
     selector({
       themeId: "wechat-theme",
-      customCSS: "#draftport p { color: rgb(7, 193, 96); }",
+      customCSS:
+        "#draftport { font-family: ThemeFont; }\n#draftport p { color: rgb(7, 193, 96); }\n#draftport h1 .content { display: inline-block; background-image: linear-gradient(90deg, red, blue); color: transparent; }\n#draftport h2 .content { display: inline-block; color: rgb(255, 0, 193); }",
       getThemeCSS: vi.fn(
         (themeId: string, darkMode?: boolean) =>
-          `/* ${themeId}:${darkMode ? "dark" : "light"} */ #draftport p { color: rgb(7, 193, 96); }`,
+          `/* ${themeId}:${darkMode ? "dark" : "light"} */ #draftport { font-family: ThemeFont; }\n#draftport p { color: rgb(7, 193, 96); }\n#draftport h1 .content { display: inline-block; background-image: linear-gradient(90deg, red, blue); color: transparent; }\n#draftport h2 .content { display: inline-block; color: rgb(255, 0, 193); }`,
       ),
     }),
 }));
@@ -184,6 +191,39 @@ describe("WysiwygMarkdownEditor", () => {
     expect(screen.getByTestId("wysiwyg-theme-style")).toHaveTextContent(
       "#draftport p { color: rgb(7, 193, 96); }",
     );
+    expect(screen.getByTestId("wysiwyg-theme-style")).toHaveTextContent(
+      "#draftport .ProseMirror { font-family: ThemeFont; }",
+    );
+    expect(screen.getByTestId("wysiwyg-theme-style")).toHaveTextContent(
+      "#draftport .ProseMirror p { color: rgb(7, 193, 96); }",
+    );
+  });
+
+  it("maps preview heading content styles without changing heading flow", () => {
+    render(<WysiwygMarkdownEditor />);
+
+    expect(screen.getByTestId("wysiwyg-heading")).toBeInTheDocument();
+    expect(screen.getByTestId("wysiwyg-theme-style")).toHaveTextContent(
+      "#draftport h1 .content { display: inline-block; background-image: linear-gradient(90deg, red, blue); color: transparent; }",
+    );
+    expect(screen.getByTestId("wysiwyg-theme-style")).toHaveTextContent(
+      "#draftport .ProseMirror h1 { display: table; background-image: linear-gradient(90deg, red, blue); color: transparent; }",
+    );
+    expect(screen.getByTestId("wysiwyg-theme-style")).toHaveTextContent(
+      "#draftport .ProseMirror h2 { display: table; color: rgb(255, 0, 193); }",
+    );
+    expect(screen.getByTestId("wysiwyg-theme-style")).not.toHaveTextContent(
+      "#draftport .ProseMirror h1 { display: inline-block;",
+    );
+    expect(getComputedStyle(screen.getByTestId("wysiwyg-heading")).color).toBe(
+      "rgba(0, 0, 0, 0)",
+    );
+    expect(
+      getComputedStyle(screen.getByTestId("wysiwyg-heading")).display,
+    ).toBe("table");
+    expect(
+      getComputedStyle(screen.getByTestId("wysiwyg-subheading")).display,
+    ).toBe("table");
   });
 });
 

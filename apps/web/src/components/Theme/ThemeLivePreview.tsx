@@ -139,7 +139,7 @@ export const ThemeLivePreview = memo(function ThemeLivePreview({
       : PREVIEW_MARKDOWN;
   const html = useMemo(() => {
     const rawHtml = parser.render(previewContent);
-    return processHtml(rawHtml, finalCss, true);
+    return processHtml(rawHtml, finalCss, false);
   }, [parser, finalCss, previewContent]);
 
   useEffect(() => {
@@ -219,7 +219,7 @@ export const ThemeLivePreview = memo(function ThemeLivePreview({
     } else {
       iframe.onload = updateContent;
     }
-  }, [html, finalCss, isDarkMode, mermaidConfigKey]);
+  }, [html, finalCss, isDarkMode, mermaidConfigKey, designerVariables]);
 
   return (
     <div className="theme-live-preview">
