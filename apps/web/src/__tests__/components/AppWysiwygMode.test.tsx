@@ -117,9 +117,7 @@ describe("App Typora-like WYSIWYG editing mode", () => {
     render(<App />, { wrapper: MemoryRouter });
 
     expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
-    expect(
-      screen.queryByTestId("markdown-source-editor"),
-    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("markdown-source-editor")).not.toBeVisible();
     expect(screen.queryByTestId("markdown-preview")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("separator", { name: "调整预览面板宽度" }),
@@ -132,16 +130,31 @@ describe("App Typora-like WYSIWYG editing mode", () => {
     fireEvent.keyDown(document, { key: "/", ctrlKey: true });
 
     expect(screen.getByTestId("markdown-source-editor")).toBeInTheDocument();
-    expect(
-      screen.queryByTestId("wysiwyg-markdown-editor"),
-    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("markdown-source-editor")).toBeVisible();
+    expect(screen.getByTestId("wysiwyg-markdown-editor")).not.toBeVisible();
 
     fireEvent.keyDown(document, { key: "/", ctrlKey: true });
 
     expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
-    expect(
-      screen.queryByTestId("markdown-source-editor"),
-    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeVisible();
+    expect(screen.getByTestId("markdown-source-editor")).not.toBeVisible();
+  });
+
+  it("keeps the WYSIWYG editor mounted when switching editing modes", () => {
+    render(<App />, { wrapper: MemoryRouter });
+
+    expect(wysiwygMountState.mountCount).toBe(1);
+
+    fireEvent.keyDown(document, { key: "/", ctrlKey: true });
+
+    expect(screen.getByTestId("markdown-source-editor")).toBeVisible();
+    expect(screen.getByTestId("wysiwyg-markdown-editor")).not.toBeVisible();
+    expect(wysiwygMountState.mountCount).toBe(1);
+
+    fireEvent.keyDown(document, { key: "/", ctrlKey: true });
+
+    expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeVisible();
+    expect(wysiwygMountState.mountCount).toBe(1);
   });
 
   it("remounts the WYSIWYG editor when the active file changes", () => {
@@ -157,7 +170,7 @@ describe("App Typora-like WYSIWYG editing mode", () => {
       size: 20,
     };
 
-    rerender(<App />, { wrapper: MemoryRouter });
+    rerender(<App />);
 
     expect(wysiwygMountState.mountCount).toBe(2);
   });

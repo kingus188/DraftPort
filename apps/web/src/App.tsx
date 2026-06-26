@@ -344,8 +344,23 @@ function App() {
                         <div className="workspace-empty-selection">
                           <p>无选择文件</p>
                         </div>
-                      ) : activeEditorMode === "wysiwyg" ? (
-                        <WysiwygMarkdownEditor key={wysiwygDocumentKey} />
+                      ) : canUseWysiwygEditor ? (
+                        <>
+                          <div
+                            hidden={activeEditorMode !== "wysiwyg"}
+                            aria-hidden={activeEditorMode !== "wysiwyg"}
+                            style={{ height: "100%" }}
+                          >
+                            <WysiwygMarkdownEditor key={wysiwygDocumentKey} />
+                          </div>
+                          <div
+                            hidden={activeEditorMode !== "source"}
+                            aria-hidden={activeEditorMode !== "source"}
+                            style={{ height: "100%" }}
+                          >
+                            <MarkdownEditor />
+                          </div>
+                        </>
                       ) : (
                         <MarkdownEditor />
                       )

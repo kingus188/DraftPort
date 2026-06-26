@@ -4,12 +4,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { defaultValueCtx, Editor, rootCtx } from "@milkdown/core";
 import { clipboard } from "@milkdown/plugin-clipboard";
+import { diagram } from "@milkdown/plugin-diagram";
+import { emoji } from "@milkdown/plugin-emoji";
 import { history } from "@milkdown/plugin-history";
+import { math } from "@milkdown/plugin-math";
 import { listener, listenerCtx } from "@milkdown/plugin-listener";
 import { commonmark } from "@milkdown/preset-commonmark";
 import { gfm } from "@milkdown/preset-gfm";
 import { Milkdown, MilkdownProvider, useEditor } from "@milkdown/react";
 import { nord } from "@milkdown/theme-nord";
+import { replaceAll } from "@milkdown/utils";
 import { useUITheme } from "../../hooks/useUITheme";
 import { useEditorStore } from "../../store/editorStore";
 import { useThemeStore } from "../../store/themeStore";
@@ -18,15 +22,11 @@ import { useHeadingScrollSpy } from "../../outline/useHeadingScrollSpy";
 import "./WysiwygMarkdownEditor.css";
 
 const UNSAFE_WYSIWYG_MARKDOWN_PATTERNS: RegExp[] = [
-  /(^|\n)```mermaid[\s\S]*?```/i,
-  /(^|\n)\$\$[\s\S]*?\$\$/,
-  /(^|[^\\])\$[^$\n]+\$/,
   /(^|\n)>\s*\[!(TIP|NOTE|IMPORTANT|WARNING|CAUTION)\]/i,
   /==[^=\n]+==/,
   /(^|[^~])~[^~\n]+~/,
   /\^[^^\n]+\^/,
   /\+\+[^+\n]+\+\+/,
-  /(^|\s):[a-z0-9_+-]+:(?=\s|$)/i,
   /^\[toc\]$/im,
 ];
 
@@ -56,7 +56,7 @@ function MilkdownEditorInner({
 }: MilkdownEditorInnerProps) {
   const latestMarkdownRef = useRef(initialMarkdown);
 
-  useEditor(
+  const editorHandle = useEditor(
     (root) => {
       const editor = Editor.make()
         .config((ctx) => {
@@ -71,6 +71,9 @@ function MilkdownEditorInner({
         })
         .use(commonmark)
         .use(gfm)
+        .use(math)
+        .use(diagram)
+        .use(emoji)
         .use(history)
         .use(clipboard)
         .use(listener);
@@ -79,6 +82,15 @@ function MilkdownEditorInner({
     },
     [onMarkdownChange],
   );
+
+  useEffect(() => {
+    const editor = editorHandle.get();
+    if (!editor) return;
+    if (initialMarkdown === latestMarkdownRef.current) return;
+
+    latestMarkdownRef.current = initialMarkdown;
+    editor.action(replaceAll(initialMarkdown));
+  }, [editorHandle, initialMarkdown]);
 
   return <Milkdown />;
 }

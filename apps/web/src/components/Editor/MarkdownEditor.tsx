@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { EditorView, minimalSetup } from "codemirror";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-import { EditorState } from "@codemirror/state";
+import { Compartment, EditorState, type Extension } from "@codemirror/state";
 import { githubLight } from "@uiw/codemirror-theme-github";
 import {
   wechatMarkdownHighlighting,
   wechatMarkdownHighlightingDark,
 } from "./markdownTheme";
 import { underlineExtension } from "./markdownUnderline";
-import { useUITheme } from "../../hooks/useUITheme";
+import { useUITheme, type UITheme } from "../../hooks/useUITheme";
 import { useEditorStore } from "../../store/editorStore";
 import { countWords, countLines } from "../../utils/wordCount";
 import { Toolbar } from "./Toolbar";
@@ -26,6 +26,37 @@ interface SyncScrollDetail {
 }
 
 /**
+ * Builds the CodeMirror extensions that are allowed to change when the app UI
+ * theme changes, so the live EditorView can be reconfigured without remounting.
+ */
+function createCodeMirrorThemeExtensions(uiTheme: UITheme): Extension[] {
+  const isDarkMode = uiTheme === "dark";
+
+  return [
+    isDarkMode ? wechatMarkdownHighlightingDark : wechatMarkdownHighlighting,
+    githubLight,
+    EditorView.theme({
+      "&": {
+        height: "100%",
+        fontSize: "15px",
+      },
+      ".cm-scroller": {
+        fontFamily:
+          "'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace",
+        lineHeight: "1.6",
+      },
+      ".cm-content": {
+        padding: "16px",
+      },
+      ".cm-gutters": {
+        backgroundColor: isDarkMode ? "var(--bg-secondary)" : "#f8f9fa",
+        border: "none",
+      },
+    }),
+  ];
+}
+
+/**
  * Hosts the CodeMirror Markdown surface, toolbar inserts, document metadata,
  * and editor-to-preview scroll synchronization.
  */
@@ -34,7 +65,12 @@ export function MarkdownEditor() {
   const viewRef = useRef<EditorView | null>(null);
   const { markdown: content, setMarkdown } = useEditorStore();
   const uiTheme = useUITheme((state) => state.theme);
+  const initialContentRef = useRef(content);
+  const initialUIThemeRef = useRef(uiTheme);
   const isSyncingRef = useRef(false);
+  const isApplyingExternalContentRef = useRef(false);
+  const themeCompartment = useMemo(() => new Compartment(), []);
+  const mountedThemeRef = useRef<UITheme | null>(null);
   const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
@@ -53,7 +89,8 @@ export function MarkdownEditor() {
 
     const currentContent = viewRef.current
       ? viewRef.current.state.doc.toString()
-      : content;
+      : initialContentRef.current;
+    const initialTheme = initialUIThemeRef.current;
 
     const startState = EditorState.create({
       doc: currentContent,
@@ -61,36 +98,16 @@ export function MarkdownEditor() {
         minimalSetup,
         customKeymap,
         markdown({ base: markdownLanguage, extensions: [underlineExtension] }),
-        uiTheme === "dark"
-          ? wechatMarkdownHighlightingDark
-          : wechatMarkdownHighlighting,
-        githubLight,
         EditorView.lineWrapping,
         paragraphSelectionStyle,
         EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            const newContent = update.state.doc.toString();
-            setMarkdown(newContent);
-          }
+          if (!update.docChanged) return;
+          if (isApplyingExternalContentRef.current) return;
+
+          const newContent = update.state.doc.toString();
+          setMarkdown(newContent);
         }),
-        EditorView.theme({
-          "&": {
-            height: "100%",
-            fontSize: "15px",
-          },
-          ".cm-scroller": {
-            fontFamily:
-              "'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace",
-            lineHeight: "1.6",
-          },
-          ".cm-content": {
-            padding: "16px",
-          },
-          ".cm-gutters": {
-            backgroundColor: "#f8f9fa",
-            border: "none",
-          },
-        }),
+        themeCompartment.of(createCodeMirrorThemeExtensions(initialTheme)),
       ],
     });
 
@@ -129,6 +146,7 @@ export function MarkdownEditor() {
     window.addEventListener(SYNC_SCROLL_EVENT, handleSync as EventListener);
 
     viewRef.current = view;
+    mountedThemeRef.current = initialTheme;
 
     return () => {
       scrollDOM.removeEventListener("scroll", handleEditorScroll);
@@ -137,23 +155,45 @@ export function MarkdownEditor() {
         handleSync as EventListener,
       );
       view.destroy();
+      viewRef.current = null;
     };
+  }, [setMarkdown, themeCompartment]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setMarkdown, uiTheme]);
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    if (mountedThemeRef.current === uiTheme) return;
+    mountedThemeRef.current = uiTheme;
+
+    view.dispatch({
+      effects: themeCompartment.reconfigure(
+        createCodeMirrorThemeExtensions(uiTheme),
+      ),
+    });
+  }, [themeCompartment, uiTheme]);
 
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
     const currentDoc = view.state.doc.toString();
     if (currentDoc === content) return;
-    view.dispatch({
-      changes: { from: 0, to: view.state.doc.length, insert: content },
-    });
+    isApplyingExternalContentRef.current = true;
+    try {
+      view.dispatch({
+        changes: { from: 0, to: view.state.doc.length, insert: content },
+      });
+    } finally {
+      isApplyingExternalContentRef.current = false;
+    }
   }, [content]);
 
-  const wordCount = countWords(content);
-  const lineCount = countLines(content);
+  const { lineCount, wordCount } = useMemo(
+    () => ({
+      lineCount: countLines(content),
+      wordCount: countWords(content),
+    }),
+    [content],
+  );
 
   const handleInsert = (
     prefix: string,

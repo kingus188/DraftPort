@@ -29,6 +29,7 @@ const mocks = vi.hoisted(() => {
     return this;
   });
   const editorInstance = {
+    action: vi.fn(),
     config: editorConfigMock,
     use: vi.fn(function editorUse(this: unknown) {
       return this;
@@ -39,13 +40,21 @@ const mocks = vi.hoisted(() => {
     ctxSetMock: vi.fn(),
     editorConfigMock,
     editorInstance,
+    diagramPlugin: "diagram-plugin",
     editorUseMock,
+    emojiPlugin: "emoji-plugin",
+    mathPlugin: "math-plugin",
     markdown: "# Draft",
+    replaceAllCallbackMock: vi.fn(),
+    replaceAllMock: vi.fn((markdown: string) => {
+      mocks.replaceAllCallbackMock(markdown);
+      return `replace-all:${markdown}`;
+    }),
     setMarkdownMock: vi.fn(),
     useEditorMock: vi.fn((factory: (root: HTMLElement) => unknown) => {
       const root = document.createElement("div");
-      factory(root);
-      return { loading: false, get: vi.fn() };
+      const editor = factory(root);
+      return { loading: false, get: vi.fn(() => editor) };
     }),
   };
 });
@@ -82,13 +91,29 @@ vi.mock("@milkdown/plugin-clipboard", () => ({
   clipboard: "clipboard",
 }));
 
+vi.mock("@milkdown/plugin-diagram", () => ({
+  diagram: mocks.diagramPlugin,
+}));
+
+vi.mock("@milkdown/plugin-emoji", () => ({
+  emoji: mocks.emojiPlugin,
+}));
+
 vi.mock("@milkdown/plugin-listener", () => ({
   listener: "listener",
   listenerCtx: Symbol("listenerCtx"),
 }));
 
+vi.mock("@milkdown/plugin-math", () => ({
+  math: mocks.mathPlugin,
+}));
+
 vi.mock("@milkdown/theme-nord", () => ({
   nord: vi.fn(),
+}));
+
+vi.mock("@milkdown/utils", () => ({
+  replaceAll: mocks.replaceAllMock,
 }));
 
 vi.mock("../../store/editorStore", () => ({
@@ -120,9 +145,12 @@ describe("WysiwygMarkdownEditor", () => {
   beforeEach(() => {
     mocks.ctxSetMock.mockClear();
     mocks.editorConfigMock.mockClear();
+    mocks.editorInstance.action.mockClear();
     mocks.editorInstance.use.mockClear();
     mocks.setMarkdownMock.mockClear();
     mocks.useEditorMock.mockClear();
+    mocks.replaceAllMock.mockClear();
+    mocks.replaceAllCallbackMock.mockClear();
     mocks.markdown = "# Draft";
   });
 
@@ -136,6 +164,14 @@ describe("WysiwygMarkdownEditor", () => {
       "# Draft",
     );
     expect(mocks.setMarkdownMock).toHaveBeenCalledWith("## Edited in WYSIWYG");
+  });
+
+  it("installs Milkdown plugins for Markdown features that should not force source mode", () => {
+    render(<WysiwygMarkdownEditor />);
+
+    expect(mocks.editorInstance.use).toHaveBeenCalledWith(mocks.mathPlugin);
+    expect(mocks.editorInstance.use).toHaveBeenCalledWith(mocks.diagramPlugin);
+    expect(mocks.editorInstance.use).toHaveBeenCalledWith(mocks.emojiPlugin);
   });
 
   it("applies the current WeChat theme CSS to the editable WYSIWYG surface", () => {
@@ -161,11 +197,16 @@ describe("canUseWysiwygMarkdown", () => {
   });
 
   it("rejects DraftPort-specific Markdown that should stay in source mode", () => {
-    expect(canUseWysiwygMarkdown("Inline math $E=mc^2$")).toBe(false);
-    expect(canUseWysiwygMarkdown("```mermaid\ngraph TD\nA-->B\n```")).toBe(
-      false,
-    );
     expect(canUseWysiwygMarkdown("> [!WARNING]\n> be careful")).toBe(false);
     expect(canUseWysiwygMarkdown("H~2~O and ==highlight==")).toBe(false);
+  });
+
+  it("allows math, Mermaid, and emoji after the corresponding Milkdown plugins are installed", () => {
+    expect(canUseWysiwygMarkdown("Inline math $E=mc^2$")).toBe(true);
+    expect(
+      canUseWysiwygMarkdown(
+        "$$\nE=mc^2\n$$\n\n```mermaid\ngraph TD\nA-->B\n```",
+      ),
+    ).toBe(true);
   });
 });
