@@ -22,13 +22,34 @@ describe("responsive shell chrome styles", () => {
   it("keeps the header as a compact action toolbar", () => {
     const css = readWorkspaceStyle("src/components/Header/Header.css");
 
-    expect(getRuleBody(css, ".app-header")).toContain("height: 56px");
+    expect(getRuleBody(css, ".app-header")).toContain("height: 60px");
     expect(getRuleBody(css, ".header-actions")).toContain(
       "justify-content: space-between",
     );
     expect(getRuleBody(css, ".header-brand")).toContain("display: flex");
     expect(getRuleBody(css, ".header-right")).toContain(
       "justify-content: flex-end",
+    );
+  });
+
+  it("keeps the theme entry icon visible after lazy theme panel styles load", () => {
+    const css = readWorkspaceStyle("src/components/Header/Header.css");
+    const themePanelCss = readWorkspaceStyle(
+      "src/components/Theme/ThemePanel.css",
+    );
+
+    expect(themePanelCss).toContain(".btn-secondary");
+    expect(getRuleBody(css, ".app-header .btn-theme-entry")).toContain(
+      "padding: 0",
+    );
+    expect(getRuleBody(css, ".app-header .btn-theme-entry")).toContain(
+      "box-sizing: border-box",
+    );
+    expect(getRuleBody(css, ".app-header .btn-theme-entry__icon")).toContain(
+      "stroke: #0f172a",
+    );
+    expect(getRuleBody(css, ".app-header .btn-theme-entry__icon")).toContain(
+      "opacity: 1",
     );
   });
 

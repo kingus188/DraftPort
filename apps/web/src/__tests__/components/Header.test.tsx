@@ -16,6 +16,7 @@ import { Header } from "../../components/Header/Header";
 import { useWindowControls } from "../../hooks/useWindowControls";
 import { useUITheme } from "../../hooks/useUITheme";
 import { useEditorStore } from "../../store/editorStore";
+import { useFileStore } from "../../store/fileStore";
 
 // Mock hooks
 vi.mock("../../hooks/useWindowControls");
@@ -74,6 +75,10 @@ describe("Header", () => {
       enumerable: true,
     });
     vi.stubGlobal("localStorage", storageMock);
+    useFileStore.setState({
+      workspacePath: null,
+      currentFile: null,
+    });
 
     if (
       typeof window !== "undefined" &&
@@ -144,6 +149,25 @@ describe("Header", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("shows the active workspace and file as compact header context", () => {
+    useFileStore.setState({
+      workspacePath: "/Users/haifeng/Documents/Obsidian/second-me",
+      currentFile: {
+        name: "AGENTS.md",
+        path: "/Users/haifeng/Documents/Obsidian/second-me/AGENTS.md",
+        createdAt: new Date("2026-06-28T00:00:00Z"),
+        updatedAt: new Date("2026-06-28T00:00:00Z"),
+        size: 1024,
+      },
+    });
+
+    render(<Header />, { wrapper: MemoryRouter });
+
+    expect(screen.getByLabelText("当前文档")).toHaveTextContent(
+      "second-me / AGENTS.md",
+    );
+  });
+
   it("reveals secondary copy targets after opening the copy menu", () => {
     render(<Header />, { wrapper: MemoryRouter });
 
@@ -201,6 +225,14 @@ describe("Header", () => {
     const themeBtn = screen.getByTitle("切换到暗色模式");
     fireEvent.click(themeBtn);
     expect(mockSetTheme).toHaveBeenCalledWith("dark");
+  });
+
+  it("uses a legible brush icon for the theme entry", () => {
+    render(<Header />, { wrapper: MemoryRouter });
+
+    const themeButton = screen.getByRole("button", { name: "主题" });
+
+    expect(themeButton.querySelector(".lucide-brush")).toBeInTheDocument();
   });
 
   it("calls copyToWechat action", () => {

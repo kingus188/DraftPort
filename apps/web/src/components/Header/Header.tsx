@@ -6,7 +6,7 @@ const ThemePanel = lazy(() =>
   import("../Theme/ThemePanel").then((m) => ({ default: m.ThemePanel })),
 );
 import {
-  Palette,
+  Brush,
   Send,
   Code,
   BookOpenText,
@@ -14,11 +14,20 @@ import {
   Sun,
   Moon,
   ChevronDown,
+  FileText,
 } from "lucide-react";
 
 import { useUITheme } from "../../hooks/useUITheme";
 import { useWindowControls } from "../../hooks/useWindowControls";
 import { resolveAppAssetPath } from "../../utils/assetPath";
+import { useFileStore } from "../../store/fileStore";
+
+/** Returns the visible final path segment for workspace and document labels. */
+function getPathBaseName(path?: string | null) {
+  if (!path) return null;
+  const normalized = path.replace(/\\/g, "/").replace(/\/+$/, "");
+  return normalized.split("/").pop() || normalized;
+}
 
 /** Renders native-style Windows controls when the desktop shell owns the title bar. */
 const WindowControls = () => {
@@ -70,12 +79,14 @@ const WindowControls = () => {
 };
 
 /**
- * Renders the compact publishing toolbar and modal entry points while
- * preserving Desktop window drag regions.
+ * Renders the editor header, active document context, publishing actions, and
+ * modal entry points while preserving Desktop window drag regions.
  */
 export function Header() {
   const { copyToWechat, copyToZhihu, copyToJuejin, copyAsHtml } =
     useEditorStore();
+  const workspacePath = useFileStore((state) => state.workspacePath);
+  const currentFile = useFileStore((state) => state.currentFile);
   const [showThemePanel, setShowThemePanel] = useState(false);
   const [copyMenuOpen, setCopyMenuOpen] = useState(false);
   const copyMenuRef = useRef<HTMLDivElement>(null);
@@ -97,38 +108,70 @@ export function Header() {
   );
 
   const { isWindows } = useWindowControls();
+  const workspaceName = getPathBaseName(workspacePath);
+  const documentName = currentFile?.name ?? null;
+  const headerContext =
+    workspaceName && documentName ? `${workspaceName} / ${documentName}` : null;
 
   return (
     <>
       <header className="app-header app-header--compact">
         <div className="header-actions">
-          <div className="header-brand" aria-label="DraftPort">
-            <img src={logoSrc} alt="DraftPort Logo" className="header-logo" />
-            <span className="header-name">DraftPort</span>
+          <div className="header-left">
+            <div className="header-brand" aria-label="DraftPort">
+              <img src={logoSrc} alt="DraftPort Logo" className="header-logo" />
+              <span className="header-name">DraftPort</span>
+            </div>
+
+            {headerContext && (
+              <div
+                className="header-context"
+                aria-label="当前文档"
+                title={headerContext}
+              >
+                <FileText size={18} strokeWidth={2} />
+                <span className="header-context__workspace">
+                  {workspaceName}
+                </span>
+                <span className="header-context__separator"> / </span>
+                <span className="header-context__file">{documentName}</span>
+              </div>
+            )}
           </div>
+
           <div className="header-right">
-            <button
-              className="btn-icon-only"
-              onClick={() => setTheme(uiTheme === "dark" ? "default" : "dark")}
-              aria-label={
-                uiTheme === "dark" ? "切换到亮色模式" : "切换到暗色模式"
-              }
-              title={uiTheme === "dark" ? "切换到亮色模式" : "切换到暗色模式"}
-            >
-              {uiTheme === "dark" ? (
-                <Sun size={18} strokeWidth={2} />
-              ) : (
-                <Moon size={18} strokeWidth={2} />
-              )}
-            </button>
-            <button
-              className="btn-secondary"
-              onClick={() => setShowThemePanel(true)}
-              aria-label="主题"
-            >
-              <Palette size={18} strokeWidth={2} />
-              <span>主题</span>
-            </button>
+            <div className="header-utility-group">
+              <button
+                className="btn-icon-only"
+                onClick={() =>
+                  setTheme(uiTheme === "dark" ? "default" : "dark")
+                }
+                aria-label={
+                  uiTheme === "dark" ? "切换到亮色模式" : "切换到暗色模式"
+                }
+                title={uiTheme === "dark" ? "切换到亮色模式" : "切换到暗色模式"}
+              >
+                {uiTheme === "dark" ? (
+                  <Sun size={18} strokeWidth={2} />
+                ) : (
+                  <Moon size={18} strokeWidth={2} />
+                )}
+              </button>
+              <button
+                className="btn-secondary btn-theme-entry"
+                onClick={() => setShowThemePanel(true)}
+                aria-label="主题"
+                title="主题"
+              >
+                <Brush
+                  className="btn-theme-entry__icon"
+                  size={18}
+                  strokeWidth={2}
+                />
+              </button>
+            </div>
+
+            <span className="header-action-divider" aria-hidden="true" />
 
             <div className="copy-group" ref={copyMenuRef}>
               <button className="btn-primary" onClick={copyToWechat}>
