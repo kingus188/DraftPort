@@ -16,7 +16,7 @@ import { useEditorStore } from "./store/editorStore";
 import "./styles/global.css";
 import "./App.css";
 
-import { Loader2 } from "lucide-react";
+import { FileText, ListTree, Loader2 } from "lucide-react";
 import { useFileStore } from "./store/fileStore";
 import { platform } from "./lib/platformAdapter";
 import { OutlinePanel } from "./outline/OutlinePanel";
@@ -49,6 +49,21 @@ interface DesktopUpdateAPI {
 }
 
 type EditorMode = "wysiwyg" | "source";
+type SidebarView = "files" | "outline";
+
+const SIDEBAR_VIEW_STORAGE_KEY = "draftport-sidebar-view";
+const SIDEBAR_VIEW_OPTIONS: { value: SidebarView; label: string }[] = [
+  { value: "files", label: "文件" },
+  { value: "outline", label: "大纲" },
+];
+
+/** Reads the stored sidebar view while falling back to files for first launch and invalid values. */
+function getInitialSidebarView(): SidebarView {
+  if (typeof window === "undefined") return "files";
+  return localStorage.getItem(SIDEBAR_VIEW_STORAGE_KEY) === "outline"
+    ? "outline"
+    : "files";
+}
 
 /**
  * Owns the top-level editor shell and keeps desktop, mobile, and Desktop
@@ -68,7 +83,9 @@ function App() {
   const storedFilePath = useEditorStore((state) => state.currentFilePath);
   const currentFilePath = useFileStore((state) => state.currentFile?.path);
   const [showThemePanel, setShowThemePanel] = useState(false);
-  const [sidebarView, setSidebarView] = useState<"files" | "outline">("files");
+  const [sidebarView, setSidebarView] = useState<SidebarView>(
+    getInitialSidebarView,
+  );
   const [editorMode, setEditorMode] = useState<EditorMode>("wysiwyg");
   const canUseWysiwygEditor = canUseWysiwygMarkdown(markdown);
   const activeEditorMode = canUseWysiwygEditor ? editorMode : "source";
@@ -76,6 +93,15 @@ function App() {
   const hasNoSelectedMarkdown = !currentFilePath && !isWorkspaceLoading;
   const wysiwygDocumentKey =
     currentFilePath ?? storedFilePath ?? "draftport-unsaved-document";
+  /** Switches the sidebar immediately and stores the choice as the next default view. */
+  const selectSidebarView = (view: SidebarView) => {
+    setSidebarView(view);
+    try {
+      localStorage.setItem(SIDEBAR_VIEW_STORAGE_KEY, view);
+    } catch {
+      /* 忽略本地存储不可用,当前会话仍然完成切换。 */
+    }
+  };
 
   // 全局编辑快捷键：保存文档，并在 Typora-like 编辑与 Markdown 源码之间切换。
   useEffect(() => {
@@ -156,7 +182,7 @@ function App() {
     return saved !== "false";
   });
   const [historyWidth, setHistoryWidth] = useState<string>(
-    showHistory ? "clamp(300px, 24vw, 392px)" : "0px",
+    showHistory ? "clamp(260px, 22vw, 300px)" : "0px",
   );
 
   useEffect(() => {
@@ -169,7 +195,7 @@ function App() {
 
   useEffect(() => {
     if (showHistory) {
-      setHistoryWidth("clamp(300px, 24vw, 392px)");
+      setHistoryWidth("clamp(260px, 22vw, 300px)");
       return;
     }
     const timer = window.setTimeout(() => setHistoryWidth("0px"), 350);
@@ -289,23 +315,28 @@ function App() {
             aria-hidden={!sidebarVisible}
           >
             <div className="history-pane__content">
-              <div className="sidebar-switch" role="tablist">
-                <button
-                  role="tab"
-                  aria-selected={sidebarView === "files"}
-                  className={sidebarView === "files" ? "is-active" : ""}
-                  onClick={() => setSidebarView("files")}
-                >
-                  文件
-                </button>
-                <button
-                  role="tab"
-                  aria-selected={sidebarView === "outline"}
-                  className={sidebarView === "outline" ? "is-active" : ""}
-                  onClick={() => setSidebarView("outline")}
-                >
-                  大纲
-                </button>
+              <div className="sidebar-mode-selector" role="group">
+                {SIDEBAR_VIEW_OPTIONS.map((option) => {
+                  const isActive = option.value === sidebarView;
+                  const Icon = option.value === "files" ? FileText : ListTree;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={isActive ? "is-active" : ""}
+                      aria-label={
+                        option.value === "files"
+                          ? "显示文件面板"
+                          : "显示大纲面板"
+                      }
+                      aria-pressed={isActive}
+                      onClick={() => selectSidebarView(option.value)}
+                    >
+                      <Icon size={15} aria-hidden="true" />
+                      <span>{option.label}</span>
+                    </button>
+                  );
+                })}
               </div>
               {sidebarView === "files" ? (
                 <FileSidebar />

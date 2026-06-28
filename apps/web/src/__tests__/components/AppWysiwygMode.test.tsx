@@ -193,6 +193,14 @@ describe("App Typora-like WYSIWYG editing mode", () => {
     expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
   });
 
+  it("uses a Typora-like narrow file panel width on desktop", () => {
+    render(<App />, { wrapper: MemoryRouter });
+
+    expect(screen.getByRole("main").getAttribute("style")).toContain(
+      "--history-width: clamp(260px, 22vw, 300px);",
+    );
+  });
+
   it("keeps mobile editing in the WYSIWYG surface without a preview switch", () => {
     Object.defineProperty(window, "innerWidth", {
       configurable: true,
@@ -243,5 +251,25 @@ describe("App Typora-like WYSIWYG editing mode", () => {
     expect(screen.getByTestId("file-sidebar")).toBeInTheDocument();
     expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
     expect(screen.queryByText(title)).not.toBeInTheDocument();
+  });
+
+  it("uses an always-visible segmented sidebar mode selector and stores the default", () => {
+    render(<App />, { wrapper: MemoryRouter });
+
+    const fileMode = screen.getByRole("button", { name: "显示文件面板" });
+    const outlineMode = screen.getByRole("button", { name: "显示大纲面板" });
+
+    expect(fileMode).toHaveAttribute("aria-pressed", "true");
+    expect(outlineMode).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByTestId("file-sidebar")).toBeInTheDocument();
+
+    fireEvent.click(outlineMode);
+
+    expect(fileMode).toHaveAttribute("aria-pressed", "false");
+    expect(outlineMode).toHaveAttribute("aria-pressed", "true");
+    expect(
+      screen.getByRole("navigation", { name: "文档大纲" }),
+    ).toBeInTheDocument();
+    expect(localStorage.getItem("draftport-sidebar-view")).toBe("outline");
   });
 });

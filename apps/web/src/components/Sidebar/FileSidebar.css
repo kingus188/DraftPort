@@ -10,28 +10,45 @@
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
     sans-serif;
+  --tree-selection-bg: color-mix(
+    in srgb,
+    var(--accent-primary) 10%,
+    #ffffff 90%
+  );
+  --tree-selection-border: color-mix(
+    in srgb,
+    var(--accent-primary) 24%,
+    transparent
+  );
+  --sidebar-file-title: #263241;
+  --sidebar-file-title-active: color-mix(
+    in srgb,
+    var(--accent-primary) 72%,
+    #0f172a 28%
+  );
+  --sidebar-file-icon: #64748b;
 }
 
 .fs-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 16px 4px;
+  padding: 10px 12px 2px;
   border-bottom: none;
 }
 
 .fs-workspace-info {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 800;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
   color: var(--text-primary);
   cursor: pointer;
-  padding: 6px 4px;
-  border-radius: 8px;
+  padding: 4px 3px;
+  border-radius: 6px;
   transition: all 0.2s ease;
-  max-width: 180px;
+  max-width: 168px;
   background-color: transparent;
   opacity: 0.9;
 }
@@ -50,7 +67,7 @@
 .fs-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .fs-btn-secondary {
@@ -80,8 +97,8 @@
 }
 
 .fs-btn-icon-only {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   padding: 0;
 }
 
@@ -91,10 +108,10 @@
 }
 
 .fs-search {
-  padding: 4px 16px 6px;
+  padding: 2px 12px 4px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .fs-search-wrapper {
@@ -114,7 +131,7 @@
 
 .fs-sort-dropdown {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 4px);
   right: 0;
   min-width: 130px;
   background: var(--bg-primary);
@@ -132,11 +149,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: none;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
   border-radius: var(--radius-sm);
   transition: all 0.15s ease;
@@ -156,7 +173,7 @@
 
 .fs-search-icon {
   position: absolute;
-  left: 11px;
+  left: 9px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-tertiary);
@@ -166,10 +183,10 @@
 .fs-search-wrapper input {
   width: 100%;
   border: var(--border-width) solid var(--border-light);
-  height: 34px;
-  border-radius: 8px;
-  padding: 0 14px 0 34px;
-  font-size: 13px;
+  height: 28px;
+  border-radius: 6px;
+  padding: 0 12px 0 30px;
+  font-size: 12.5px;
   background: #ffffff;
   transition: all 0.2s ease;
   backdrop-filter: blur(4px);
@@ -194,39 +211,44 @@
 .fs-list {
   flex: 1;
   overflow-y: auto;
-  padding: 2px 16px 16px;
+  padding: 2px 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 1px;
   background: transparent;
   border-radius: 0 0 var(--radius-xl) var(--radius-xl);
 }
 
 .fs-item {
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
-  padding: 6px 10px;
+  padding: 5px 8px;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 0;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .fs-item:hover {
   background: #eef4f7;
+  border-color: color-mix(in srgb, var(--border-light) 55%, transparent);
   box-shadow: none;
 }
 
 .fs-item.active {
-  background: transparent;
-  border-color: transparent;
+  background: var(--tree-selection-bg);
+  border-color: var(--tree-selection-border);
   box-shadow: none;
 }
 
 .fs-item.active .fs-title {
-  color: var(--tree-selection-fg);
+  color: var(--sidebar-file-title-active);
+}
+
+.fs-item.active .fs-file-icon {
+  color: var(--sidebar-file-title-active);
 }
 
 .fs-item.dragging {
@@ -241,27 +263,27 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+}
+
+.fs-file-icon {
+  color: var(--sidebar-file-icon);
+  flex: 0 0 auto;
 }
 
 .fs-title-block {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   flex: 1;
   min-width: 0;
 }
 
-.fs-time {
-  font-size: 11px;
-  color: var(--text-tertiary);
-}
-
 .fs-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.4;
+  font-size: 12.5px;
+  font-weight: 550;
+  color: var(--sidebar-file-title);
+  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -269,26 +291,14 @@
   flex-shrink: 0;
 }
 
-.fs-meta-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.fs-meta-separator {
-  color: var(--text-tertiary);
-  font-size: 10px;
-}
-
-.fs-theme-info {
-  font-size: 12px;
-  color: #6b8f7a;
-  font-weight: 600;
-  letter-spacing: 0;
-}
-
-.fs-item.active .fs-theme-info {
-  color: var(--tree-selection-fg);
+.fs-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-primary);
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--accent-primary) 13%, transparent);
 }
 
 /* Rename UI - Web Style */
@@ -338,11 +348,11 @@
 
 .fs-action-trigger {
   border: none;
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   border-radius: var(--radius-pill);
   background: transparent;
-  color: var(--text-tertiary);
+  color: #475569;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -352,7 +362,7 @@
   opacity: 0;
   pointer-events: none;
   visibility: hidden;
-  margin-top: 4px;
+  margin-top: 0;
 }
 
 .fs-item:hover .fs-action-trigger,
@@ -561,14 +571,14 @@
 .fs-folder {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 4px;
-  border-radius: 8px;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: background 0.15s ease;
   color: var(--text-secondary);
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .fs-folder.drop-target {
@@ -611,10 +621,11 @@
 }
 
 .fs-folder-count {
-  font-size: 13px;
-  color: #7b8794;
-  background: #edf1f5;
-  padding: 2px 8px;
+  font-size: 10.5px;
+  line-height: 16px;
+  color: #64748b;
+  background: color-mix(in srgb, #edf1f5 86%, transparent);
+  padding: 0 6px;
   border-radius: var(--radius-pill);
 }
 
@@ -633,9 +644,9 @@
 .fs-folder-children {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   padding-left: 0;
-  padding-top: 4px;
+  padding-top: 1px;
   margin: 0;
   overflow: visible;
 }
@@ -648,19 +659,19 @@
 }
 
 .fs-item {
-  padding: 10px 12px;
+  padding: 5px 8px;
 }
 
 .fs-folder {
-  padding: 10px 12px;
+  padding: 5px 8px;
 }
 
 .fs-folder {
-  padding-left: calc(12px + var(--tree-indent-offset, 0px));
+  padding-left: calc(8px + var(--tree-indent-offset, 0px));
 }
 
 .fs-item {
-  padding-left: calc(52px + var(--tree-indent-offset, 0px));
+  padding-left: calc(30px + var(--tree-indent-offset, 0px));
 }
 
 /* 子菜单样式 - 保持不变 */

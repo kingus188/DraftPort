@@ -76,7 +76,7 @@ describe("responsive shell chrome styles", () => {
     const css = readWorkspaceStyle("src/App.css");
 
     expect(css).toMatch(
-      /grid-template-columns:\s*var\(--history-width,\s*clamp\(280px,\s*25vw,\s*340px\)\)\s*minmax\(0,\s*1fr\);/,
+      /grid-template-columns:\s*var\(--history-width,\s*clamp\(260px,\s*22vw,\s*300px\)\)\s*minmax\(0,\s*1fr\);/,
     );
   });
 });

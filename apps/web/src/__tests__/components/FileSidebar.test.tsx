@@ -137,7 +137,41 @@ describe("FileSidebar", () => {
     );
     const headerRule = sidebarStyles.match(/\.fs-header\s*{[^}]+}/)?.[0] ?? "";
 
-    expect(headerRule).toContain("padding: 16px 16px 4px;");
+    expect(headerRule).toContain("padding: 10px 12px 2px;");
+  });
+
+  it("shows the workspace root only in the header", () => {
+    render(<FileSidebar />);
+
+    expect(screen.getAllByText("second-me")).toHaveLength(1);
+    expect(screen.queryByText("根目录")).toBeNull();
+  });
+
+  it("uses medium compact tree density similar to Typora", () => {
+    const sidebarStyles = readFileSync(
+      "src/components/Sidebar/FileSidebar.css",
+      "utf8",
+    );
+
+    const listRule = sidebarStyles.match(/\.fs-list\s*{[^}]+}/)?.[0] ?? "";
+    const titleRule = sidebarStyles.match(/^\.fs-title\s*{[^}]+}/m)?.[0] ?? "";
+
+    expect(listRule).toContain("padding: 2px 10px 12px;");
+    expect(listRule).toContain("gap: 1px;");
+    expect(sidebarStyles).toContain("padding: 5px 8px;");
+    expect(titleRule).toContain("font-size: 12.5px;");
+    expect(titleRule).toContain("line-height: 1.25;");
+    expect(titleRule).toContain("font-weight: 550;");
+    expect(titleRule).toContain("color: var(--sidebar-file-title);");
+    expect(sidebarStyles).not.toContain(".fs-time");
+    expect(sidebarStyles).not.toContain(".fs-theme-info");
+    expect(sidebarStyles).not.toContain(".fs-meta-row");
+    expect(sidebarStyles).toContain(
+      "padding-left: calc(8px + var(--tree-indent-offset, 0px));",
+    );
+    expect(sidebarStyles).toContain(
+      "padding-left: calc(30px + var(--tree-indent-offset, 0px));",
+    );
   });
 
   it("marks tree rows with depth so nested files and folders render indented", () => {
@@ -186,41 +220,71 @@ describe("FileSidebar", () => {
 
     expect(componentSource).toContain("const TREE_INDENT_STEP_PX = 5.5;");
     expect(sidebarStyles).toContain(
-      "padding-left: calc(12px + var(--tree-indent-offset, 0px));",
+      "padding-left: calc(8px + var(--tree-indent-offset, 0px));",
     );
     expect(sidebarStyles).toContain(
-      "padding-left: calc(52px + var(--tree-indent-offset, 0px));",
+      "padding-left: calc(30px + var(--tree-indent-offset, 0px));",
     );
   });
 
-  it("highlights active text without row backgrounds or shadows", () => {
+  it("uses the publishing queue selection treatment for active files", () => {
     const sidebarStyles = readFileSync(
       "src/components/Sidebar/FileSidebar.css",
+      "utf8",
+    );
+    const componentSource = readFileSync(
+      "src/components/Sidebar/FileSidebar.tsx",
       "utf8",
     );
 
     const fileActiveRule =
       sidebarStyles.match(/\.fs-item\.active\s*{[^}]+}/)?.[0] ?? "";
-    const folderActiveRule =
-      sidebarStyles.match(/\.fs-folder\.active\s*{[^}]+}/)?.[0] ?? "";
     const fileTitleRule =
       sidebarStyles.match(/\.fs-item\.active \.fs-title\s*{[^}]+}/)?.[0] ?? "";
-    const fileThemeRule =
-      sidebarStyles.match(/\.fs-item\.active \.fs-theme-info\s*{[^}]+}/)?.[0] ??
+    const statusDotRule =
+      sidebarStyles.match(/\.fs-status-dot\s*{[^}]+}/)?.[0] ?? "";
+    const fileIconRule =
+      sidebarStyles.match(/^\.fs-file-icon\s*{[^}]+}/m)?.[0] ?? "";
+    const activeFileIconRule =
+      sidebarStyles.match(/\.fs-item\.active \.fs-file-icon\s*{[^}]+}/)?.[0] ??
       "";
-    const folderCountRule =
-      sidebarStyles.match(
-        /\.fs-folder\.active \.fs-folder-count\s*{[^}]+}/,
-      )?.[0] ?? "";
 
-    expect(fileActiveRule).toContain("background: transparent;");
+    expect(componentSource).toContain("FileText");
+    expect(componentSource).toContain('className="fs-status-dot"');
+    expect(fileIconRule).toContain("color: var(--sidebar-file-icon)");
+    expect(activeFileIconRule).toContain("var(--sidebar-file-title-active)");
+    expect(fileActiveRule).toContain("background: var(--tree-selection-bg);");
+    expect(fileActiveRule).toContain(
+      "border-color: var(--tree-selection-border);",
+    );
     expect(fileActiveRule).toContain("box-shadow: none;");
-    expect(folderActiveRule).toContain("background: transparent;");
-    expect(folderActiveRule).toContain("box-shadow: none;");
-    expect(fileTitleRule).toContain("var(--tree-selection-fg)");
-    expect(fileThemeRule).toContain("var(--tree-selection-fg)");
-    expect(folderActiveRule).toContain("var(--tree-selection-fg)");
-    expect(folderCountRule).toContain("color: var(--tree-selection-fg)");
-    expect(folderCountRule).toContain("background: transparent;");
+    expect(fileTitleRule).toContain("var(--sidebar-file-title-active)");
+    expect(statusDotRule).toContain("background: var(--accent-primary)");
+  });
+
+  it("renders file rows with icons and active status dots", () => {
+    const activeFile = makeFile("06-专题创作计划.md", "/workspace/06.md");
+    const inactiveFile = makeFile("05-路线图.md", "/workspace/05.md");
+
+    mockUseSidebarState.mockReturnValue({
+      ...mockUseSidebarState(),
+      currentFile: activeFile,
+      filteredItems: [activeFile, inactiveFile],
+    });
+
+    render(<FileSidebar />);
+
+    const activeRow = screen.getByText("06-专题创作计划").closest(".fs-item");
+    const inactiveRow = screen.getByText("05-路线图").closest(".fs-item");
+
+    expect(activeRow).toHaveClass("active");
+    expect(activeRow?.querySelector(".fs-file-icon")).not.toBeNull();
+    expect(activeRow?.querySelector(".fs-status-dot")).not.toBeNull();
+    expect(activeRow?.querySelector(".fs-meta-row")).toBeNull();
+    expect(inactiveRow?.querySelector(".fs-file-icon")).not.toBeNull();
+    expect(inactiveRow?.querySelector(".fs-status-dot")).toBeNull();
+    expect(inactiveRow?.querySelector(".fs-meta-row")).toBeNull();
+    expect(screen.queryByText("刚刚")).toBeNull();
+    expect(screen.queryByText("默认主题")).toBeNull();
   });
 });

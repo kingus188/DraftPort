@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import type { CSSProperties } from "react";
-import { useThemeStore } from "../../store/themeStore";
 import {
   Search,
   Plus,
   FolderOpen,
   FolderPlus,
+  FileText,
   MoreHorizontal,
   ChevronRight,
   ArrowUpDown,
@@ -53,7 +53,6 @@ function getTreeDepthStyle(depth: number): CSSProperties {
  */
 export function FileSidebar() {
   const state = useSidebarState();
-  const currentThemeName = useThemeStore((s) => s.themeName);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const sortBtnRef = useRef<HTMLButtonElement>(null);
   const sortMenuRef = useRef<HTMLDivElement>(null);
@@ -86,78 +85,78 @@ export function FileSidebar() {
     };
   }, [showSortMenu]);
 
-  const renderFileItem = (file: FileItem, depth: number) => (
-    <div
-      key={file.path}
-      className={`fs-item ${state.currentFile?.path === file.path ? "active" : ""} ${state.draggingPath === file.path ? "dragging" : ""}`}
-      data-tree-depth={depth}
-      style={getTreeDepthStyle(depth)}
-      onClick={() => state.handleFileClick(file)}
-      onContextMenu={(e) => state.handleContextMenu(e, file)}
-      draggable={state.isDragEnabled && state.renamingPath !== file.path}
-      onDragStart={(e) => {
-        if (!state.isDragEnabled) return;
-        e.dataTransfer.setData(FILE_DRAG_TYPE, file.path);
-        e.dataTransfer.setData("text/plain", file.path);
-        e.dataTransfer.effectAllowed = "move";
-        state.setDraggingPath(file.path);
-      }}
-      onDragEnd={() => {
-        state.setDraggingPath(null);
-        state.setDraggingFolderPath(null);
-        state.setDragOverTarget(null);
-      }}
-    >
-      <div className="fs-item-main">
-        <div className="fs-title-block">
-          {state.renamingPath === file.path ? (
-            <div className="fs-rename" onClick={(e) => e.stopPropagation()}>
-              <input
-                value={state.renameValue}
-                onChange={(e) => state.setRenameValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") state.submitRename();
-                  if (e.key === "Escape") state.setRenamingPath(null);
-                }}
-                autoFocus
-              />
-              <button onClick={() => state.submitRename()}>确认</button>
-              <button onClick={() => state.setRenamingPath(null)}>取消</button>
-            </div>
-          ) : (
-            <>
-              <span
-                className="fs-title"
-                title={file.title || file.name.replace(/\.md$/, "")}
-              >
-                {file.title || file.name.replace(/\.md$/, "")}
-              </span>
-              <div className="fs-meta-row">
-                <span className="fs-time">
-                  {state.formatTime(new Date(file.updatedAt))}
-                </span>
-                <span className="fs-meta-separator">·</span>
-                <span className="fs-theme-info">
-                  {state.currentFile?.path === file.path
-                    ? currentThemeName
-                    : file.themeName || "默认主题"}
-                </span>
+  /** Renders one document row with navigation state and row-scoped actions. */
+  const renderFileItem = (file: FileItem, depth: number) => {
+    const isCurrentFile = state.currentFile?.path === file.path;
+
+    return (
+      <div
+        key={file.path}
+        className={`fs-item ${isCurrentFile ? "active" : ""} ${state.draggingPath === file.path ? "dragging" : ""}`}
+        data-tree-depth={depth}
+        style={getTreeDepthStyle(depth)}
+        onClick={() => state.handleFileClick(file)}
+        onContextMenu={(e) => state.handleContextMenu(e, file)}
+        draggable={state.isDragEnabled && state.renamingPath !== file.path}
+        onDragStart={(e) => {
+          if (!state.isDragEnabled) return;
+          e.dataTransfer.setData(FILE_DRAG_TYPE, file.path);
+          e.dataTransfer.setData("text/plain", file.path);
+          e.dataTransfer.effectAllowed = "move";
+          state.setDraggingPath(file.path);
+        }}
+        onDragEnd={() => {
+          state.setDraggingPath(null);
+          state.setDraggingFolderPath(null);
+          state.setDragOverTarget(null);
+        }}
+      >
+        <div className="fs-item-main">
+          <FileText size={16} className="fs-file-icon" aria-hidden="true" />
+          <div className="fs-title-block">
+            {state.renamingPath === file.path ? (
+              <div className="fs-rename" onClick={(e) => e.stopPropagation()}>
+                <input
+                  value={state.renameValue}
+                  onChange={(e) => state.setRenameValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") state.submitRename();
+                    if (e.key === "Escape") state.setRenamingPath(null);
+                  }}
+                  autoFocus
+                />
+                <button onClick={() => state.submitRename()}>确认</button>
+                <button onClick={() => state.setRenamingPath(null)}>
+                  取消
+                </button>
               </div>
-            </>
+            ) : (
+              <>
+                <span
+                  className="fs-title"
+                  title={file.title || file.name.replace(/\.md$/, "")}
+                >
+                  {file.title || file.name.replace(/\.md$/, "")}
+                </span>
+              </>
+            )}
+          </div>
+          {isCurrentFile && (
+            <span className="fs-status-dot" aria-hidden="true" />
           )}
+          <button
+            className="fs-action-trigger"
+            onClick={(e) => {
+              e.stopPropagation();
+              state.handleContextMenu(e, file);
+            }}
+          >
+            <MoreHorizontal size={16} />
+          </button>
         </div>
-        <button
-          className="fs-action-trigger"
-          onClick={(e) => {
-            e.stopPropagation();
-            state.handleContextMenu(e, file);
-          }}
-        >
-          <MoreHorizontal size={16} />
-        </button>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderFolderItem = (folder: FolderItem, depth: number) => {
     const isCollapsed = state.collapsedFolders.has(folder.path);
@@ -347,27 +346,6 @@ export function FileSidebar() {
           onDrop={state.handleDropToRoot}
           onDragLeave={(e) => state.handleDragLeave(e, ROOT_DROP_TARGET)}
         >
-          {!state.filter && (
-            <div
-              className={`fs-folder ${state.activeFolder === null ? "active" : ""} ${state.dragOverTarget === ROOT_DROP_TARGET ? "drop-target" : ""}`}
-              onClick={state.handleRootFolderClick}
-              onDragOver={(e) => {
-                if (!state.isDragEnabled) return;
-                e.preventDefault();
-                e.stopPropagation();
-                state.setDragOverTarget(ROOT_DROP_TARGET);
-              }}
-              onDrop={(e) => state.handleDropToFolder(e, "")}
-              onDragLeave={(e) => state.handleDragLeave(e, ROOT_DROP_TARGET)}
-            >
-              <FolderOpen size={14} className="fs-folder-type-icon" />
-              <span className="fs-folder-name">
-                {state.workspacePath
-                  ? getBaseName(state.workspacePath)
-                  : "根目录"}
-              </span>
-            </div>
-          )}
           {state.filter
             ? (state.filteredItems as FileItem[]).map((file) =>
                 renderFileItem(file, 0),
