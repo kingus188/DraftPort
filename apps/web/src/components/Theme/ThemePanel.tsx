@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { useThemeStore } from "../../store/themeStore";
+import { useFileStore } from "../../store/fileStore";
 import { type DesignerVariables, defaultVariables } from "./ThemeDesigner";
 import { generateCSS } from "./ThemeDesigner/generateCSS";
 import { ThemePanelView } from "./ThemePanelView";
@@ -34,6 +35,7 @@ const areDesignerVariablesEqual = (
 export function ThemePanel({ open, onClose }: ThemePanelProps) {
   const theme = useThemeStore((state) => state.themeId);
   const selectTheme = useThemeStore((state) => state.selectTheme);
+  const currentFilePath = useFileStore((state) => state.currentFile?.path);
   const createTheme = useThemeStore((state) => state.createTheme);
   const updateTheme = useThemeStore((state) => state.updateTheme);
   const deleteTheme = useThemeStore((state) => state.deleteTheme);
@@ -226,7 +228,7 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
       await handleSave();
     }
 
-    selectTheme(selectedThemeId);
+    selectTheme(selectedThemeId, currentFilePath);
     onClose();
   };
 
@@ -240,7 +242,7 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
         cssToSave,
         editorMode === "visual" ? designerVariables : undefined,
       );
-      selectTheme(newTheme.id);
+      selectTheme(newTheme.id, currentFilePath);
 
       setSelectedThemeId(newTheme.id);
       setCssInput(cssToSave);
@@ -291,7 +293,7 @@ export function ThemePanel({ open, onClose }: ThemePanelProps) {
   const handleConfirmDelete = () => {
     if (!isCustomTheme) return;
     deleteTheme(selectedThemeId);
-    selectTheme("default");
+    selectTheme("default", currentFilePath);
     handleSelectTheme("default");
     setShowDeleteConfirm(false);
     toast.success("主题已删除");

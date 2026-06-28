@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { useFileStore } from "../store/fileStore";
-import { useThemeStore } from "../store/themeStore";
 import {
   applyMarkdownFileMeta,
   stripMarkdownExtension,
@@ -190,12 +189,8 @@ export function useFileSystemEffects({
     // once dirty we skip the expensive reconstruction and just keep the
     // autosave timer armed — this is the per-keystroke hot path.
     if (!isDirty) {
-      const { themeId: currentTheme, themeName: currentThemeName } =
-        useThemeStore.getState();
       const fullContent = applyMarkdownFileMeta(lastSavedContent, {
         body: markdown,
-        theme: currentTheme,
-        themeName: currentThemeName,
         title: currentFile.title || stripMarkdownExtension(currentFile.name),
       });
       if (fullContent === lastSavedContent) return;

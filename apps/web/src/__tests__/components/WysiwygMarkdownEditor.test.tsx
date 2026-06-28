@@ -51,6 +51,8 @@ const mocks = vi.hoisted(() => {
       return `replace-all:${markdown}`;
     }),
     setMarkdownMock: vi.fn(),
+    themeCss:
+      "#draftport { font-family: ThemeFont; }\n#draftport p { color: rgb(7, 193, 96); }\n#draftport h1 .content { display: inline-block; background-image: linear-gradient(90deg, red, blue); color: transparent; }\n#draftport h2 .content { display: inline-block; color: rgb(255, 0, 193); }",
     useEditorMock: vi.fn((factory: (root: HTMLElement) => unknown) => {
       const root = document.createElement("div");
       const editor = factory(root);
@@ -134,11 +136,10 @@ vi.mock("../../store/themeStore", () => ({
   useThemeStore: (selector: (state: unknown) => unknown) =>
     selector({
       themeId: "wechat-theme",
-      customCSS:
-        "#draftport { font-family: ThemeFont; }\n#draftport p { color: rgb(7, 193, 96); }\n#draftport h1 .content { display: inline-block; background-image: linear-gradient(90deg, red, blue); color: transparent; }\n#draftport h2 .content { display: inline-block; color: rgb(255, 0, 193); }",
+      customCSS: mocks.themeCss,
       getThemeCSS: vi.fn(
         (themeId: string, darkMode?: boolean) =>
-          `/* ${themeId}:${darkMode ? "dark" : "light"} */ #draftport { font-family: ThemeFont; }\n#draftport p { color: rgb(7, 193, 96); }\n#draftport h1 .content { display: inline-block; background-image: linear-gradient(90deg, red, blue); color: transparent; }\n#draftport h2 .content { display: inline-block; color: rgb(255, 0, 193); }`,
+          `/* ${themeId}:${darkMode ? "dark" : "light"} */ ${mocks.themeCss}`,
       ),
     }),
 }));
@@ -159,6 +160,8 @@ describe("WysiwygMarkdownEditor", () => {
     mocks.replaceAllMock.mockClear();
     mocks.replaceAllCallbackMock.mockClear();
     mocks.markdown = "# Draft";
+    mocks.themeCss =
+      "#draftport { font-family: ThemeFont; }\n#draftport p { color: rgb(7, 193, 96); }\n#draftport h1 .content { display: inline-block; background-image: linear-gradient(90deg, red, blue); color: transparent; }\n#draftport h2 .content { display: inline-block; color: rgb(255, 0, 193); }";
   });
 
   it("mounts Milkdown with the current Markdown and writes serialized changes back", () => {
@@ -224,6 +227,31 @@ describe("WysiwygMarkdownEditor", () => {
     expect(
       getComputedStyle(screen.getByTestId("wysiwyg-subheading")).display,
     ).toBe("table");
+  });
+
+  it("keeps theme root box rules from resizing the WYSIWYG scroll surface", () => {
+    mocks.themeCss =
+      "#draftport { max-width: 677px; margin: 0 auto; padding: 5px 20px; font-family: ThemeFont; }\n#draftport p { color: rgb(7, 193, 96); }";
+
+    render(<WysiwygMarkdownEditor />);
+
+    const styleText =
+      screen.getByTestId("wysiwyg-theme-style").textContent ?? "";
+    expect(styleText).toContain(
+      "#draftport.wysiwyg-markdown-editor__surface { width: 100%; max-width: none; margin: 0; padding: 0; }",
+    );
+    expect(styleText).toMatch(
+      /#draftport\s+\.ProseMirror\s*\{[^}]*font-family:\s*ThemeFont/i,
+    );
+    expect(styleText).not.toMatch(
+      /#draftport\s+\.ProseMirror\s*\{[^}]*max-width/i,
+    );
+    expect(styleText).not.toMatch(
+      /#draftport\s+\.ProseMirror\s*\{[^}]*margin/i,
+    );
+    expect(styleText).not.toMatch(
+      /#draftport\s+\.ProseMirror\s*\{[^}]*padding/i,
+    );
   });
 });
 

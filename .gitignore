@@ -22,4 +22,5 @@ apps/tauri/src-tauri/target/
 .agentdocs/
 .gemini/
 .claude/
+.superpowers/
 AGNTNTS.md

@@ -85,13 +85,9 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
 
       if (activeFile && currentIsDirty) {
         const { markdown: currentMarkdown } = useEditorStore.getState();
-        const { themeId: currentTheme, themeName: currentThemeName } =
-          useThemeStore.getState();
         const baseContent = useFileStore.getState().lastSavedContent;
         const fullContent = applyMarkdownFileMeta(baseContent, {
           body: currentMarkdown,
-          theme: currentTheme,
-          themeName: currentThemeName,
           title: activeFile.title || stripMarkdownExtension(activeFile.name),
         });
 
@@ -131,9 +127,20 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
           file.title?.trim() ||
           stripMarkdownExtension(file.name);
 
-        setCurrentFile({ ...file, title: resolvedTitle });
+        const resolvedTheme = useThemeStore
+          .getState()
+          .resolveFileTheme(file.path, {
+            themeId: parsed.theme,
+            themeName: parsed.themeName,
+          });
+
+        setCurrentFile({
+          ...file,
+          title: resolvedTitle,
+          themeName: resolvedTheme.themeName,
+        });
         setMarkdown(parsed.body);
-        useThemeStore.getState().selectTheme(parsed.theme);
+        useThemeStore.getState().activateTheme(resolvedTheme.themeId);
         setLastSavedContent(content);
         setIsDirty(false);
       } else {
@@ -263,14 +270,9 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       setSaving(true);
 
       const { markdown: latestMarkdown } = useEditorStore.getState();
-      const { themeId: currentTheme, themeName: currentThemeName } =
-        useThemeStore.getState();
-
       const baseContent = useFileStore.getState().lastSavedContent;
       const fullContent = applyMarkdownFileMeta(baseContent, {
         body: latestMarkdown,
-        theme: currentTheme,
-        themeName: currentThemeName,
         title: currentFile.title || stripMarkdownExtension(currentFile.name),
       });
 
@@ -359,6 +361,7 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
       const res = await desktop.fs.deleteFile(file.path);
       if (res.success) {
         toast.success("已删除");
+        useThemeStore.getState().removeFileThemePath(file.path);
         await refreshFiles();
         if (currentFile && currentFile.path === file.path) {
           setCurrentFile(null);

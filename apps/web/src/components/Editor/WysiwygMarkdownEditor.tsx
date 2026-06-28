@@ -97,6 +97,46 @@ const HEADING_CONTENT_SELECTOR_PATTERN =
 const HEADING_CONTENT_SOURCE_PATTERN =
   /#draftport\s+h[1-6]\s+\.content(?=[:\s.#>[+~]|$)/;
 const CSS_RULE_PATTERN = /([^{}]+)\{([^{}]*)\}/g;
+const CSS_LEADING_COMMENT_PATTERN = /^(?:\s*\/\*[\s\S]*?\*\/\s*)+/;
+const WYSIWYG_SURFACE_RESET_RULE =
+  "#draftport.wysiwyg-markdown-editor__surface { width: 100%; max-width: none; margin: 0; padding: 0; }";
+const WYSIWYG_ROOT_BOX_PROPERTIES = new Set([
+  "width",
+  "min-width",
+  "max-width",
+  "margin",
+  "margin-top",
+  "margin-right",
+  "margin-bottom",
+  "margin-left",
+  "padding",
+  "padding-top",
+  "padding-right",
+  "padding-bottom",
+  "padding-left",
+]);
+
+/** Returns true when a selector targets only the preview root instead of content nodes. */
+function isDraftportRootSelector(selector: string): boolean {
+  return (
+    selector.trim().replace(CSS_LEADING_COMMENT_PATTERN, "").trim() ===
+    "#draftport"
+  );
+}
+
+/** Removes root box-model declarations that would resize the WYSIWYG editor canvas. */
+function removeWysiwygRootBoxDeclarations(body: string): string {
+  const declarations = body
+    .split(";")
+    .map((declaration) => declaration.trim())
+    .filter(Boolean)
+    .filter((declaration) => {
+      const property = declaration.split(":")[0]?.trim().toLowerCase();
+      return property ? !WYSIWYG_ROOT_BOX_PROPERTIES.has(property) : true;
+    });
+
+  return declarations.length > 0 ? `${declarations.join("; ")};` : "";
+}
 
 /**
  * Converts a preview selector into the equivalent Milkdown selector.
@@ -123,6 +163,10 @@ function adaptSelectorForWysiwyg(selector: string): string | null {
  * applied to the Milkdown heading element itself.
  */
 function adaptRuleBodyForWysiwyg(selectorText: string, body: string): string {
+  if (selectorText.split(",").every(isDraftportRootSelector)) {
+    return removeWysiwygRootBoxDeclarations(body);
+  }
+
   if (!HEADING_CONTENT_SOURCE_PATTERN.test(selectorText)) {
     return body;
   }
@@ -180,7 +224,7 @@ function adaptThemeCssForWysiwyg(themeCss: string): string {
     return themeCss;
   }
 
-  return `${themeCss}\n/* WYSIWYG theme adapter: mirror #draftport rules into Milkdown content. */\n${adaptedRules.join("\n")}`;
+  return `${themeCss}\n/* WYSIWYG theme adapter: mirror #draftport rules into Milkdown content. */\n${adaptedRules.join("\n")}\n${WYSIWYG_SURFACE_RESET_RULE}`;
 }
 
 /**

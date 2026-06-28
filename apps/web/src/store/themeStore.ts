@@ -28,6 +28,17 @@ const clearDarkCssCache = () => darkCssCache.clear();
 // localStorage 键名
 const CUSTOM_THEMES_KEY = "draftport-custom-themes";
 const SELECTED_THEME_KEY = "draftport-selected-theme";
+const FILE_THEME_ASSIGNMENTS_KEY = "draftport-file-theme-assignments";
+
+export interface FileThemeAssignment {
+  themeId: string;
+  themeName: string;
+}
+
+const DEFAULT_THEME_ASSIGNMENT: FileThemeAssignment = {
+  themeId: "default",
+  themeName: "默认主题",
+};
 
 const getBrowserStorage = (): Storage | null => {
   if (typeof window === "undefined") {
@@ -98,6 +109,76 @@ const saveCustomThemes = (themes: CustomTheme[]): void => {
   }
 };
 
+const loadFileThemes = (): Record<string, FileThemeAssignment> => {
+  const storage = getBrowserStorage();
+  if (!storage) return {};
+  try {
+    const stored = storage.getItem(FILE_THEME_ASSIGNMENTS_KEY);
+    if (!stored) return {};
+    const parsed = JSON.parse(stored) as Record<string, FileThemeAssignment>;
+    if (!parsed || typeof parsed !== "object") return {};
+
+    return Object.fromEntries(
+      Object.entries(parsed).filter(
+        ([filePath, value]) =>
+          Boolean(filePath) &&
+          value &&
+          typeof value.themeId === "string" &&
+          typeof value.themeName === "string",
+      ),
+    );
+  } catch (error) {
+    console.error("加载文件主题映射失败:", error);
+    return {};
+  }
+};
+
+const saveFileThemes = (themes: Record<string, FileThemeAssignment>): void => {
+  const storage = getBrowserStorage();
+  if (!storage) return;
+  try {
+    storage.setItem(FILE_THEME_ASSIGNMENTS_KEY, JSON.stringify(themes));
+  } catch (error) {
+    console.error("保存文件主题映射失败:", error);
+  }
+};
+
+const resolveThemeById = (
+  themeId: string,
+  themes: CustomTheme[],
+): CustomTheme | undefined => themes.find((theme) => theme.id === themeId);
+
+const toThemeAssignment = (theme: CustomTheme): FileThemeAssignment => ({
+  themeId: theme.id,
+  themeName: theme.name,
+});
+
+const normalizeThemePath = (path: string): string => path.replace(/\\/g, "/");
+
+const isThemePathAtOrInside = (
+  filePath: string,
+  targetPath: string,
+): boolean => {
+  const normalizedFilePath = normalizeThemePath(filePath);
+  const normalizedTargetPath = normalizeThemePath(targetPath);
+  return (
+    normalizedFilePath === normalizedTargetPath ||
+    normalizedFilePath.startsWith(`${normalizedTargetPath}/`)
+  );
+};
+
+const replaceThemePathPrefix = (
+  filePath: string,
+  oldPath: string,
+  newPath: string,
+): string | null => {
+  if (!isThemePathAtOrInside(filePath, oldPath)) return null;
+  const suffix = normalizeThemePath(filePath).slice(
+    normalizeThemePath(oldPath).length,
+  );
+  return `${normalizeThemePath(newPath)}${suffix}`;
+};
+
 // 保存选中主题到 localStorage
 const saveSelectedTheme = (themeId: string, themeName: string): void => {
   const storage = getBrowserStorage();
@@ -146,10 +227,25 @@ interface ThemeStore {
 
   // 自定义主题列表
   customThemes: CustomTheme[];
+  fileThemes: Record<string, FileThemeAssignment>;
 
   // 主题操作
-  selectTheme: (themeId: string) => void;
+  /** Activates a theme for rendering without changing any file assignment. */
+  activateTheme: (themeId: string) => void;
+  /** Applies a theme and optionally stores it as the selected file's theme. */
+  selectTheme: (themeId: string, filePath?: string) => void;
   setCustomCSS: (css: string) => void;
+  /** Returns the stored theme assignment for one file when it still exists. */
+  getFileTheme: (filePath: string) => FileThemeAssignment | null;
+  /** Resolves the file theme, preferring client assignment before frontmatter. */
+  resolveFileTheme: (
+    filePath: string,
+    fallback: FileThemeAssignment,
+  ) => FileThemeAssignment;
+  /** Moves exact and nested file theme assignments after file or folder moves. */
+  moveFileThemePath: (oldPath: string, newPath: string) => void;
+  /** Removes exact and nested file theme assignments after file or folder deletion. */
+  removeFileThemePath: (path: string) => void;
   getThemeCSS: (themeId: string, darkMode?: boolean) => string;
 
   getAllThemes: () => CustomTheme[];
@@ -182,24 +278,91 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
   themeName: initialSelectedTheme?.name ?? "默认主题",
   customCSS: "",
   customThemes: loadCustomThemes(),
+  fileThemes: loadFileThemes(),
 
-  selectTheme: (themeId: string) => {
-    const allThemes = get().getAllThemes();
-    const theme = allThemes.find((t) => t.id === themeId);
-    if (theme) {
-      clearDarkCssCache();
-      set({
-        themeId: theme.id,
-        themeName: theme.name,
-        customCSS: theme.css,
-      });
-      saveSelectedTheme(theme.id, theme.name);
-    }
+  activateTheme: (themeId: string) => {
+    const theme = resolveThemeById(themeId, get().getAllThemes());
+    if (!theme) return;
+
+    clearDarkCssCache();
+    set({
+      themeId: theme.id,
+      themeName: theme.name,
+      customCSS: theme.css,
+    });
+    saveSelectedTheme(theme.id, theme.name);
+  },
+
+  selectTheme: (themeId: string, filePath?: string) => {
+    const theme = resolveThemeById(themeId, get().getAllThemes());
+    if (!theme) return;
+
+    const assignment = toThemeAssignment(theme);
+    const nextFileThemes = filePath
+      ? { ...get().fileThemes, [filePath]: assignment }
+      : get().fileThemes;
+
+    clearDarkCssCache();
+    set({
+      themeId: theme.id,
+      themeName: theme.name,
+      customCSS: theme.css,
+      fileThemes: nextFileThemes,
+    });
+    if (filePath) saveFileThemes(nextFileThemes);
+    saveSelectedTheme(theme.id, theme.name);
   },
 
   setCustomCSS: (css: string) => {
     clearDarkCssCache();
     set({ customCSS: css });
+  },
+
+  getFileTheme: (filePath: string) => {
+    const assignment = get().fileThemes[filePath];
+    if (!assignment) return null;
+    const theme = resolveThemeById(assignment.themeId, get().getAllThemes());
+    return theme ? toThemeAssignment(theme) : null;
+  },
+
+  resolveFileTheme: (filePath: string, fallback: FileThemeAssignment) => {
+    const storedTheme = get().getFileTheme(filePath);
+    if (storedTheme) return storedTheme;
+
+    const fallbackTheme = resolveThemeById(
+      fallback.themeId,
+      get().getAllThemes(),
+    );
+    if (fallbackTheme) return toThemeAssignment(fallbackTheme);
+
+    const defaultTheme = resolveThemeById(
+      DEFAULT_THEME_ASSIGNMENT.themeId,
+      get().getAllThemes(),
+    );
+    return defaultTheme
+      ? toThemeAssignment(defaultTheme)
+      : DEFAULT_THEME_ASSIGNMENT;
+  },
+
+  moveFileThemePath: (oldPath: string, newPath: string) => {
+    const nextFileThemes = Object.fromEntries(
+      Object.entries(get().fileThemes).map(([filePath, assignment]) => {
+        const movedPath = replaceThemePathPrefix(filePath, oldPath, newPath);
+        return [movedPath ?? filePath, assignment];
+      }),
+    );
+    saveFileThemes(nextFileThemes);
+    set({ fileThemes: nextFileThemes });
+  },
+
+  removeFileThemePath: (path: string) => {
+    const nextFileThemes = Object.fromEntries(
+      Object.entries(get().fileThemes).filter(
+        ([filePath]) => !isThemePathAtOrInside(filePath, path),
+      ),
+    );
+    saveFileThemes(nextFileThemes);
+    set({ fileThemes: nextFileThemes });
   },
 
   getThemeCSS: (themeId: string, darkMode?: boolean) => {
@@ -291,9 +454,19 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
       ...state.customThemes.slice(themeIndex + 1),
     ];
 
+    const nextFileThemes = Object.fromEntries(
+      Object.entries(state.fileThemes).map(([filePath, assignment]) => [
+        filePath,
+        assignment.themeId === id
+          ? toThemeAssignment(updatedTheme)
+          : assignment,
+      ]),
+    );
+
     saveCustomThemes(nextCustomThemes);
+    saveFileThemes(nextFileThemes);
     clearDarkCssCache();
-    set({ customThemes: nextCustomThemes });
+    set({ customThemes: nextCustomThemes, fileThemes: nextFileThemes });
 
     // 当前主题更新后要同步刷新运行态 CSS，WYSIWYG 编辑器订阅 customCSS 来重算主题样式。
     if (state.themeId === id) {
@@ -312,9 +485,15 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     }
 
     const nextCustomThemes = state.customThemes.filter((t) => t.id !== id);
+    const nextFileThemes = Object.fromEntries(
+      Object.entries(state.fileThemes).filter(
+        ([, assignment]) => assignment.themeId !== id,
+      ),
+    );
     saveCustomThemes(nextCustomThemes);
+    saveFileThemes(nextFileThemes);
     clearDarkCssCache();
-    set({ customThemes: nextCustomThemes });
+    set({ customThemes: nextCustomThemes, fileThemes: nextFileThemes });
 
     // 如果删除的是当前主题，切换到默认
     if (state.themeId === id) {

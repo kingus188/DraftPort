@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import toast from "react-hot-toast";
 import type { FileItem } from "../store/fileTypes";
 import { useFileStore } from "../store/fileStore";
+import { useThemeStore } from "../store/themeStore";
 import {
   isPathWithinFolder,
   joinPath,
@@ -68,6 +69,9 @@ export function useFileSystemFolderActions({
       });
       if (res.success) {
         toast.success("文件已移动");
+        if (res.newPath) {
+          useThemeStore.getState().moveFileThemePath(file.path, res.newPath);
+        }
         await refreshFiles();
         if (currentFile && currentFile.path === file.path && res.newPath) {
           setCurrentFile({ ...currentFile, path: res.newPath });
@@ -97,6 +101,7 @@ export function useFileSystemFolderActions({
       });
       if (res.success && res.newPath) {
         toast.success("文件夹已重命名");
+        useThemeStore.getState().moveFileThemePath(folder.path, res.newPath);
         await refreshFiles();
         updateCurrentFilePathForFolder(folder.path, res.newPath);
         return { success: true as const, newPath: res.newPath };
@@ -116,6 +121,7 @@ export function useFileSystemFolderActions({
       });
       if (res.success && res.newPath) {
         toast.success("文件夹已移动");
+        useThemeStore.getState().moveFileThemePath(folder.path, res.newPath);
         await refreshFiles();
         updateCurrentFilePathForFolder(folder.path, res.newPath);
         return { success: true as const, newPath: res.newPath };
@@ -135,6 +141,7 @@ export function useFileSystemFolderActions({
       });
       if (res.success) {
         toast.success("文件夹已删除");
+        useThemeStore.getState().removeFileThemePath(folderPath);
         await refreshFiles();
         if (currentFile && isPathWithinFolder(currentFile.path, folderPath)) {
           setCurrentFile(null);
