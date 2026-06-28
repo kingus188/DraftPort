@@ -13,6 +13,11 @@ describe("OutlinePanel", () => {
     expect(rowB).toHaveAttribute("data-level", "2");
   });
 
+  it("keeps visual numbering out of the button name", () => {
+    render(<OutlinePanel markdown={"# A\n\n## B"} />);
+    expect(screen.getByRole("button", { name: "B" })).toBeInTheDocument();
+  });
+
   it("emits a jump with the heading index on click", () => {
     const spy = vi.spyOn(bus, "emitOutlineJump");
     render(<OutlinePanel markdown={"# A\n\n## B"} />);

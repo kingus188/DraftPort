@@ -3,8 +3,7 @@
   flex-direction: column;
   overflow-y: auto;
   height: 100%;
-  padding: 8px 16px 16px 8px;
-  gap: 2px;
+  padding: 10px 12px 18px;
 }
 .outline-panel--empty {
   padding: 24px 16px;
@@ -14,26 +13,56 @@
 }
 .outline-row {
   position: relative;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  min-height: 40px;
   text-align: left;
   border: none;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--border-light) 62%, transparent);
   background: none;
   cursor: pointer;
-  padding: 7px 12px;
-  border-radius: var(--radius-md);
+  padding: 7px 10px 7px calc(var(--outline-depth, 0) * 12px + 2px);
+  border-radius: 0;
   font-size: 14px;
-  line-height: 1.55;
+  line-height: 1.35;
   color: var(--text-secondary);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   transition:
     background-color 0.15s ease,
-    color 0.15s ease;
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
-/* 一级标题更突出,层级越深越淡,靠字色而非缩进单独承担层级感。 */
+
+.outline-row:first-child {
+  min-height: 48px;
+}
+
+.outline-row:last-child {
+  border-bottom-color: transparent;
+}
+
+.outline-row__index {
+  color: var(--text-tertiary);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.outline-row__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 一级标题更突出,层级越深越淡,靠字色和浅缩进共同承担层级感。 */
 .outline-row[data-level="1"] {
   color: var(--text-primary);
   font-weight: 600;
+  grid-template-columns: 28px minmax(0, 1fr);
+  padding-left: 2px;
 }
 .outline-row[data-level="2"] {
   color: var(--text-primary);
@@ -44,14 +73,31 @@
   color: var(--text-tertiary);
   font-size: 13px;
 }
+
+.outline-row[data-level="3"] .outline-row__index,
+.outline-row[data-level="4"] .outline-row__index,
+.outline-row[data-level="5"] .outline-row__index,
+.outline-row[data-level="6"] .outline-row__index {
+  color: color-mix(in srgb, var(--text-tertiary) 72%, transparent);
+}
+
 .outline-row:hover {
-  background: var(--bg-hover);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--bg-hover) 72%, transparent);
   color: var(--text-primary);
 }
+
 /* 当前所在标题:绿色左强调条 + 极淡绿底,呼应正文章节标题的竖条。 */
 .outline-row.is-active {
   color: var(--accent-primary);
   font-weight: 600;
   background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
-  box-shadow: inset 2px 0 0 var(--accent-primary);
+  border-bottom-color: transparent;
+  border-radius: var(--radius-md);
+  box-shadow: inset 3px 0 0 var(--accent-primary);
+}
+
+.outline-row.is-active .outline-row__index,
+.outline-row.is-active .outline-row__label {
+  color: inherit;
 }

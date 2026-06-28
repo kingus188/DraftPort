@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { parseOutline } from "./outlineModel";
 import { emitOutlineJump, onOutlineActive } from "./outlineBus";
 import "./OutlinePanel.css";
@@ -26,11 +26,15 @@ export function OutlinePanel({ markdown }: OutlinePanelProps) {
           key={item.index}
           className={`outline-row ${item.index === activeIndex ? "is-active" : ""}`}
           data-level={item.level}
-          style={{ paddingLeft: `${(item.level - 1) * 12 + 8}px` }}
+          style={{ "--outline-depth": item.level - 1 } as CSSProperties}
           onClick={() => emitOutlineJump(item.index)}
+          aria-label={item.text}
           title={item.text}
         >
-          {item.text}
+          <span className="outline-row__index" aria-hidden="true">
+            {item.index + 1}
+          </span>
+          <span className="outline-row__label">{item.text}</span>
         </button>
       ))}
     </nav>
