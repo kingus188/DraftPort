@@ -494,7 +494,7 @@ function FileSidebarInner() {
           </button>
           <button
             className="fs-btn-secondary fs-btn-icon-only"
-            onClick={() => state.setShowNewFolderModal(true)}
+            onClick={() => state.startCreateFolder(state.activeFolder)}
             data-tooltip="新建文件夹"
             onMouseEnter={(e) => state.showTooltip(e, "新建文件夹")}
             onMouseLeave={state.hideTooltip}
@@ -560,14 +560,14 @@ function FileSidebarInner() {
               {SORT_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
-                  className={`fs-sort-option ${state.sortMode === opt.value ? "active" : ""}`}
+                  className={`fs-sort-option ${state.activeSortMode === opt.value ? "active" : ""}`}
                   onClick={() => {
-                    state.handleSetSortMode(opt.value);
+                    void state.handleSetSortMode(opt.value);
                     setShowSortMenu(false);
                   }}
                 >
                   <span>{opt.label}</span>
-                  {state.sortMode === opt.value && <Check size={14} />}
+                  {state.activeSortMode === opt.value && <Check size={14} />}
                 </button>
               ))}
             </div>
@@ -600,6 +600,8 @@ function FileSidebarInner() {
           menuTarget={state.menuTarget}
           menuTargetFolder={state.menuTargetFolder}
           showMoveMenu={state.showMoveMenu}
+          showSortMenu={state.showContextSortMenu}
+          contextSortMode={state.contextSortMode}
           allFolders={state.allFolders}
           folderMoveTargets={
             state.menuTargetFolder
@@ -614,8 +616,12 @@ function FileSidebarInner() {
             state.menuTarget && state.startRename(state.menuTarget)
           }
           onToggleMoveMenu={() => state.setShowMoveMenu(!state.showMoveMenu)}
+          onToggleSortMenu={() =>
+            state.setShowContextSortMenu(!state.showContextSortMenu)
+          }
           onMoveToFolder={state.handleMoveToFolder}
           onMoveFolder={state.handleMoveFolder}
+          onCreateFile={state.handleCreateFileFromContextMenu}
           onDeleteFile={() => {
             if (state.menuTarget) {
               state.setDeleteTarget(state.menuTarget);
@@ -637,9 +643,9 @@ function FileSidebarInner() {
             }
           }}
           onNewFolder={() => {
-            state.setShowNewFolderModal(true);
-            state.closeMenu();
+            state.handleStartCreateFolderFromContextMenu();
           }}
+          onSetSortMode={state.handleSetContextSortMode}
         />
       )}
 
@@ -700,7 +706,7 @@ function FileSidebarInner() {
           value={state.newFolderName}
           onChange={state.setNewFolderName}
           onConfirm={state.handleCreateFolder}
-          onCancel={() => state.setShowNewFolderModal(false)}
+          onCancel={state.closeNewFolderModal}
         />
       )}
 

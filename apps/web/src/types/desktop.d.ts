@@ -124,9 +124,17 @@ interface DesktopAPI {
   };
 }
 
+type WorkspaceOrderSortMode =
+  | "opened-desc"
+  | "updated-desc"
+  | "name-asc"
+  | "name-desc"
+  | "manual";
+
 interface WorkspaceOrderConfig {
   version: 1;
   folders: Record<string, string[]>;
+  sortModes?: Record<string, WorkspaceOrderSortMode>;
 }
 
 interface RecentItemRecord {

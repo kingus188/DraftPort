@@ -19,7 +19,21 @@ const WORKSPACE_ORDER_VERSION: u8 = 1;
 #[serde(rename_all = "camelCase")]
 pub(crate) struct WorkspaceOrderConfig {
     pub(crate) version: u8,
+    #[serde(default)]
     pub(crate) folders: BTreeMap<String, Vec<String>>,
+    #[serde(default)]
+    pub(crate) sort_modes: BTreeMap<String, WorkspaceSortMode>,
+}
+
+/// Supported renderer sort modes for one folder level in the sidebar tree.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub(crate) enum WorkspaceSortMode {
+    OpenedDesc,
+    UpdatedDesc,
+    NameAsc,
+    NameDesc,
+    Manual,
 }
 
 impl Default for WorkspaceOrderConfig {
@@ -27,6 +41,7 @@ impl Default for WorkspaceOrderConfig {
         Self {
             version: WORKSPACE_ORDER_VERSION,
             folders: BTreeMap::new(),
+            sort_modes: BTreeMap::new(),
         }
     }
 }
@@ -64,7 +79,9 @@ pub(crate) fn save_workspace_order_config(
 
 /// Returns the hidden project config file path for manual file tree ordering.
 fn workspace_order_path(workspace: &Path) -> PathBuf {
-    workspace.join(WORKSPACE_CONFIG_DIR).join(WORKSPACE_ORDER_FILE)
+    workspace
+        .join(WORKSPACE_CONFIG_DIR)
+        .join(WORKSPACE_ORDER_FILE)
 }
 
 /// Rejects malicious or accidental order entries outside the active workspace.
@@ -77,6 +94,9 @@ fn validate_workspace_order_config(
         for child in children {
             validate_workspace_order_path(workspace, Path::new(child))?;
         }
+    }
+    for parent in config.sort_modes.keys() {
+        validate_workspace_order_path(workspace, Path::new(parent))?;
     }
     Ok(())
 }
@@ -113,6 +133,7 @@ mod tests {
 
     use super::{
         load_workspace_order_config, save_workspace_order_config, WorkspaceOrderConfig,
+        WorkspaceSortMode,
     };
 
     fn test_workspace(name: &str) -> PathBuf {
@@ -141,13 +162,42 @@ mod tests {
         config
             .folders
             .insert(root_path.clone(), vec![docs_path, file_path]);
+        config
+            .sort_modes
+            .insert(root_path.clone(), WorkspaceSortMode::Manual);
 
         save_workspace_order_config(&workspace, &config).expect("order config should save");
         let loaded = load_workspace_order_config(&workspace).expect("order config should load");
 
         assert_eq!(loaded.version, 1);
-        assert_eq!(loaded.folders.get(&root_path), config.folders.get(&root_path));
+        assert_eq!(
+            loaded.folders.get(&root_path),
+            config.folders.get(&root_path)
+        );
+        assert_eq!(
+            loaded.sort_modes.get(&root_path),
+            Some(&WorkspaceSortMode::Manual)
+        );
         assert!(workspace.join(".draftport").join("order.json").is_file());
+        cleanup(&workspace);
+    }
+
+    #[test]
+    fn workspace_order_config_loads_legacy_files_without_sort_modes() {
+        let workspace = test_workspace("legacy-file");
+        let order_dir = workspace.join(".draftport");
+        fs::create_dir_all(&order_dir).expect("project config folder should be created");
+        fs::write(
+            order_dir.join("order.json"),
+            r#"{"version":1,"folders":{}}"#,
+        )
+        .expect("legacy order config should be written");
+
+        let loaded = load_workspace_order_config(&workspace).expect("order config should load");
+
+        assert_eq!(loaded.version, 1);
+        assert!(loaded.folders.is_empty());
+        assert!(loaded.sort_modes.is_empty());
         cleanup(&workspace);
     }
 
@@ -173,8 +223,27 @@ mod tests {
         let mut config = WorkspaceOrderConfig::default();
         config.folders.insert(
             workspace.to_string_lossy().to_string(),
-            vec![workspace.join("..").join("outside.md").to_string_lossy().to_string()],
+            vec![workspace
+                .join("..")
+                .join("outside.md")
+                .to_string_lossy()
+                .to_string()],
         );
+
+        let result = save_workspace_order_config(&workspace, &config);
+
+        assert_eq!(result, Err("非法路径".to_string()));
+        assert!(!workspace.join(".draftport").join("order.json").exists());
+        cleanup(&workspace);
+    }
+
+    #[test]
+    fn workspace_order_config_rejects_sort_mode_paths_outside_workspace() {
+        let workspace = test_workspace("outside-sort-mode-path");
+        let mut config = WorkspaceOrderConfig::default();
+        config
+            .sort_modes
+            .insert("/tmp/outside".to_string(), WorkspaceSortMode::NameAsc);
 
         let result = save_workspace_order_config(&workspace, &config);
 

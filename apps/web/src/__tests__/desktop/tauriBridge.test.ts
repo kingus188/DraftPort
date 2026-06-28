@@ -52,6 +52,10 @@ describe("installTauriDesktopBridge", () => {
       folders: {
         "/workspace": ["/workspace/docs", "/workspace/a.md"],
       },
+      sortModes: {
+        "/workspace": "manual",
+        "/workspace/docs": "name-asc",
+      },
     });
 
     expect(invoke).toHaveBeenCalledWith("workspace_order_get", undefined);
@@ -60,6 +64,10 @@ describe("installTauriDesktopBridge", () => {
         version: 1,
         folders: {
           "/workspace": ["/workspace/docs", "/workspace/a.md"],
+        },
+        sortModes: {
+          "/workspace": "manual",
+          "/workspace/docs": "name-asc",
         },
       },
     });

@@ -10,6 +10,7 @@ export type SortMode =
   | "manual";
 export type RecentItemMap = Map<string, string>;
 export type ManualOrderFolders = Record<string, string[]>;
+export type FolderSortModes = Record<string, SortMode>;
 
 const nameCollator = new Intl.Collator("zh-Hans", {
   numeric: true,
@@ -38,6 +39,10 @@ export function saveSortMode(mode: SortMode) {
   localStorage.setItem(SORT_MODE_KEY, mode);
 }
 
+/**
+ * Compares file rows for sidebar ordering, keeping "name" modes aligned with
+ * the filename shown in the file tree instead of document frontmatter titles.
+ */
 export function compareFiles(
   a: FileItem,
   b: FileItem,
@@ -50,98 +55,89 @@ export function compareFiles(
     case "updated-desc":
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     case "name-asc":
-      return nameCollator.compare(a.title || a.name, b.title || b.name);
+      return nameCollator.compare(a.name, b.name);
     case "name-desc":
-      return nameCollator.compare(b.title || b.name, a.title || a.name);
+      return nameCollator.compare(b.name, a.name);
     case "manual":
-      return nameCollator.compare(a.title || a.name, b.title || b.name);
+      return nameCollator.compare(a.name, b.name);
   }
 }
 
+/**
+ * Sorts each tree level with that parent folder's configured mode, falling
+ * back to the legacy root mode when no folder-specific setting exists.
+ */
 export function sortTreeItems(
   items: TreeItem[],
   mode: SortMode,
   recentItems?: RecentItemMap,
   manualOrderFolders?: ManualOrderFolders,
   parentPath = "/",
+  folderSortModes?: FolderSortModes,
 ): TreeItem[] {
-  if (mode === "manual") {
-    return sortManualTreeItems(items, manualOrderFolders, parentPath);
+  const effectiveMode = folderSortModes?.[parentPath] ?? mode;
+  const itemsWithSortedChildren = items.map((item) =>
+    item.isDirectory
+      ? {
+          ...item,
+          children: sortTreeItems(
+            item.children,
+            mode,
+            recentItems,
+            manualOrderFolders,
+            item.path,
+            folderSortModes,
+          ),
+        }
+      : item,
+  );
+
+  if (effectiveMode === "manual") {
+    return sortManualTreeLevelItems(
+      itemsWithSortedChildren,
+      manualOrderFolders,
+      parentPath,
+    );
   }
 
-  if (mode === "opened-desc") {
-    return [...items]
-      .map((item) =>
-        item.isDirectory
-          ? {
-              ...item,
-              children: sortTreeItems(
-                item.children,
-                mode,
-                recentItems,
-                manualOrderFolders,
-                item.path,
-              ),
-            }
-          : item,
-      )
-      .sort((a, b) => compareTreeItems(a, b, mode, recentItems));
+  if (effectiveMode === "opened-desc") {
+    return [...itemsWithSortedChildren].sort((a, b) =>
+      compareTreeItems(a, b, effectiveMode, recentItems),
+    );
   }
 
   const folders: FolderItem[] = [];
   const files: FileItem[] = [];
-  for (const item of items) {
+  for (const item of itemsWithSortedChildren) {
     if (item.isDirectory) {
-      folders.push({
-        ...item,
-        children: sortTreeItems(
-          item.children,
-          mode,
-          recentItems,
-          manualOrderFolders,
-          item.path,
-        ),
-      });
+      folders.push(item);
     } else {
       files.push(item);
     }
   }
   folders.sort((a, b) => nameCollator.compare(a.name, b.name));
-  files.sort((a, b) => compareFiles(a, b, mode, recentItems));
+  files.sort((a, b) => compareFiles(a, b, effectiveMode, recentItems));
   return [...folders, ...files];
 }
 
-/** Applies project-local manual order to one tree level without mutating source nodes. */
-function sortManualTreeItems(
+/** Applies project-local manual order to one already-sorted tree level. */
+function sortManualTreeLevelItems(
   items: TreeItem[],
   manualOrderFolders: ManualOrderFolders | undefined,
   parentPath: string,
 ): TreeItem[] {
   const orderedPaths = manualOrderFolders?.[parentPath] ?? [];
   const orderIndex = new Map(orderedPaths.map((path, index) => [path, index]));
-  return [...items]
-    .map((item) =>
-      item.isDirectory
-        ? {
-            ...item,
-            children: sortManualTreeItems(
-              item.children,
-              manualOrderFolders,
-              item.path,
-            ),
-          }
-        : item,
-    )
-    .sort((left, right) => {
-      const leftIndex = orderIndex.get(left.path);
-      const rightIndex = orderIndex.get(right.path);
-      if (leftIndex !== undefined && rightIndex !== undefined) {
-        return leftIndex - rightIndex;
-      }
-      if (leftIndex !== undefined) return -1;
-      if (rightIndex !== undefined) return 1;
-      return 0;
-    });
+  return [...items].sort((left, right) => {
+    const leftIndex = orderIndex.get(left.path);
+    const rightIndex = orderIndex.get(right.path);
+    if (leftIndex !== undefined && rightIndex !== undefined) {
+      return leftIndex - rightIndex;
+    }
+    if (leftIndex !== undefined) return -1;
+    if (rightIndex !== undefined) return 1;
+    return 0;
+  });
 }
 
 function compareTreeItems(

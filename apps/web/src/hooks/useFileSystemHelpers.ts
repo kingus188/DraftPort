@@ -112,10 +112,18 @@ export interface DesktopAPI {
   };
 }
 
-/** Project-local manual tree order keyed by parent folder path. */
+export type WorkspaceOrderSortMode =
+  | "opened-desc"
+  | "updated-desc"
+  | "name-asc"
+  | "name-desc"
+  | "manual";
+
+/** Project-local tree order and per-folder sort modes keyed by parent folder path. */
 export interface WorkspaceOrderConfig {
   version: 1;
   folders: Record<string, string[]>;
+  sortModes?: Record<string, WorkspaceOrderSortMode>;
 }
 
 export interface RecentItemRecord {

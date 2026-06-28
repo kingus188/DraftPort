@@ -81,6 +81,8 @@ describe("FileSidebar", () => {
       setActiveFolder: vi.fn(),
       showMoveMenu: false,
       setShowMoveMenu: vi.fn(),
+      showContextSortMenu: false,
+      setShowContextSortMenu: vi.fn(),
       dragOverTarget: null,
       setDragOverTarget: vi.fn(),
       tooltip: null,
@@ -91,6 +93,8 @@ describe("FileSidebar", () => {
       showRenameFolderModal: false,
       setShowRenameFolderModal: vi.fn(),
       sortMode: "updated-desc",
+      activeSortMode: "updated-desc",
+      contextSortMode: "updated-desc",
       handleSetSortMode: vi.fn(),
       toggleFolder: vi.fn(),
       getFolderMoveTargets: vi.fn(() => []),
@@ -104,6 +108,9 @@ describe("FileSidebar", () => {
       handleCreateFolder: vi.fn(),
       handleMoveToFolder: vi.fn(),
       handleMoveFolder: vi.fn(),
+      handleCreateFileFromContextMenu: vi.fn(),
+      handleStartCreateFolderFromContextMenu: vi.fn(),
+      handleSetContextSortMode: vi.fn(),
       handleRenameFolder: vi.fn(),
       closeRenameFolderModal: vi.fn(),
       prepareDeleteFolder: vi.fn(),
@@ -290,6 +297,157 @@ describe("FileSidebar", () => {
     fireEvent.click(container.querySelector(".fs-sort-btn")!);
 
     expect(screen.getByText("手动排序")).toBeInTheDocument();
+  });
+
+  it("offers create and sort actions when right-clicking a folder", () => {
+    const folder = makeFolder("docs", "/workspace/docs", []);
+    const handleCreateFileFromContextMenu = vi.fn();
+    const handleStartCreateFolderFromContextMenu = vi.fn();
+    const setShowContextSortMenu = vi.fn();
+
+    mockUseSidebarState.mockReturnValue({
+      ...mockUseSidebarState(),
+      menuOpen: true,
+      menuTargetFolder: folder,
+      showContextSortMenu: false,
+      setShowContextSortMenu,
+      handleCreateFileFromContextMenu,
+      handleStartCreateFolderFromContextMenu,
+    });
+
+    render(<FileSidebar />);
+
+    fireEvent.click(screen.getByRole("button", { name: /新建文章/ }));
+    fireEvent.click(screen.getByRole("button", { name: /新建文件夹/ }));
+    fireEvent.click(screen.getByRole("button", { name: /排序方式/ }));
+
+    expect(handleCreateFileFromContextMenu).toHaveBeenCalledTimes(1);
+    expect(handleStartCreateFolderFromContextMenu).toHaveBeenCalledTimes(1);
+    expect(setShowContextSortMenu).toHaveBeenCalledWith(true);
+  });
+
+  it("sets the context menu folder sort mode from the sort submenu", () => {
+    const folder = makeFolder("docs", "/workspace/docs", []);
+    const handleSetContextSortMode = vi.fn();
+
+    mockUseSidebarState.mockReturnValue({
+      ...mockUseSidebarState(),
+      menuOpen: true,
+      menuTargetFolder: folder,
+      showContextSortMenu: true,
+      contextSortMode: "name-asc",
+      handleSetContextSortMode,
+    });
+
+    render(<FileSidebar />);
+
+    expect(screen.getByText("名称升序").closest(".fs-sort-option")).toHaveClass(
+      "active",
+    );
+    fireEvent.click(screen.getByRole("button", { name: /名称降序/ }));
+
+    expect(handleSetContextSortMode).toHaveBeenCalledWith("name-desc");
+  });
+
+  it("sorts the right-clicked folder's visible files from the context menu", () => {
+    const alpha = makeFile("alpha.md", "/workspace/docs/alpha.md");
+    const zeta = makeFile("zeta.md", "/workspace/docs/zeta.md");
+    const folder = makeFolder("docs", "/workspace/docs", [zeta, alpha]);
+    const sortedFolder = makeFolder("docs", "/workspace/docs", [alpha, zeta]);
+    const handleSetContextSortMode = vi.fn(() => {
+      mockUseSidebarState.mockReturnValue({
+        ...mockUseSidebarState(),
+        filteredItems: [sortedFolder],
+        menuOpen: false,
+        activeSortMode: "updated-desc",
+        contextSortMode: "name-asc",
+        handleSetContextSortMode,
+      });
+      rerender(<FileSidebar />);
+    });
+
+    mockUseSidebarState.mockReturnValue({
+      ...mockUseSidebarState(),
+      filteredItems: [folder],
+      menuOpen: false,
+      activeSortMode: "updated-desc",
+      contextSortMode: "updated-desc",
+      handleSetContextSortMode,
+    });
+    const { rerender } = render(<FileSidebar />);
+
+    expect(
+      screen
+        .getByText("zeta")
+        .compareDocumentPosition(screen.getByText("alpha")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    mockUseSidebarState.mockReturnValue({
+      ...mockUseSidebarState(),
+      filteredItems: [folder],
+      menuOpen: true,
+      menuTargetFolder: folder,
+      showContextSortMenu: true,
+      activeSortMode: "updated-desc",
+      contextSortMode: "updated-desc",
+      handleSetContextSortMode,
+    });
+    rerender(<FileSidebar />);
+
+    fireEvent.click(screen.getByRole("button", { name: /名称升序/ }));
+
+    expect(handleSetContextSortMode).toHaveBeenCalledWith("name-asc");
+    expect(
+      screen
+        .getByText("alpha")
+        .compareDocumentPosition(screen.getByText("zeta")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("offers create and sort actions from the empty area context menu", () => {
+    mockUseSidebarState.mockReturnValue({
+      ...mockUseSidebarState(),
+      menuOpen: true,
+      menuTarget: null,
+      menuTargetFolder: null,
+      showContextSortMenu: true,
+      contextSortMode: "opened-desc",
+    });
+
+    render(<FileSidebar />);
+
+    expect(
+      screen.getByRole("button", { name: /新建文章/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /新建文件夹/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /排序方式/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("最近打开").closest(".fs-sort-option")).toHaveClass(
+      "active",
+    );
+  });
+
+  it("highlights the active folder's effective sort mode in the sort menu", () => {
+    mockUseSidebarState.mockReturnValue({
+      ...mockUseSidebarState(),
+      sortMode: "updated-desc",
+      activeSortMode: "name-asc",
+    });
+    const { container } = render(<FileSidebar />);
+
+    fireEvent.click(container.querySelector(".fs-sort-btn")!);
+
+    expect(screen.getByText("名称升序").closest(".fs-sort-option")).toHaveClass(
+      "active",
+    );
+    expect(
+      screen.getByText("最近编辑").closest(".fs-sort-option"),
+    ).not.toHaveClass("active");
   });
 
   it("uses pointer events instead of HTML5 drag for desktop-safe tree sorting", () => {

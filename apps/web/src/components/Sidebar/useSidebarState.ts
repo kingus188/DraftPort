@@ -1,10 +1,11 @@
 import type { SyntheticEvent } from "react";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useFileSystem } from "../../hooks/useFileSystem";
 import { getDesktopBridge } from "../../hooks/useFileSystemHelpers";
 import toast from "react-hot-toast";
 import type { FileItem, FolderItem } from "../../store/fileTypes";
 import {
+  type FolderSortModes,
   type ManualOrderFolders,
   type SortMode,
   getSortMode,
@@ -76,6 +77,13 @@ export function useSidebarState() {
   const [newFolderName, setNewFolderName] = useState("");
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
   const [showMoveMenu, setShowMoveMenu] = useState(false);
+  const [showContextSortMenu, setShowContextSortMenu] = useState(false);
+  const [contextMenuFolderPath, setContextMenuFolderPath] = useState<
+    string | null
+  >(null);
+  const [newFolderParentPath, setNewFolderParentPath] = useState<string | null>(
+    null,
+  );
   const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{
     text: string;
@@ -92,6 +100,8 @@ export function useSidebarState() {
   );
   const [manualOrderFolders, setManualOrderFolders] =
     useState<ManualOrderFolders>({});
+  const [folderSortModes, setFolderSortModes] = useState<FolderSortModes>({});
+  const workspaceOrderMutationRef = useRef(0);
 
   const isDragEnabled = !filter;
 
@@ -125,18 +135,29 @@ export function useSidebarState() {
   const refreshWorkspaceOrder = useCallback(async () => {
     if (!desktop?.workspaceOrder || !workspacePath) {
       setManualOrderFolders({});
+      setFolderSortModes({});
       return;
     }
+    const loadRevision = workspaceOrderMutationRef.current;
     try {
       const result = await desktop.workspaceOrder.get();
+      if (workspaceOrderMutationRef.current !== loadRevision) {
+        return;
+      }
       if (!result.success || !result.order) {
         setManualOrderFolders({});
+        setFolderSortModes({});
         return;
       }
       setManualOrderFolders(result.order.folders ?? {});
+      setFolderSortModes(result.order.sortModes ?? {});
     } catch (error) {
+      if (workspaceOrderMutationRef.current !== loadRevision) {
+        return;
+      }
       console.error("[WorkspaceOrder] load failed", error);
       setManualOrderFolders({});
+      setFolderSortModes({});
     }
   }, [desktop, workspacePath]);
 
@@ -195,6 +216,7 @@ export function useSidebarState() {
         recentItems,
         manualOrderFolders,
         workspacePath,
+        folderSortModes,
       ),
     [
       files,
@@ -204,18 +226,103 @@ export function useSidebarState() {
       recentItems,
       manualOrderFolders,
       workspacePath,
+      folderSortModes,
     ],
   );
 
-  const handleSetSortMode = useCallback((mode: SortMode) => {
-    setSortModeState(mode);
-    saveSortMode(mode);
-  }, []);
+  const activeSortTarget = activeFolder ?? workspacePath;
+  const activeSortMode = activeSortTarget
+    ? (folderSortModes[activeSortTarget] ?? sortMode)
+    : sortMode;
+
+  /** Resolves the sort mode for a concrete folder path without changing state. */
+  const getSortModeForPath = useCallback(
+    (folderPath: string | null | undefined): SortMode => {
+      if (!folderPath) return sortMode;
+      return folderSortModes[folderPath] ?? sortMode;
+    },
+    [folderSortModes, sortMode],
+  );
+
+  const handleSetSortMode = useCallback(
+    async (mode: SortMode, explicitTargetPath?: string | null) => {
+      const targetPath =
+        explicitTargetPath !== undefined
+          ? explicitTargetPath
+          : (activeFolder ?? workspacePath);
+      if (!targetPath) {
+        setSortModeState(mode);
+        saveSortMode(mode);
+        return;
+      }
+
+      const previousSortMode = sortMode;
+      const previousFolderSortModes = folderSortModes;
+      const nextFolderSortModes = {
+        ...folderSortModes,
+        [targetPath]: mode,
+      };
+
+      workspaceOrderMutationRef.current += 1;
+      setFolderSortModes(nextFolderSortModes);
+      if (targetPath === workspacePath) {
+        setSortModeState(mode);
+        saveSortMode(mode);
+      }
+
+      try {
+        const result = await desktop?.workspaceOrder?.save({
+          version: 1,
+          folders: manualOrderFolders,
+          sortModes: nextFolderSortModes,
+        });
+        if (desktop?.workspaceOrder && !result?.success) {
+          throw new Error(result?.error || "排序保存失败");
+        }
+      } catch (error) {
+        console.error("[WorkspaceOrder] save sort mode failed", error);
+        setFolderSortModes(previousFolderSortModes);
+        if (targetPath === workspacePath) {
+          setSortModeState(previousSortMode);
+          saveSortMode(previousSortMode);
+        }
+        toast.error("排序保存失败");
+      }
+    },
+    [
+      activeFolder,
+      desktop,
+      folderSortModes,
+      manualOrderFolders,
+      sortMode,
+      workspacePath,
+    ],
+  );
 
   const getDisplayTitle = useCallback(
     (file: FileItem) => file.title?.trim() || file.name.replace(/\.md$/i, ""),
     [],
   );
+
+  const getContextMenuFolderPath = useCallback(
+    () => contextMenuFolderPath ?? menuTargetFolder?.path ?? activeFolder,
+    [activeFolder, contextMenuFolderPath, menuTargetFolder],
+  );
+
+  const contextSortTarget = getContextMenuFolderPath() ?? workspacePath;
+  const contextSortMode = getSortModeForPath(contextSortTarget);
+
+  /** Opens the new-folder modal with an explicit target parent folder. */
+  const startCreateFolder = useCallback((parentPath?: string | null) => {
+    setNewFolderParentPath(parentPath ?? null);
+    setShowNewFolderModal(true);
+  }, []);
+
+  /** Closes the new-folder modal and clears any context-menu parent target. */
+  const closeNewFolderModal = useCallback(() => {
+    setShowNewFolderModal(false);
+    setNewFolderParentPath(null);
+  }, []);
 
   const toggleFolder = useCallback(
     (folderPath: string) => {
@@ -271,7 +378,9 @@ export function useSidebarState() {
     setMenuOpen(false);
     setMenuTarget(null);
     setMenuTargetFolder(null);
+    setContextMenuFolderPath(null);
     setShowMoveMenu(false);
+    setShowContextSortMenu(false);
   }, []);
 
   const handleContextMenu = useCallback(
@@ -280,34 +389,45 @@ export function useSidebarState() {
       e.stopPropagation();
       setMenuTarget(file);
       setMenuTargetFolder(null);
+      setContextMenuFolderPath(null);
       setMenuPos({ x: e.clientX, y: e.clientY });
       setMenuOpen(true);
       setShowMoveMenu(false);
+      setShowContextSortMenu(false);
     },
     [],
   );
 
+  /** Opens a folder menu and makes that folder the active sort/create target. */
   const handleFolderContextMenu = useCallback(
     (e: React.MouseEvent, folder: FolderItem) => {
       e.preventDefault();
       e.stopPropagation();
+      setActiveFolder(folder.path);
+      setContextMenuFolderPath(folder.path);
       setMenuTargetFolder(folder);
       setMenuTarget(null);
       setMenuPos({ x: e.clientX, y: e.clientY });
       setMenuOpen(true);
       setShowMoveMenu(false);
+      setShowContextSortMenu(false);
     },
     [],
   );
 
-  const handleEmptyContextMenu = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setMenuTarget(null);
-    setMenuTargetFolder(null);
-    setMenuPos({ x: e.clientX, y: e.clientY });
-    setMenuOpen(true);
-    setShowMoveMenu(false);
-  }, []);
+  const handleEmptyContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      setMenuTarget(null);
+      setMenuTargetFolder(null);
+      setContextMenuFolderPath(activeFolder ?? workspacePath ?? null);
+      setMenuPos({ x: e.clientX, y: e.clientY });
+      setMenuOpen(true);
+      setShowMoveMenu(false);
+      setShowContextSortMenu(false);
+    },
+    [activeFolder, workspacePath],
+  );
 
   const startRename = useCallback(
     (file: FileItem) => {
@@ -348,10 +468,38 @@ export function useSidebarState() {
       toast.error("请输入文件夹名称");
       return;
     }
-    await createFolder(newFolderName.trim(), activeFolder || undefined);
+    const parentPath = newFolderParentPath ?? activeFolder;
+    await createFolder(newFolderName.trim(), parentPath || undefined);
     setNewFolderName("");
-    setShowNewFolderModal(false);
-  }, [newFolderName, activeFolder, createFolder]);
+    closeNewFolderModal();
+  }, [
+    newFolderName,
+    newFolderParentPath,
+    activeFolder,
+    createFolder,
+    closeNewFolderModal,
+  ]);
+
+  const handleCreateFileFromContextMenu = useCallback(async () => {
+    await createFile(getContextMenuFolderPath() || undefined);
+    closeMenu();
+  }, [closeMenu, createFile, getContextMenuFolderPath]);
+
+  const handleStartCreateFolderFromContextMenu = useCallback(() => {
+    startCreateFolder(getContextMenuFolderPath());
+    closeMenu();
+  }, [closeMenu, getContextMenuFolderPath, startCreateFolder]);
+
+  const handleSetContextSortMode = useCallback(
+    async (mode: SortMode) => {
+      await handleSetSortMode(
+        mode,
+        getContextMenuFolderPath() ?? workspacePath,
+      );
+      closeMenu();
+    },
+    [closeMenu, getContextMenuFolderPath, handleSetSortMode, workspacePath],
+  );
 
   const handleMoveToFolder = useCallback(
     async (targetFolder: string) => {
@@ -458,12 +606,20 @@ export function useSidebarState() {
       }
 
       const previousFolders = manualOrderFolders;
+      const previousFolderSortModes = folderSortModes;
+      const previousSortMode = sortMode;
       const nextFolders = {
         ...manualOrderFolders,
         [draggedParent]: nextPaths,
       };
+      const nextFolderSortModes = {
+        ...folderSortModes,
+        [draggedParent]: "manual" as SortMode,
+      };
+      workspaceOrderMutationRef.current += 1;
       setManualOrderFolders(nextFolders);
-      if (sortMode !== "manual") {
+      setFolderSortModes(nextFolderSortModes);
+      if (draggedParent === workspacePath && sortMode !== "manual") {
         setSortModeState("manual");
         saveSortMode("manual");
       }
@@ -472,6 +628,7 @@ export function useSidebarState() {
         const result = await desktop?.workspaceOrder?.save({
           version: 1,
           folders: nextFolders,
+          sortModes: nextFolderSortModes,
         });
         if (!result?.success) {
           throw new Error(result?.error || "排序保存失败");
@@ -479,6 +636,11 @@ export function useSidebarState() {
       } catch (error) {
         console.error("[WorkspaceOrder] save failed", error);
         setManualOrderFolders(previousFolders);
+        setFolderSortModes(previousFolderSortModes);
+        if (draggedParent === workspacePath) {
+          setSortModeState(previousSortMode);
+          saveSortMode(previousSortMode);
+        }
         toast.error("排序保存失败");
       }
     },
@@ -486,6 +648,7 @@ export function useSidebarState() {
       desktop,
       filteredItems,
       isDragEnabled,
+      folderSortModes,
       manualOrderFolders,
       sortMode,
       workspacePath,
@@ -630,6 +793,8 @@ export function useSidebarState() {
     setActiveFolder,
     showMoveMenu,
     setShowMoveMenu,
+    showContextSortMenu,
+    setShowContextSortMenu,
     dragOverTarget,
     setDragOverTarget,
     tooltip,
@@ -640,6 +805,9 @@ export function useSidebarState() {
     showRenameFolderModal,
     setShowRenameFolderModal,
     sortMode,
+    activeSortMode,
+    contextSortMode,
+    getSortModeForPath,
     handleSetSortMode,
 
     toggleFolder,
@@ -651,7 +819,12 @@ export function useSidebarState() {
     startRename,
     copyTitle,
     submitRename,
+    startCreateFolder,
+    closeNewFolderModal,
     handleCreateFolder,
+    handleCreateFileFromContextMenu,
+    handleStartCreateFolderFromContextMenu,
+    handleSetContextSortMode,
     handleMoveToFolder,
     handleMoveFolder,
     handleRenameFolder,

@@ -36,9 +36,17 @@ interface RecentItemRecord {
   missing: boolean;
 }
 
+type WorkspaceOrderSortMode =
+  | "opened-desc"
+  | "updated-desc"
+  | "name-asc"
+  | "name-desc"
+  | "manual";
+
 interface WorkspaceOrderConfig {
   version: 1;
   folders: Record<string, string[]>;
+  sortModes?: Record<string, WorkspaceOrderSortMode>;
 }
 
 declare global {

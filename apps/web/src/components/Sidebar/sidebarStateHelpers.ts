@@ -1,5 +1,10 @@
 import type { FileItem, FolderItem, TreeItem } from "../../store/fileTypes";
-import type { ManualOrderFolders, RecentItemMap, SortMode } from "./sortUtils";
+import type {
+  FolderSortModes,
+  ManualOrderFolders,
+  RecentItemMap,
+  SortMode,
+} from "./sortUtils";
 import { compareFiles, sortTreeItems } from "./sortUtils";
 
 const COLLAPSED_KEY = "draftport-folder-collapsed";
@@ -74,6 +79,7 @@ export function buildFilteredItems(
   recentItems?: RecentItemMap,
   manualOrderFolders?: ManualOrderFolders,
   workspacePath?: string | null,
+  folderSortModes?: FolderSortModes,
 ) {
   if (!filter) {
     return sortTreeItems(
@@ -82,6 +88,7 @@ export function buildFilteredItems(
       recentItems,
       manualOrderFolders,
       workspacePath ?? "/",
+      folderSortModes,
     );
   }
 

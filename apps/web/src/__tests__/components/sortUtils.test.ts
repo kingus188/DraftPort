@@ -15,10 +15,34 @@ function makeFile(name: string, updatedAt: string, title?: string): FileItem {
   };
 }
 
+function makeFileAt(path: string, updatedAt: string, title?: string): FileItem {
+  const name = path.slice(path.lastIndexOf("/") + 1);
+  return {
+    name,
+    path,
+    createdAt: new Date("2024-01-01"),
+    updatedAt: new Date(updatedAt),
+    size: 100,
+    title,
+  };
+}
+
 function makeFolder(name: string, children: TreeItem[]): FolderItem {
   return {
     name,
     path: `/${name}`,
+    createdAt: new Date("2024-01-01"),
+    updatedAt: new Date("2024-01-01"),
+    isDirectory: true as const,
+    children,
+  };
+}
+
+function makeFolderAt(path: string, children: TreeItem[]): FolderItem {
+  const name = path.slice(path.lastIndexOf("/") + 1);
+  return {
+    name,
+    path,
     createdAt: new Date("2024-01-01"),
     updatedAt: new Date("2024-01-01"),
     isDirectory: true as const,
@@ -121,14 +145,14 @@ describe("sortTreeItems", () => {
     expect(names(sorted)).toEqual(["阿里.md", "编辑.md", "测试.md"]);
   });
 
-  it("按 title 排序（优先于 name）", () => {
+  it("按文件名排序，不让文档标题覆盖侧边栏名称顺序", () => {
     const items = [
       makeFile("z.md", "2024-01-01", "Alpha"),
       makeFile("a.md", "2024-01-01", "Charlie"),
       makeFile("m.md", "2024-01-01", "Beta"),
     ];
     const sorted = sortTreeItems(items, "name-asc");
-    expect(names(sorted)).toEqual(["z.md", "m.md", "a.md"]);
+    expect(names(sorted)).toEqual(["a.md", "m.md", "z.md"]);
   });
 
   it("不修改原始数组", () => {
@@ -220,6 +244,139 @@ describe("manual order sorting", () => {
     expect(sortedFolder.children.map((entry) => entry.name)).toEqual([
       "b.md",
       "a.md",
+    ]);
+  });
+});
+
+describe("per-folder sort modes", () => {
+  it("uses each parent folder's own sort mode while preserving the root fallback", () => {
+    const nested = makeFolderAt("/workspace/docs/sub", [
+      makeFileAt("/workspace/docs/sub/a.md", "2024-01-01"),
+      makeFileAt("/workspace/docs/sub/b.md", "2024-01-02"),
+    ]);
+    const docs = makeFolderAt("/workspace/docs", [
+      makeFileAt("/workspace/docs/zeta.md", "2024-01-03"),
+      makeFileAt("/workspace/docs/alpha.md", "2024-01-01"),
+      nested,
+    ]);
+    const items: TreeItem[] = [
+      docs,
+      makeFileAt("/workspace/root-old.md", "2024-01-01"),
+      makeFileAt("/workspace/root-fresh.md", "2024-01-02"),
+    ];
+    const recentItems: RecentItemMap = new Map([
+      ["/workspace/docs", "2026-01-02T00:00:00.000Z"],
+      ["/workspace/root-fresh.md", "2026-01-03T00:00:00.000Z"],
+    ]);
+
+    const sorted = sortTreeItems(
+      items,
+      "opened-desc",
+      recentItems,
+      {
+        "/workspace/docs/sub": [
+          "/workspace/docs/sub/b.md",
+          "/workspace/docs/sub/a.md",
+        ],
+      },
+      "/workspace",
+      {
+        "/workspace/docs": "name-asc",
+        "/workspace/docs/sub": "manual",
+      },
+    );
+
+    expect(sorted.map((entry) => entry.path)).toEqual([
+      "/workspace/root-fresh.md",
+      "/workspace/docs",
+      "/workspace/root-old.md",
+    ]);
+
+    const sortedDocs = sorted[1] as FolderItem;
+    expect(sortedDocs.children.map((entry) => entry.path)).toEqual([
+      "/workspace/docs/sub",
+      "/workspace/docs/alpha.md",
+      "/workspace/docs/zeta.md",
+    ]);
+
+    const sortedSub = sortedDocs.children[0] as FolderItem;
+    expect(sortedSub.children.map((entry) => entry.path)).toEqual([
+      "/workspace/docs/sub/b.md",
+      "/workspace/docs/sub/a.md",
+    ]);
+  });
+
+  it("sorts a right-clicked folder's numbered files by filename when name ascending is selected", () => {
+    const zhihu = makeFolderAt("/workspace/知乎", [
+      makeFileAt(
+        "/workspace/知乎/06-专题创作计划.md",
+        "2024-01-06",
+        "专题创作计划",
+      ),
+      makeFileAt(
+        "/workspace/知乎/04-发布与时间.md",
+        "2024-01-04",
+        "发布与时间",
+      ),
+      makeFileAt(
+        "/workspace/知乎/01-定位与读者.md",
+        "2024-01-01",
+        "定位与读者",
+      ),
+      makeFileAt(
+        "/workspace/知乎/03-双平台策略.md",
+        "2024-01-03",
+        "双平台策略",
+      ),
+      makeFileAt("/workspace/知乎/05-路线图.md", "2024-01-05", "路线图"),
+      makeFileAt(
+        "/workspace/知乎/02-内容体系与写作模板.md",
+        "2024-01-02",
+        "内容体系与写作模板",
+      ),
+      makeFileAt("/workspace/知乎/README.md", "2024-01-07", "README"),
+    ]);
+
+    const sorted = sortTreeItems(
+      [zhihu],
+      "opened-desc",
+      undefined,
+      undefined,
+      "/workspace",
+      { "/workspace/知乎": "name-asc" },
+    );
+    const sortedZhihu = sorted[0] as FolderItem;
+
+    expect(sortedZhihu.children.map((entry) => entry.name)).toEqual([
+      "01-定位与读者.md",
+      "02-内容体系与写作模板.md",
+      "03-双平台策略.md",
+      "04-发布与时间.md",
+      "05-路线图.md",
+      "06-专题创作计划.md",
+      "README.md",
+    ]);
+  });
+
+  it("falls back to the legacy root mode when a folder has no local sort mode", () => {
+    const docs = makeFolderAt("/workspace/docs", [
+      makeFileAt("/workspace/docs/newer.md", "2024-02-01"),
+      makeFileAt("/workspace/docs/older.md", "2024-01-01"),
+    ]);
+
+    const sorted = sortTreeItems(
+      [docs],
+      "updated-desc",
+      undefined,
+      undefined,
+      "/workspace",
+      {},
+    );
+    const sortedDocs = sorted[0] as FolderItem;
+
+    expect(sortedDocs.children.map((entry) => entry.path)).toEqual([
+      "/workspace/docs/newer.md",
+      "/workspace/docs/older.md",
     ]);
   });
 });

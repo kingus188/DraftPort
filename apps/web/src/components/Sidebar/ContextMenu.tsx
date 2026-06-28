@@ -6,8 +6,12 @@ import {
   ChevronRight,
   MoveRight,
   FolderPlus,
+  FilePlus,
+  ArrowUpDown,
+  Check,
 } from "lucide-react";
 import type { FileItem, FolderItem } from "../../store/fileTypes";
+import type { SortMode } from "./sortUtils";
 
 interface FolderOption {
   name: string;
@@ -19,38 +23,85 @@ interface ContextMenuProps {
   menuTarget: FileItem | null;
   menuTargetFolder: FolderItem | null;
   showMoveMenu: boolean;
+  showSortMenu: boolean;
+  contextSortMode: SortMode;
   allFolders: FolderOption[];
   folderMoveTargets: FolderOption[];
   onClose: () => void;
   onCopyTitle: () => void;
   onStartRename: () => void;
   onToggleMoveMenu: () => void;
+  onToggleSortMenu: () => void;
   onMoveToFolder: (path: string) => void;
   onMoveFolder: (path: string) => void;
+  onCreateFile: () => void;
   onDeleteFile: () => void;
   onDeleteFolder: () => void;
   onStartRenameFolder: () => void;
   onNewFolder: () => void;
+  onSetSortMode: (mode: SortMode) => void;
 }
+
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: "manual", label: "手动排序" },
+  { value: "opened-desc", label: "最近打开" },
+  { value: "updated-desc", label: "最近编辑" },
+  { value: "name-asc", label: "名称升序" },
+  { value: "name-desc", label: "名称降序" },
+];
 
 export function ContextMenu({
   position,
   menuTarget,
   menuTargetFolder,
   showMoveMenu,
+  showSortMenu,
+  contextSortMode,
   allFolders,
   folderMoveTargets,
   onClose,
   onCopyTitle,
   onStartRename,
   onToggleMoveMenu,
+  onToggleSortMenu,
   onMoveToFolder,
   onMoveFolder,
+  onCreateFile,
   onDeleteFile,
   onDeleteFolder,
   onStartRenameFolder,
   onNewFolder,
+  onSetSortMode,
 }: ContextMenuProps) {
+  const renderCreationAndSortActions = () => (
+    <>
+      <button onClick={onCreateFile}>
+        <FilePlus size={14} /> 新建文章
+      </button>
+      <button onClick={onNewFolder}>
+        <FolderPlus size={14} /> 新建文件夹
+      </button>
+      <button onClick={onToggleSortMenu} className="has-submenu">
+        <ArrowUpDown size={14} /> 排序方式
+        <ChevronRight size={12} className="submenu-arrow" />
+      </button>
+      {showSortMenu && (
+        <div className="fs-submenu">
+          {SORT_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              className={`fs-sort-option ${contextSortMode === option.value ? "active" : ""}`}
+              onClick={() => onSetSortMode(option.value)}
+            >
+              <span>{option.label}</span>
+              {contextSortMode === option.value && <Check size={14} />}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  );
+
   return createPortal(
     <div className="fs-context-menu-overlay" onClick={onClose}>
       <div
@@ -87,6 +138,7 @@ export function ContextMenu({
         )}
         {menuTargetFolder && (
           <>
+            {renderCreationAndSortActions()}
             <button onClick={onStartRenameFolder}>
               <Edit2 size={14} /> 重命名
             </button>
@@ -109,11 +161,7 @@ export function ContextMenu({
             </button>
           </>
         )}
-        {!menuTarget && !menuTargetFolder && (
-          <button onClick={onNewFolder}>
-            <FolderPlus size={14} /> 新建文件夹
-          </button>
-        )}
+        {!menuTarget && !menuTargetFolder && renderCreationAndSortActions()}
       </div>
     </div>,
     document.body,
