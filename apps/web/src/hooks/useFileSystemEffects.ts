@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import toast from "react-hot-toast";
 import { useFileStore } from "../store/fileStore";
 import {
   applyMarkdownFileMeta,
@@ -7,6 +8,7 @@ import {
 import {
   WORKSPACE_KEY,
   type DesktopAPI,
+  type FileRefreshPayload,
   type RecentItemRecord,
 } from "./useFileSystemHelpers";
 import {
@@ -26,6 +28,7 @@ interface UseFileSystemEffectsParams {
   lastSavedContent: string;
   loadWorkspace: (path: string) => Promise<void>;
   refreshFiles: (dir?: string) => Promise<unknown>;
+  reloadCurrentFileFromDisk: () => Promise<void>;
   openFile: (
     file: NonNullable<ReturnType<typeof useFileStore.getState>["currentFile"]>,
   ) => Promise<void>;
@@ -51,6 +54,24 @@ const getBrowserStorage = (): Storage | null => {
 
 const RECENT_FOLDER_EVENT = "draftport:open-recent-folder";
 
+/** Normalizes native watcher paths so Windows and POSIX paths compare the same way. */
+function normalizeRefreshPath(path: string) {
+  return path.replace(/\\/g, "/");
+}
+
+/** Returns whether a native refresh payload can affect the active editor file. */
+function refreshPayloadTouchesFile(
+  payload: FileRefreshPayload | undefined,
+  filePath: string,
+) {
+  if (!payload?.paths?.length) return true;
+  const target = normalizeRefreshPath(filePath);
+  return payload.paths.some((path) => {
+    const changedPath = normalizeRefreshPath(path);
+    return target === changedPath || target.startsWith(`${changedPath}/`);
+  });
+}
+
 function getBaseName(rawPath: string) {
   const last = Math.max(rawPath.lastIndexOf("/"), rawPath.lastIndexOf("\\"));
   return last >= 0 ? rawPath.slice(last + 1) : rawPath;
@@ -70,6 +91,11 @@ function toFileItem(item: RecentItemRecord) {
   };
 }
 
+/**
+ * Wires desktop lifecycle, menu, autosave, and native file refresh events into
+ * the React file/editor stores while keeping filesystem writes centralized in
+ * useFileSystem.
+ */
 export function useFileSystemEffects({
   enabled,
   desktop,
@@ -82,6 +108,7 @@ export function useFileSystemEffects({
   lastSavedContent,
   loadWorkspace,
   refreshFiles,
+  reloadCurrentFileFromDisk,
   openFile,
   createFile,
   saveFile,
@@ -93,6 +120,8 @@ export function useFileSystemEffects({
   const selectWorkspaceRef = useRef(selectWorkspace);
   const openFileRef = useRef(openFile);
   const loadWorkspaceRef = useRef(loadWorkspace);
+  const reloadCurrentFileFromDiskRef = useRef(reloadCurrentFileFromDisk);
+  const dirtyRefreshWarningPathRef = useRef<string | null>(null);
 
   // One scheduler for the document's lifetime; onSave reads the latest store
   // state so it never writes a stale file or fights the restore guard.
@@ -128,6 +157,10 @@ export function useFileSystemEffects({
   }, [loadWorkspace]);
 
   useEffect(() => {
+    reloadCurrentFileFromDiskRef.current = reloadCurrentFileFromDisk;
+  }, [reloadCurrentFileFromDisk]);
+
+  useEffect(() => {
     if (!enabled) return;
     if (!desktop) return;
     const storage = getBrowserStorage();
@@ -141,13 +174,36 @@ export function useFileSystemEffects({
   useEffect(() => {
     if (!enabled) return;
     if (!desktop) return;
-    const handler = desktop.fs.onRefresh(() => {
+    const handler = desktop.fs.onRefresh((payload) => {
       void refreshFiles();
+      const {
+        currentFile: activeFile,
+        isDirty: dirty,
+        isRestoring: restoring,
+      } = useFileStore.getState();
+      if (!activeFile || !refreshPayloadTouchesFile(payload, activeFile.path)) {
+        return;
+      }
+      if (dirty) {
+        if (dirtyRefreshWarningPathRef.current !== activeFile.path) {
+          toast("文件已在外部修改，已保留当前未保存内容");
+          dirtyRefreshWarningPathRef.current = activeFile.path;
+        }
+        return;
+      }
+      if (!restoring) {
+        dirtyRefreshWarningPathRef.current = null;
+        void reloadCurrentFileFromDiskRef.current();
+      }
     });
     return () => {
       desktop.fs.removeRefreshListener(handler);
     };
   }, [enabled, refreshFiles, desktop]);
+
+  useEffect(() => {
+    if (!isDirty) dirtyRefreshWarningPathRef.current = null;
+  }, [currentFile?.path, isDirty]);
 
   useEffect(() => {
     if (!enabled) return;

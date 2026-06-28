@@ -61,7 +61,7 @@ interface DesktopAPI {
       folderPath: string;
       targetFolder: string;
     }) => Promise<{ success: boolean; newPath?: string; error?: string }>;
-    onRefresh: (callback: () => void) => unknown;
+    onRefresh: (callback: (payload?: FileRefreshPayload) => void) => unknown;
     removeRefreshListener: (handler: unknown) => void;
     onMenuNewFile: (callback: () => void) => unknown;
     onMenuSave: (callback: () => void) => unknown;
@@ -147,6 +147,10 @@ interface RecentItemRecord {
   mtime: number | null;
   size: number | null;
   missing: boolean;
+}
+
+interface FileRefreshPayload {
+  paths?: string[];
 }
 
 declare global {

@@ -67,7 +67,7 @@ export interface DesktopAPI {
       folderPath: string;
       targetFolder: string;
     }) => Promise<{ success: boolean; newPath?: string; error?: string }>;
-    onRefresh: (cb: () => void) => unknown;
+    onRefresh: (cb: (payload?: FileRefreshPayload) => void) => unknown;
     removeRefreshListener: (handler: unknown) => void;
     onMenuNewFile: (cb: () => void) => unknown;
     onMenuSave: (cb: () => void) => unknown;
@@ -136,6 +136,11 @@ export interface RecentItemRecord {
   mtime: number | null;
   size: number | null;
   missing: boolean;
+}
+
+/** Native file watcher payload emitted when files inside the workspace change. */
+export interface FileRefreshPayload {
+  paths?: string[];
 }
 
 export const WORKSPACE_KEY = "draftport-workspace-path";

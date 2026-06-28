@@ -157,6 +157,63 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
     [setMarkdown, desktop],
   );
 
+  /**
+   * Reloads the active file after an external watcher event without recording a
+   * recent-open entry or overwriting local unsaved edits.
+   */
+  const reloadCurrentFileFromDisk = useCallback(async () => {
+    if (!desktop) return;
+    const activeFile = useFileStore.getState().currentFile;
+    if (!activeFile) return;
+    const currentState = useFileStore.getState();
+    if (currentState.isDirty || currentState.isRestoring) return;
+
+    setIsRestoring(true);
+    try {
+      const res = await desktop.fs.readFile(activeFile.path);
+      if (!res.success || typeof res.content !== "string") {
+        toast.error(res.error || "重新加载文件失败");
+        return;
+      }
+
+      const content = res.content;
+      const parsed = parseMarkdownFileContent(content);
+      const resolvedTitle =
+        parsed.title?.trim() ||
+        activeFile.title?.trim() ||
+        stripMarkdownExtension(activeFile.name);
+      const resolvedTheme = useThemeStore
+        .getState()
+        .resolveFileTheme(activeFile.path, {
+          themeId: parsed.theme,
+          themeName: parsed.themeName,
+        });
+
+      setLastSavedContent(content);
+      setCurrentFile({
+        ...activeFile,
+        title: resolvedTitle,
+        themeName: resolvedTheme.themeName,
+      });
+      setMarkdown(parsed.body);
+      useThemeStore.getState().activateTheme(resolvedTheme.themeId);
+      setLastSavedAt(new Date());
+      setIsDirty(false);
+    } finally {
+      setTimeout(() => {
+        setIsRestoring(false);
+      }, 100);
+    }
+  }, [
+    desktop,
+    setCurrentFile,
+    setIsDirty,
+    setIsRestoring,
+    setLastSavedAt,
+    setLastSavedContent,
+    setMarkdown,
+  ]);
+
   const loadWorkspace = useCallback(
     async (path: string) => {
       if (!desktop) return;
@@ -399,6 +456,7 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
     lastSavedContent,
     loadWorkspace,
     refreshFiles,
+    reloadCurrentFileFromDisk,
     openFile,
     createFile,
     saveFile,
@@ -416,6 +474,7 @@ export function useFileSystem(options: UseFileSystemOptions = {}) {
     loadWorkspace,
     selectWorkspace,
     openFile,
+    reloadCurrentFileFromDisk,
     createFile,
     saveFile,
     updateFileTitle,

@@ -114,6 +114,7 @@ describe("useFileSystemEffects", () => {
       lastSavedContent: "",
       loadWorkspace: vi.fn(async () => {}),
       refreshFiles,
+      reloadCurrentFileFromDisk: vi.fn(async () => {}),
       openFile,
       createFile,
       saveFile: vi.fn(async () => {}),
@@ -168,5 +169,93 @@ describe("useFileSystemEffects", () => {
     expect(fs.removeRefreshListener).toHaveBeenCalledTimes(1);
     expect(fs.removeRefreshListener).toHaveBeenCalledWith("refresh-handler");
     expect(fs.removeAllListeners).toHaveBeenCalledTimes(1);
+  });
+
+  it("刷新事件会在当前文件无本地修改时重载磁盘内容", async () => {
+    const { desktop, getRefreshCallback } = buildDesktopMock();
+    const refreshFiles = vi.fn(async () => {});
+    const reloadCurrentFileFromDisk = vi.fn(async () => {});
+    const currentFile = {
+      name: "article.md",
+      path: "/workspace/article.md",
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+      updatedAt: new Date("2026-01-01T00:00:00Z"),
+      size: 12,
+      isDirectory: false as const,
+    };
+    useFileStore.setState({ currentFile, isDirty: false, isRestoring: false });
+
+    renderHook(() =>
+      useFileSystemEffects({
+        enabled: true,
+        desktop: desktop as DesktopAPI,
+        currentFile,
+        markdown: "# Article\n",
+        theme: "default",
+        themeName: "默认主题",
+        isRestoring: false,
+        isDirty: false,
+        lastSavedContent: "# Article\n",
+        loadWorkspace: vi.fn(async () => {}),
+        refreshFiles,
+        reloadCurrentFileFromDisk,
+        openFile: vi.fn(async () => {}),
+        createFile: vi.fn(async () => {}),
+        saveFile: vi.fn(async () => {}),
+        selectWorkspace: vi.fn(async () => {}),
+        setIsDirty: vi.fn(),
+      }),
+    );
+
+    getRefreshCallback()?.();
+
+    await waitFor(() => {
+      expect(refreshFiles).toHaveBeenCalledTimes(1);
+      expect(reloadCurrentFileFromDisk).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("刷新事件不会覆盖已有本地未保存修改", async () => {
+    const { desktop, getRefreshCallback } = buildDesktopMock();
+    const refreshFiles = vi.fn(async () => {});
+    const reloadCurrentFileFromDisk = vi.fn(async () => {});
+    const currentFile = {
+      name: "article.md",
+      path: "/workspace/article.md",
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+      updatedAt: new Date("2026-01-01T00:00:00Z"),
+      size: 12,
+      isDirectory: false as const,
+    };
+    useFileStore.setState({ currentFile, isDirty: true, isRestoring: false });
+
+    renderHook(() =>
+      useFileSystemEffects({
+        enabled: true,
+        desktop: desktop as DesktopAPI,
+        currentFile,
+        markdown: "# Local draft\n",
+        theme: "default",
+        themeName: "默认主题",
+        isRestoring: false,
+        isDirty: true,
+        lastSavedContent: "# Article\n",
+        loadWorkspace: vi.fn(async () => {}),
+        refreshFiles,
+        reloadCurrentFileFromDisk,
+        openFile: vi.fn(async () => {}),
+        createFile: vi.fn(async () => {}),
+        saveFile: vi.fn(async () => {}),
+        selectWorkspace: vi.fn(async () => {}),
+        setIsDirty: vi.fn(),
+      }),
+    );
+
+    getRefreshCallback()?.();
+
+    await waitFor(() => {
+      expect(refreshFiles).toHaveBeenCalledTimes(1);
+    });
+    expect(reloadCurrentFileFromDisk).not.toHaveBeenCalled();
   });
 });

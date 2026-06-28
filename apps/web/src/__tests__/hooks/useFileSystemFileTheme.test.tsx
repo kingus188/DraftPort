@@ -66,7 +66,7 @@ describe("useFileSystem file theme assignments", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     window.localStorage.clear();
-    const desktop = buildDesktopMock({
+    const contents = {
       "/workspace/a.md": `---
 theme: default
 themeName: "默认主题"
@@ -83,10 +83,15 @@ title: "B"
 
 # B
 `,
-    });
+    };
+    const desktop = buildDesktopMock(contents);
     Object.defineProperty(window, "desktop", {
       configurable: true,
       value: desktop,
+    });
+    Object.defineProperty(window, "__draftportTestContents", {
+      configurable: true,
+      value: contents,
     });
     useFileStore.setState({
       workspacePath: "/workspace",
@@ -168,5 +173,39 @@ title: "B"
         content: expect.stringContaining("theme: receipt"),
       }),
     );
+  });
+
+  it("reloads the active file from disk without marking it dirty", async () => {
+    const { result } = renderHook(() => useFileSystem());
+
+    await act(async () => {
+      await result.current.openFile(buildFile("/workspace/a.md"));
+    });
+    await flushRestoreTimer();
+
+    const contents = (
+      window as unknown as {
+        __draftportTestContents: Record<string, string>;
+      }
+    ).__draftportTestContents;
+    contents["/workspace/a.md"] = `---
+theme: default
+themeName: "默认主题"
+title: "A 外部更新"
+---
+
+# A changed outside
+`;
+
+    await act(async () => {
+      await result.current.reloadCurrentFileFromDisk();
+    });
+
+    expect(useEditorStore.getState().markdown).toBe("# A changed outside\n");
+    expect(useFileStore.getState().lastSavedContent).toBe(
+      contents["/workspace/a.md"],
+    );
+    expect(useFileStore.getState().currentFile?.title).toBe("A 外部更新");
+    expect(useFileStore.getState().isDirty).toBe(false);
   });
 });

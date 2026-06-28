@@ -3,7 +3,7 @@
 
 use std::{
     fs,
-    path::{Path, PathBuf},
+    path::{Component, Path, PathBuf},
     sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
@@ -24,7 +24,7 @@ pub(crate) struct MarkdownMeta {
     pub(crate) theme_name: String,
 }
 
-/// Activates the workspace and starts a root-level watcher for renderer refresh events.
+/// Activates the workspace and starts a watcher for renderer refresh events.
 pub(crate) fn activate_workspace(
     app: &AppHandle,
     state: &State<'_, DesktopState>,
@@ -38,7 +38,7 @@ pub(crate) fn activate_workspace(
     Ok(())
 }
 
-/// Starts a debounced root-level watcher that mirrors Electron's `file:refresh` event.
+/// Starts a debounced workspace watcher that mirrors Electron's `file:refresh` event.
 fn start_workspace_watcher(
     app: &AppHandle,
     state: &State<'_, DesktopState>,
@@ -48,7 +48,11 @@ fn start_workspace_watcher(
     let last_emit = Arc::new(Mutex::new(None::<Instant>));
     let last_emit_for_callback = Arc::clone(&last_emit);
     let mut watcher = notify::recommended_watcher(move |event: notify::Result<notify::Event>| {
-        if event.is_err() {
+        let Ok(event) = event else {
+            return;
+        };
+        let paths = watch_event_paths(&event);
+        if paths.is_empty() {
             return;
         }
         let Ok(mut last_emit) = last_emit_for_callback.lock() else {
@@ -62,11 +66,11 @@ fn start_workspace_watcher(
             return;
         }
         *last_emit = Some(now);
-        let _ = app.emit("file:refresh", ());
+        let _ = app.emit("file:refresh", serde_json::json!({ "paths": paths }));
     })
     .map_err(|error| error.to_string())?;
     watcher
-        .watch(dir, RecursiveMode::NonRecursive)
+        .watch(dir, RecursiveMode::Recursive)
         .map_err(|error| error.to_string())?;
     *state
         .watcher
@@ -144,6 +148,26 @@ pub(crate) fn scan_workspace(dir: &Path) -> Vec<FileEntry> {
 /// Returns whether a workspace entry should be ignored during recursive scans.
 fn should_skip_workspace_entry(name: &str) -> bool {
     name.starts_with('.') || SKIPPED_WORKSPACE_DIRS.contains(&name)
+}
+
+/// Converts notify events into renderer payload paths while filtering heavy folders.
+fn watch_event_paths(event: &notify::Event) -> Vec<String> {
+    event
+        .paths
+        .iter()
+        .filter(|path| !should_skip_watch_path(path))
+        .map(|path| path_string(path))
+        .collect()
+}
+
+/// Returns whether a watcher event path belongs to a skipped workspace segment.
+fn should_skip_watch_path(path: &Path) -> bool {
+    path.components().any(|component| {
+        let Component::Normal(name) = component else {
+            return false;
+        };
+        should_skip_workspace_entry(&name.to_string_lossy())
+    })
 }
 
 /// Builds a file tree node for a folder.
@@ -378,5 +402,17 @@ mod tests {
         );
 
         fs::remove_dir_all(root).expect("test workspace should be removed");
+    }
+
+    #[test]
+    fn watch_event_paths_filters_skipped_workspace_segments() {
+        let event = notify::Event::new(notify::EventKind::Any)
+            .add_path(PathBuf::from("/workspace/docs/article.md"))
+            .add_path(PathBuf::from("/workspace/node_modules/pkg/hidden.md"))
+            .add_path(PathBuf::from("/workspace/.git/index"));
+
+        let paths = watch_event_paths(&event);
+
+        assert_eq!(paths, vec!["/workspace/docs/article.md"]);
     }
 }

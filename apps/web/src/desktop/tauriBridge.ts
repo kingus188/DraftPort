@@ -36,6 +36,10 @@ interface RecentItemRecord {
   missing: boolean;
 }
 
+interface FileRefreshPayload {
+  paths?: string[];
+}
+
 type WorkspaceOrderSortMode =
   | "opened-desc"
   | "updated-desc"
@@ -144,7 +148,10 @@ export function installTauriDesktopBridge(
       deleteFolder: (payload) => call(COMMANDS.deleteFolder, { payload }),
       renameFolder: (payload) => call(COMMANDS.renameFolder, { payload }),
       moveFolder: (payload) => call(COMMANDS.moveFolder, { payload }),
-      onRefresh: (callback) => onDesktopEvent("file:refresh", callback),
+      onRefresh: (callback) =>
+        onDesktopEvent("file:refresh", (payload) =>
+          callback(payload as FileRefreshPayload | undefined),
+        ),
       removeRefreshListener: () => undefined,
       onMenuNewFile: (callback) => onDesktopEvent("menu:new-file", callback),
       onMenuSave: (callback) => onDesktopEvent("menu:save", callback),
