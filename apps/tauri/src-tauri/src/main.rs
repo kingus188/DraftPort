@@ -34,6 +34,8 @@ fn main() {
             commands::workspace::workspace_select,
             commands::workspace::workspace_set,
             commands::workspace::file_list,
+            commands::workspace::workspace_order_get,
+            commands::workspace::workspace_order_save,
             commands::files::file_read,
             commands::files::file_open,
             commands::files::file_create,

@@ -39,6 +39,32 @@ describe("installTauriDesktopBridge", () => {
     expect(invoke).toHaveBeenCalledWith("file_list", { dir: undefined });
   });
 
+  it("exposes workspace order commands for project-local manual sorting", async () => {
+    const invoke = vi.fn(async () => ({ success: true }));
+    window.__TAURI_INTERNALS__ = { invoke };
+
+    installTauriDesktopBridge();
+
+    expect(window.desktop?.workspaceOrder).toBeDefined();
+    await window.desktop!.workspaceOrder!.get();
+    await window.desktop!.workspaceOrder!.save({
+      version: 1,
+      folders: {
+        "/workspace": ["/workspace/docs", "/workspace/a.md"],
+      },
+    });
+
+    expect(invoke).toHaveBeenCalledWith("workspace_order_get", undefined);
+    expect(invoke).toHaveBeenCalledWith("workspace_order_save", {
+      payload: {
+        version: 1,
+        folders: {
+          "/workspace": ["/workspace/docs", "/workspace/a.md"],
+        },
+      },
+    });
+  });
+
   it("removes only listeners registered through the bridge", async () => {
     const callbacks: Array<() => void> = [];
     window.__TAURI_INTERNALS__ = {

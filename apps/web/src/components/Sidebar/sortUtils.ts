@@ -6,8 +6,10 @@ export type SortMode =
   | "opened-desc"
   | "updated-desc"
   | "name-asc"
-  | "name-desc";
+  | "name-desc"
+  | "manual";
 export type RecentItemMap = Map<string, string>;
+export type ManualOrderFolders = Record<string, string[]>;
 
 const nameCollator = new Intl.Collator("zh-Hans", {
   numeric: true,
@@ -22,7 +24,8 @@ export function getSortMode(): SortMode {
       saved === "opened-desc" ||
       saved === "updated-desc" ||
       saved === "name-asc" ||
-      saved === "name-desc"
+      saved === "name-desc" ||
+      saved === "manual"
     )
       return saved;
   } catch {
@@ -50,6 +53,8 @@ export function compareFiles(
       return nameCollator.compare(a.title || a.name, b.title || b.name);
     case "name-desc":
       return nameCollator.compare(b.title || b.name, a.title || a.name);
+    case "manual":
+      return nameCollator.compare(a.title || a.name, b.title || b.name);
   }
 }
 
@@ -57,14 +62,26 @@ export function sortTreeItems(
   items: TreeItem[],
   mode: SortMode,
   recentItems?: RecentItemMap,
+  manualOrderFolders?: ManualOrderFolders,
+  parentPath = "/",
 ): TreeItem[] {
+  if (mode === "manual") {
+    return sortManualTreeItems(items, manualOrderFolders, parentPath);
+  }
+
   if (mode === "opened-desc") {
     return [...items]
       .map((item) =>
         item.isDirectory
           ? {
               ...item,
-              children: sortTreeItems(item.children, mode, recentItems),
+              children: sortTreeItems(
+                item.children,
+                mode,
+                recentItems,
+                manualOrderFolders,
+                item.path,
+              ),
             }
           : item,
       )
@@ -77,7 +94,13 @@ export function sortTreeItems(
     if (item.isDirectory) {
       folders.push({
         ...item,
-        children: sortTreeItems(item.children, mode, recentItems),
+        children: sortTreeItems(
+          item.children,
+          mode,
+          recentItems,
+          manualOrderFolders,
+          item.path,
+        ),
       });
     } else {
       files.push(item);
@@ -86,6 +109,39 @@ export function sortTreeItems(
   folders.sort((a, b) => nameCollator.compare(a.name, b.name));
   files.sort((a, b) => compareFiles(a, b, mode, recentItems));
   return [...folders, ...files];
+}
+
+/** Applies project-local manual order to one tree level without mutating source nodes. */
+function sortManualTreeItems(
+  items: TreeItem[],
+  manualOrderFolders: ManualOrderFolders | undefined,
+  parentPath: string,
+): TreeItem[] {
+  const orderedPaths = manualOrderFolders?.[parentPath] ?? [];
+  const orderIndex = new Map(orderedPaths.map((path, index) => [path, index]));
+  return [...items]
+    .map((item) =>
+      item.isDirectory
+        ? {
+            ...item,
+            children: sortManualTreeItems(
+              item.children,
+              manualOrderFolders,
+              item.path,
+            ),
+          }
+        : item,
+    )
+    .sort((left, right) => {
+      const leftIndex = orderIndex.get(left.path);
+      const rightIndex = orderIndex.get(right.path);
+      if (leftIndex !== undefined && rightIndex !== undefined) {
+        return leftIndex - rightIndex;
+      }
+      if (leftIndex !== undefined) return -1;
+      if (rightIndex !== undefined) return 1;
+      return 0;
+    });
 }
 
 function compareTreeItems(

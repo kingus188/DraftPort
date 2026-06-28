@@ -1,5 +1,5 @@
 import type { FileItem, FolderItem, TreeItem } from "../../store/fileTypes";
-import type { RecentItemMap, SortMode } from "./sortUtils";
+import type { ManualOrderFolders, RecentItemMap, SortMode } from "./sortUtils";
 import { compareFiles, sortTreeItems } from "./sortUtils";
 
 const COLLAPSED_KEY = "draftport-folder-collapsed";
@@ -72,8 +72,18 @@ export function buildFilteredItems(
   flattenFiles: (items: TreeItem[]) => FileItem[],
   sortMode: SortMode,
   recentItems?: RecentItemMap,
+  manualOrderFolders?: ManualOrderFolders,
+  workspacePath?: string | null,
 ) {
-  if (!filter) return sortTreeItems(files, sortMode, recentItems);
+  if (!filter) {
+    return sortTreeItems(
+      files,
+      sortMode,
+      recentItems,
+      manualOrderFolders,
+      workspacePath ?? "/",
+    );
+  }
 
   const keyword = filter.toLowerCase();
   const matched = flattenFiles(files).filter((f) =>
@@ -121,6 +131,53 @@ export function resolveParentFolderPath(
     return null;
   }
   return parentPath;
+}
+
+/** Resolves the direct parent used as the manual order bucket for a tree item. */
+export function resolveOrderParentPath(
+  itemPath: string,
+  workspacePath: string | null,
+): string | null {
+  if (!workspacePath || itemPath === workspacePath) return null;
+  const normalizedPath = normalizePath(itemPath);
+  const lastIndex = normalizedPath.lastIndexOf("/");
+  if (lastIndex === -1) return workspacePath;
+  const parentPath = itemPath.substring(
+    0,
+    itemPath.length - (normalizedPath.length - lastIndex),
+  );
+  return parentPath || workspacePath;
+}
+
+/** Collects direct child paths for the parent currently being manually sorted. */
+export function collectDirectChildPaths(
+  items: TreeItem[],
+  parentPath: string,
+  workspacePath: string | null,
+): string[] {
+  if (workspacePath && parentPath === workspacePath) {
+    return items.map((item) => item.path);
+  }
+  const folder = findFolderByPath(items, parentPath);
+  return folder?.children.map((item) => item.path) ?? [];
+}
+
+/** Moves one sibling path before or after another while preserving the rest. */
+export function reorderSiblingPaths(
+  paths: string[],
+  draggedPath: string,
+  targetPath: string,
+  position: "before" | "after",
+): string[] {
+  const withoutDragged = paths.filter((path) => path !== draggedPath);
+  const targetIndex = withoutDragged.indexOf(targetPath);
+  if (targetIndex === -1) return paths;
+  const insertIndex = position === "before" ? targetIndex : targetIndex + 1;
+  return [
+    ...withoutDragged.slice(0, insertIndex),
+    draggedPath,
+    ...withoutDragged.slice(insertIndex),
+  ];
 }
 
 export function expandAncestorFolders(

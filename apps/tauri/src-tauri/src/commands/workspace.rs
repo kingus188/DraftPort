@@ -9,6 +9,9 @@ use crate::domain::recent::record_recent_item;
 use crate::domain::workspace::{
     activate_workspace, is_path_inside_workspace_state, resolve_workspace_path, scan_workspace,
 };
+use crate::domain::workspace_order::{
+    load_workspace_order_config, save_workspace_order_config, WorkspaceOrderConfig,
+};
 use crate::shared::model::{DesktopState, RecentItemType};
 use crate::shared::util::{json_error, json_success, path_string};
 
@@ -67,4 +70,25 @@ pub(crate) async fn file_list(
     Ok(json_success(
         serde_json::json!({ "files": files }),
     ))
+}
+
+/// Loads the current workspace's persisted manual file tree order.
+#[tauri::command]
+pub(crate) fn workspace_order_get(
+    state: State<'_, DesktopState>,
+) -> Result<serde_json::Value, String> {
+    let workspace = crate::domain::workspace::current_workspace(&state)?;
+    let config = load_workspace_order_config(&workspace)?;
+    Ok(json_success(serde_json::json!({ "order": config })))
+}
+
+/// Saves the current workspace's manual file tree order into project config.
+#[tauri::command]
+pub(crate) fn workspace_order_save(
+    state: State<'_, DesktopState>,
+    payload: WorkspaceOrderConfig,
+) -> Result<serde_json::Value, String> {
+    let workspace = crate::domain::workspace::current_workspace(&state)?;
+    save_workspace_order_config(&workspace, &payload)?;
+    Ok(json_success(serde_json::json!({ "order": payload })))
 }

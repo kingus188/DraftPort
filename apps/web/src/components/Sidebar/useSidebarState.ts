@@ -4,9 +4,15 @@ import { useFileSystem } from "../../hooks/useFileSystem";
 import { getDesktopBridge } from "../../hooks/useFileSystemHelpers";
 import toast from "react-hot-toast";
 import type { FileItem, FolderItem } from "../../store/fileTypes";
-import { type SortMode, getSortMode, saveSortMode } from "./sortUtils";
+import {
+  type ManualOrderFolders,
+  type SortMode,
+  getSortMode,
+  saveSortMode,
+} from "./sortUtils";
 import {
   buildFilteredItems,
+  collectDirectChildPaths,
   collectAllFolders,
   expandAncestorFolders,
   FILE_DRAG_TYPE,
@@ -17,6 +23,8 @@ import {
   getCollapsedState,
   isDescendantPath,
   remapPath,
+  reorderSiblingPaths,
+  resolveOrderParentPath,
   resolveParentFolderPath,
   ROOT_DROP_TARGET,
   saveCollapsedState,
@@ -68,10 +76,6 @@ export function useSidebarState() {
   const [newFolderName, setNewFolderName] = useState("");
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
   const [showMoveMenu, setShowMoveMenu] = useState(false);
-  const [draggingPath, setDraggingPath] = useState<string | null>(null);
-  const [draggingFolderPath, setDraggingFolderPath] = useState<string | null>(
-    null,
-  );
   const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{
     text: string;
@@ -86,6 +90,8 @@ export function useSidebarState() {
   const [recentItems, setRecentItems] = useState<Map<string, string>>(
     () => new Map(),
   );
+  const [manualOrderFolders, setManualOrderFolders] =
+    useState<ManualOrderFolders>({});
 
   const isDragEnabled = !filter;
 
@@ -114,6 +120,29 @@ export function useSidebarState() {
   useEffect(() => {
     void refreshRecentItems();
   }, [refreshRecentItems, workspacePath]);
+
+  /** Loads the project-local manual order for the currently active workspace. */
+  const refreshWorkspaceOrder = useCallback(async () => {
+    if (!desktop?.workspaceOrder || !workspacePath) {
+      setManualOrderFolders({});
+      return;
+    }
+    try {
+      const result = await desktop.workspaceOrder.get();
+      if (!result.success || !result.order) {
+        setManualOrderFolders({});
+        return;
+      }
+      setManualOrderFolders(result.order.folders ?? {});
+    } catch (error) {
+      console.error("[WorkspaceOrder] load failed", error);
+      setManualOrderFolders({});
+    }
+  }, [desktop, workspacePath]);
+
+  useEffect(() => {
+    void refreshWorkspaceOrder();
+  }, [refreshWorkspaceOrder]);
 
   useEffect(() => {
     const handleRecentFolder = (event: Event) => {
@@ -158,8 +187,24 @@ export function useSidebarState() {
 
   const filteredItems = useMemo(
     () =>
-      buildFilteredItems(files, filter, flattenFiles, sortMode, recentItems),
-    [files, filter, flattenFiles, sortMode, recentItems],
+      buildFilteredItems(
+        files,
+        filter,
+        flattenFiles,
+        sortMode,
+        recentItems,
+        manualOrderFolders,
+        workspacePath,
+      ),
+    [
+      files,
+      filter,
+      flattenFiles,
+      sortMode,
+      recentItems,
+      manualOrderFolders,
+      workspacePath,
+    ],
   );
 
   const handleSetSortMode = useCallback((mode: SortMode) => {
@@ -379,20 +424,84 @@ export function useSidebarState() {
     [files, flattenFiles],
   );
 
-  const handleDropToFolder = useCallback(
-    async (e: React.DragEvent, targetFolder: string) => {
-      if (!isDragEnabled) return;
-      e.preventDefault();
-      e.stopPropagation();
+  /** Reorders a dragged item path within the same parent without moving it on disk. */
+  const reorderDraggedPath = useCallback(
+    async (
+      draggedPath: string,
+      targetPath: string,
+      position: "before" | "after",
+    ) => {
+      if (!isDragEnabled || !workspacePath) return;
+      if (!draggedPath || draggedPath === targetPath) return;
 
-      const draggedFolderPath = e.dataTransfer.getData(FOLDER_DRAG_TYPE);
-      if (draggedFolderPath) {
-        if (targetFolder && isDescendantPath(draggedFolderPath, targetFolder)) {
+      const draggedParent = resolveOrderParentPath(draggedPath, workspacePath);
+      const targetParent = resolveOrderParentPath(targetPath, workspacePath);
+      if (!draggedParent || draggedParent !== targetParent) {
+        setDragOverTarget(null);
+        return;
+      }
+
+      const currentPaths = collectDirectChildPaths(
+        filteredItems,
+        draggedParent,
+        workspacePath,
+      );
+      const nextPaths = reorderSiblingPaths(
+        currentPaths,
+        draggedPath,
+        targetPath,
+        position,
+      );
+      if (nextPaths.join("\n") === currentPaths.join("\n")) {
+        setDragOverTarget(null);
+        return;
+      }
+
+      const previousFolders = manualOrderFolders;
+      const nextFolders = {
+        ...manualOrderFolders,
+        [draggedParent]: nextPaths,
+      };
+      setManualOrderFolders(nextFolders);
+      if (sortMode !== "manual") {
+        setSortModeState("manual");
+        saveSortMode("manual");
+      }
+      setDragOverTarget(null);
+      try {
+        const result = await desktop?.workspaceOrder?.save({
+          version: 1,
+          folders: nextFolders,
+        });
+        if (!result?.success) {
+          throw new Error(result?.error || "排序保存失败");
+        }
+      } catch (error) {
+        console.error("[WorkspaceOrder] save failed", error);
+        setManualOrderFolders(previousFolders);
+        toast.error("排序保存失败");
+      }
+    },
+    [
+      desktop,
+      filteredItems,
+      isDragEnabled,
+      manualOrderFolders,
+      sortMode,
+      workspacePath,
+    ],
+  );
+
+  /** Moves a dragged tree item path to a folder using the existing file-system actions. */
+  const moveDraggedPathToFolder = useCallback(
+    async (draggedPath: string, targetFolder: string) => {
+      if (!isDragEnabled || !draggedPath) return;
+      const folder = findFolderByPath(files, draggedPath);
+      if (folder) {
+        if (targetFolder && isDescendantPath(draggedPath, targetFolder)) {
           setDragOverTarget(null);
           return;
         }
-        const folder = findFolderByPath(files, draggedFolderPath);
-        if (!folder) return;
         const res = await moveFolder(folder, targetFolder);
         if (res.success && res.newPath) {
           updateFolderPathState(folder.path, res.newPath);
@@ -401,70 +510,56 @@ export function useSidebarState() {
         return;
       }
 
-      const filePath =
-        e.dataTransfer.getData(FILE_DRAG_TYPE) ||
-        e.dataTransfer.getData("text/plain");
-      if (!filePath) return;
-      const file = findFileByPath(filePath);
+      const file = findFileByPath(draggedPath);
       if (!file) return;
       await moveToFolder(file, targetFolder);
       setDragOverTarget(null);
     },
     [
-      isDragEnabled,
       files,
-      moveFolder,
-      updateFolderPathState,
       findFileByPath,
+      isDragEnabled,
+      moveFolder,
       moveToFolder,
+      updateFolderPathState,
     ],
   );
 
-  const handleDropToRoot = useCallback(
-    async (e: React.DragEvent) => {
-      if (!isDragEnabled) return;
-      e.preventDefault();
-      if (e.target !== e.currentTarget) return;
-
-      const draggedFolderPath = e.dataTransfer.getData(FOLDER_DRAG_TYPE);
-      if (draggedFolderPath) {
-        const folder = findFolderByPath(files, draggedFolderPath);
-        if (!folder) return;
-        const res = await moveFolder(folder, "");
-        if (res.success && res.newPath) {
-          updateFolderPathState(folder.path, res.newPath);
-        }
+  /** Finishes a drag using an explicit insertion or folder intent. */
+  const finishDraggedPathWithIntent = useCallback(
+    async (draggedPath: string, intent: string | null) => {
+      if (!draggedPath || !intent) {
         setDragOverTarget(null);
         return;
       }
 
-      const filePath =
-        e.dataTransfer.getData(FILE_DRAG_TYPE) ||
-        e.dataTransfer.getData("text/plain");
-      if (!filePath) return;
-      const file = findFileByPath(filePath);
-      if (!file) return;
-      await moveToFolder(file, "");
-      setDragOverTarget(null);
-    },
-    [
-      isDragEnabled,
-      files,
-      moveFolder,
-      updateFolderPathState,
-      findFileByPath,
-      moveToFolder,
-    ],
-  );
+      if (intent === ROOT_DROP_TARGET) {
+        await moveDraggedPathToFolder(draggedPath, "");
+        return;
+      }
 
-  const handleDragLeave = useCallback(
-    (e: React.DragEvent, targetKey: string) => {
-      if (!isDragEnabled) return;
-      const related = e.relatedTarget as Node | null;
-      if (related && e.currentTarget.contains(related)) return;
-      setDragOverTarget((current) => (current === targetKey ? null : current));
+      const beforeSuffix = ":before";
+      const afterSuffix = ":after";
+      if (intent.endsWith(beforeSuffix)) {
+        await reorderDraggedPath(
+          draggedPath,
+          intent.slice(0, -beforeSuffix.length),
+          "before",
+        );
+        return;
+      }
+      if (intent.endsWith(afterSuffix)) {
+        await reorderDraggedPath(
+          draggedPath,
+          intent.slice(0, -afterSuffix.length),
+          "after",
+        );
+        return;
+      }
+
+      await moveDraggedPathToFolder(draggedPath, intent);
     },
-    [isDragEnabled],
+    [moveDraggedPathToFolder, reorderDraggedPath, setDragOverTarget],
   );
 
   const handleFileClick = useCallback(
@@ -535,10 +630,6 @@ export function useSidebarState() {
     setActiveFolder,
     showMoveMenu,
     setShowMoveMenu,
-    draggingPath,
-    setDraggingPath,
-    draggingFolderPath,
-    setDraggingFolderPath,
     dragOverTarget,
     setDragOverTarget,
     tooltip,
@@ -568,9 +659,9 @@ export function useSidebarState() {
     prepareDeleteFolder,
     showTooltip: showTooltipFn,
     hideTooltip,
-    handleDropToFolder,
-    handleDropToRoot,
-    handleDragLeave,
+    reorderDraggedPath,
+    moveDraggedPathToFolder,
+    finishDraggedPathWithIntent,
     handleFileClick,
     handleRootFolderClick,
     formatTime,

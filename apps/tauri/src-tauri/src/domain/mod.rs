@@ -3,3 +3,4 @@
 
 pub(crate) mod recent;
 pub(crate) mod workspace;
+pub(crate) mod workspace_order;

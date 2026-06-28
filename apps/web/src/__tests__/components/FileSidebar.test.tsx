@@ -81,10 +81,6 @@ describe("FileSidebar", () => {
       setActiveFolder: vi.fn(),
       showMoveMenu: false,
       setShowMoveMenu: vi.fn(),
-      draggingPath: null,
-      setDraggingPath: vi.fn(),
-      draggingFolderPath: null,
-      setDraggingFolderPath: vi.fn(),
       dragOverTarget: null,
       setDragOverTarget: vi.fn(),
       tooltip: null,
@@ -113,9 +109,9 @@ describe("FileSidebar", () => {
       prepareDeleteFolder: vi.fn(),
       showTooltip: vi.fn(),
       hideTooltip: vi.fn(),
-      handleDropToFolder: vi.fn(),
-      handleDropToRoot: vi.fn(),
-      handleDragLeave: vi.fn(),
+      reorderDraggedPath: vi.fn(),
+      moveDraggedPathToFolder: vi.fn(),
+      finishDraggedPathWithIntent: vi.fn(),
       handleFileClick: vi.fn(),
       handleRootFolderClick: vi.fn(),
       formatTime: vi.fn(() => "刚刚"),
@@ -286,5 +282,215 @@ describe("FileSidebar", () => {
     expect(inactiveRow?.querySelector(".fs-meta-row")).toBeNull();
     expect(screen.queryByText("刚刚")).toBeNull();
     expect(screen.queryByText("默认主题")).toBeNull();
+  });
+
+  it("offers manual sorting in the sort menu", () => {
+    const { container } = render(<FileSidebar />);
+
+    fireEvent.click(container.querySelector(".fs-sort-btn")!);
+
+    expect(screen.getByText("手动排序")).toBeInTheDocument();
+  });
+
+  it("uses pointer events instead of HTML5 drag for desktop-safe tree sorting", () => {
+    const componentSource = readFileSync(
+      "src/components/Sidebar/FileSidebar.tsx",
+      "utf8",
+    );
+
+    expect(componentSource).toContain("onPointerDown");
+    expect(componentSource).toContain("pointermove");
+    expect(componentSource).toContain("pointerup");
+    expect(componentSource).not.toContain("react-dnd");
+    expect(componentSource).not.toContain("dataTransfer");
+    expect(componentSource).not.toContain("onDragOver");
+    expect(componentSource).not.toContain("onDrop=");
+  });
+
+  it("shows insertion intent while pointer-dragging over another row", () => {
+    const setDragOverTarget = vi.fn();
+    const firstFile = makeFile("a.md", "/workspace/a.md");
+    const secondFile = makeFile("b.md", "/workspace/b.md");
+
+    mockUseSidebarState.mockReturnValue({
+      ...mockUseSidebarState(),
+      filteredItems: [firstFile, secondFile],
+      setDragOverTarget,
+    });
+
+    render(<FileSidebar />);
+
+    const source = screen.getByText("a").closest(".fs-item")!;
+    const row = screen.getByText("b").closest(".fs-item")!;
+    vi.spyOn(row, "getBoundingClientRect").mockReturnValue({
+      top: 0,
+      bottom: 20,
+      left: 0,
+      right: 200,
+      width: 200,
+      height: 20,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    Object.defineProperty(document, "elementFromPoint", {
+      configurable: true,
+      value: vi.fn(() => row),
+    });
+
+    fireEvent.pointerDown(source, {
+      pointerId: 1,
+      button: 0,
+      clientX: 10,
+      clientY: 2,
+    });
+    fireEvent.pointerMove(window, {
+      pointerId: 1,
+      clientX: 12,
+      clientY: 18,
+    });
+
+    expect(setDragOverTarget).toHaveBeenCalledWith("/workspace/b.md:after");
+  });
+
+  it("finishes pointer drag using the last insertion intent", () => {
+    const setDragOverTarget = vi.fn();
+    const finishDraggedPathWithIntent = vi.fn();
+    const firstFile = makeFile("a.md", "/workspace/a.md");
+    const secondFile = makeFile("b.md", "/workspace/b.md");
+
+    mockUseSidebarState.mockReturnValue({
+      ...mockUseSidebarState(),
+      filteredItems: [firstFile, secondFile],
+      setDragOverTarget,
+      finishDraggedPathWithIntent,
+    });
+
+    render(<FileSidebar />);
+
+    const source = screen.getByText("a").closest(".fs-item")!;
+    const row = screen.getByText("b").closest(".fs-item")!;
+    vi.spyOn(row, "getBoundingClientRect").mockReturnValue({
+      top: 0,
+      bottom: 20,
+      left: 0,
+      right: 200,
+      width: 200,
+      height: 20,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    Object.defineProperty(document, "elementFromPoint", {
+      configurable: true,
+      value: vi.fn(() => row),
+    });
+
+    fireEvent.pointerDown(source, {
+      pointerId: 7,
+      button: 0,
+      clientX: 10,
+      clientY: 2,
+    });
+    fireEvent.pointerMove(window, {
+      pointerId: 7,
+      clientX: 12,
+      clientY: 8,
+    });
+    fireEvent.pointerUp(window, {
+      pointerId: 7,
+      clientX: 12,
+      clientY: 8,
+    });
+
+    expect(setDragOverTarget).toHaveBeenCalledWith("/workspace/b.md:before");
+    expect(finishDraggedPathWithIntent).toHaveBeenCalledWith(
+      "/workspace/a.md",
+      "/workspace/b.md:before",
+    );
+  });
+
+  it("does not open the file after a completed pointer drag", () => {
+    const handleFileClick = vi.fn();
+    const finishDraggedPathWithIntent = vi.fn();
+    const firstFile = makeFile("a.md", "/workspace/a.md");
+    const secondFile = makeFile("b.md", "/workspace/b.md");
+
+    mockUseSidebarState.mockReturnValue({
+      ...mockUseSidebarState(),
+      filteredItems: [firstFile, secondFile],
+      handleFileClick,
+      finishDraggedPathWithIntent,
+    });
+
+    render(<FileSidebar />);
+
+    const source = screen.getByText("a").closest(".fs-item")!;
+    const row = screen.getByText("b").closest(".fs-item")!;
+    vi.spyOn(row, "getBoundingClientRect").mockReturnValue({
+      top: 0,
+      bottom: 20,
+      left: 0,
+      right: 200,
+      width: 200,
+      height: 20,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    Object.defineProperty(document, "elementFromPoint", {
+      configurable: true,
+      value: vi.fn(() => row),
+    });
+
+    fireEvent.pointerDown(source, {
+      pointerId: 8,
+      button: 0,
+      clientX: 10,
+      clientY: 2,
+    });
+    fireEvent.pointerMove(window, {
+      pointerId: 8,
+      clientX: 12,
+      clientY: 18,
+    });
+    fireEvent.pointerUp(window, {
+      pointerId: 8,
+      clientX: 12,
+      clientY: 18,
+    });
+    fireEvent.click(source);
+
+    expect(handleFileClick).not.toHaveBeenCalled();
+  });
+
+  it("marks the active manual drop insertion position", () => {
+    const firstFile = makeFile("a.md", "/workspace/a.md");
+
+    mockUseSidebarState.mockReturnValue({
+      ...mockUseSidebarState(),
+      sortMode: "manual",
+      filteredItems: [firstFile],
+      dragOverTarget: "/workspace/a.md:before",
+    });
+
+    render(<FileSidebar />);
+
+    const row = screen.getByText("a").closest(".fs-item")!;
+
+    expect(row).toHaveClass("drop-before");
+    expect(row.querySelector(".fs-drop-indicator.before")).not.toBeNull();
+  });
+
+  it("uses a visible DOM insertion indicator for manual drag ordering", () => {
+    const sidebarStyles = readFileSync(
+      "src/components/Sidebar/FileSidebar.css",
+      "utf8",
+    );
+
+    expect(sidebarStyles).toContain(".fs-drop-indicator");
+    expect(sidebarStyles).toContain("height: 3px;");
+    expect(sidebarStyles).toMatch(/box-shadow:\s*0 0 0 1px/);
+    expect(sidebarStyles).toContain("z-index: 5;");
   });
 });

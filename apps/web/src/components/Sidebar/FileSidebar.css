@@ -220,6 +220,7 @@
 }
 
 .fs-item {
+  position: relative;
   border: 1px solid transparent;
   border-radius: 6px;
   background: transparent;
@@ -569,6 +570,7 @@
 }
 
 .fs-folder {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -586,6 +588,28 @@
   box-shadow: inset 0 0 0 1px
     color-mix(in srgb, var(--accent-primary) 45%, transparent);
   color: var(--accent-primary);
+}
+
+.fs-drop-indicator {
+  position: absolute;
+  left: calc(8px + var(--tree-indent-offset, 0px));
+  right: 8px;
+  height: 3px;
+  pointer-events: none;
+  border-radius: var(--radius-pill);
+  background: var(--accent-primary);
+  box-shadow:
+    0 0 0 1px var(--bg-primary),
+    0 0 10px color-mix(in srgb, var(--accent-primary) 45%, transparent);
+  z-index: 5;
+}
+
+.fs-drop-indicator.before {
+  top: -1px;
+}
+
+.fs-drop-indicator.after {
+  bottom: -1px;
 }
 
 .fs-folder:hover {

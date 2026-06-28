@@ -176,6 +176,54 @@ describe("recent-open sorting", () => {
   });
 });
 
+describe("manual order sorting", () => {
+  it("按项目配置里的同级顺序混排文件夹和文件", () => {
+    const items: TreeItem[] = [
+      makeFolder("docs", []),
+      makeFile("a.md", "2024-01-01"),
+      makeFile("b.md", "2024-01-02"),
+    ];
+
+    const sorted = sortTreeItems(items, "manual", undefined, {
+      "/": ["/b.md", "/docs", "/a.md"],
+    });
+
+    expect(sorted.map((entry) => entry.name)).toEqual(["b.md", "docs", "a.md"]);
+  });
+
+  it("忽略不存在的手动顺序路径，并把新增项目按扫描顺序追加", () => {
+    const items: TreeItem[] = [
+      makeFile("a.md", "2024-01-01"),
+      makeFile("b.md", "2024-01-02"),
+      makeFile("c.md", "2024-01-03"),
+    ];
+
+    const sorted = sortTreeItems(items, "manual", undefined, {
+      "/": ["/missing.md", "/b.md"],
+    });
+
+    expect(sorted.map((entry) => entry.name)).toEqual(["b.md", "a.md", "c.md"]);
+  });
+
+  it("递归使用每个父目录自己的手动顺序", () => {
+    const folder = makeFolder("docs", [
+      makeFile("a.md", "2024-01-01"),
+      makeFile("b.md", "2024-01-02"),
+    ]);
+
+    const sorted = sortTreeItems([folder], "manual", undefined, {
+      "/": ["/docs"],
+      "/docs": ["/b.md", "/a.md"],
+    });
+    const sortedFolder = sorted[0] as FolderItem;
+
+    expect(sortedFolder.children.map((entry) => entry.name)).toEqual([
+      "b.md",
+      "a.md",
+    ]);
+  });
+});
+
 describe("切换排序模式后列表顺序变化", () => {
   const items: TreeItem[] = [
     makeFile("beta.md", "2024-01-01"),

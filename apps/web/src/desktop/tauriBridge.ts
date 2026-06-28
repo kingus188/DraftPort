@@ -36,6 +36,11 @@ interface RecentItemRecord {
   missing: boolean;
 }
 
+interface WorkspaceOrderConfig {
+  version: 1;
+  folders: Record<string, string[]>;
+}
+
 declare global {
   interface Window {
     __TAURI_INTERNALS__?: TauriInternals;
@@ -65,6 +70,8 @@ const COMMANDS = {
   recentItemsRemove: "recent_items_remove",
   recentItemsClear: "recent_items_clear",
   recentItemsRenamePath: "recent_items_rename_path",
+  workspaceOrderGet: "workspace_order_get",
+  workspaceOrderSave: "workspace_order_save",
   windowMinimize: "window_minimize",
   windowMaximize: "window_maximize",
   windowClose: "window_close",
@@ -149,6 +156,11 @@ export function installTauriDesktopBridge(
       clear: () => call(COMMANDS.recentItemsClear),
       renamePath: (payload) =>
         call(COMMANDS.recentItemsRenamePath, { payload }),
+    },
+    workspaceOrder: {
+      get: () => call(COMMANDS.workspaceOrderGet),
+      save: (payload: WorkspaceOrderConfig) =>
+        call(COMMANDS.workspaceOrderSave, { payload }),
     },
     window: {
       minimize: () => call(COMMANDS.windowMinimize),

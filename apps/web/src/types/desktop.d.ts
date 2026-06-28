@@ -94,6 +94,18 @@ interface DesktopAPI {
       newPath: string;
     }) => Promise<{ success: boolean; error?: string }>;
   };
+  workspaceOrder?: {
+    get: () => Promise<{
+      success: boolean;
+      order?: WorkspaceOrderConfig;
+      error?: string;
+    }>;
+    save: (payload: WorkspaceOrderConfig) => Promise<{
+      success: boolean;
+      order?: WorkspaceOrderConfig;
+      error?: string;
+    }>;
+  };
   window?: {
     minimize: () => Promise<void>;
     maximize: () => Promise<void>;
@@ -110,6 +122,11 @@ interface DesktopAPI {
     }) => Promise<{ success: boolean; error?: string }>;
     writeText: (text: string) => Promise<{ success: boolean; error?: string }>;
   };
+}
+
+interface WorkspaceOrderConfig {
+  version: 1;
+  folders: Record<string, string[]>;
 }
 
 interface RecentItemRecord {

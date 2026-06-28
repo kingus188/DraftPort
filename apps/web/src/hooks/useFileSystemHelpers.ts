@@ -98,6 +98,24 @@ export interface DesktopAPI {
       newPath: string;
     }) => Promise<{ success: boolean; error?: string }>;
   };
+  workspaceOrder?: {
+    get: () => Promise<{
+      success: boolean;
+      order?: WorkspaceOrderConfig;
+      error?: string;
+    }>;
+    save: (payload: WorkspaceOrderConfig) => Promise<{
+      success: boolean;
+      order?: WorkspaceOrderConfig;
+      error?: string;
+    }>;
+  };
+}
+
+/** Project-local manual tree order keyed by parent folder path. */
+export interface WorkspaceOrderConfig {
+  version: 1;
+  folders: Record<string, string[]>;
 }
 
 export interface RecentItemRecord {
