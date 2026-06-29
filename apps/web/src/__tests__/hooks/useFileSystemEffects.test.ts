@@ -258,4 +258,87 @@ describe("useFileSystemEffects", () => {
     });
     expect(reloadCurrentFileFromDisk).not.toHaveBeenCalled();
   });
+
+  it("正文被清空时仍会标记为本地未保存修改", async () => {
+    const { desktop } = buildDesktopMock();
+    const currentFile = {
+      name: "article.md",
+      path: "/workspace/article.md",
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+      updatedAt: new Date("2026-01-01T00:00:00Z"),
+      size: 12,
+      isDirectory: false as const,
+    };
+    const setIsDirty = vi.fn();
+
+    renderHook(() =>
+      useFileSystemEffects({
+        enabled: true,
+        desktop: desktop as DesktopAPI,
+        currentFile,
+        markdown: "",
+        theme: "default",
+        themeName: "默认主题",
+        isRestoring: false,
+        isDirty: false,
+        lastSavedContent: "# Article\n",
+        loadWorkspace: vi.fn(async () => {}),
+        refreshFiles: vi.fn(async () => {}),
+        reloadCurrentFileFromDisk: vi.fn(async () => {}),
+        openFile: vi.fn(async () => {}),
+        createFile: vi.fn(async () => {}),
+        saveFile: vi.fn(async () => {}),
+        selectWorkspace: vi.fn(async () => {}),
+        setIsDirty,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(setIsDirty).toHaveBeenCalledWith(true);
+    });
+  });
+
+  it("刷新事件不会覆盖尚未同步到 fileStore dirty 的编辑器内容", async () => {
+    const { desktop, getRefreshCallback } = buildDesktopMock();
+    const refreshFiles = vi.fn(async () => {});
+    const reloadCurrentFileFromDisk = vi.fn(async () => {});
+    const currentFile = {
+      name: "article.md",
+      path: "/workspace/article.md",
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+      updatedAt: new Date("2026-01-01T00:00:00Z"),
+      size: 12,
+      isDirectory: false as const,
+    };
+    useFileStore.setState({ currentFile, isDirty: false, isRestoring: false });
+
+    renderHook(() =>
+      useFileSystemEffects({
+        enabled: true,
+        desktop: desktop as DesktopAPI,
+        currentFile,
+        markdown: "# Local draft\n",
+        theme: "default",
+        themeName: "默认主题",
+        isRestoring: false,
+        isDirty: false,
+        lastSavedContent: "# Article\n",
+        loadWorkspace: vi.fn(async () => {}),
+        refreshFiles,
+        reloadCurrentFileFromDisk,
+        openFile: vi.fn(async () => {}),
+        createFile: vi.fn(async () => {}),
+        saveFile: vi.fn(async () => {}),
+        selectWorkspace: vi.fn(async () => {}),
+        setIsDirty: vi.fn(),
+      }),
+    );
+
+    getRefreshCallback()?.();
+
+    await waitFor(() => {
+      expect(refreshFiles).toHaveBeenCalledTimes(1);
+    });
+    expect(reloadCurrentFileFromDisk).not.toHaveBeenCalled();
+  });
 });

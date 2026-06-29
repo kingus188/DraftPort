@@ -1,10 +1,7 @@
 import { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { useFileStore } from "../store/fileStore";
-import {
-  applyMarkdownFileMeta,
-  stripMarkdownExtension,
-} from "../utils/markdownFileMeta";
+import { parseMarkdownFileContent } from "../utils/markdownFileMeta";
 import {
   WORKSPACE_KEY,
   type DesktopAPI,
@@ -72,6 +69,11 @@ function refreshPayloadTouchesFile(
   });
 }
 
+/** Returns whether the editor body has diverged from the last saved disk body. */
+function hasUnsavedEditorBody(markdown: string, lastSavedContent: string) {
+  return markdown !== parseMarkdownFileContent(lastSavedContent).body;
+}
+
 function getBaseName(rawPath: string) {
   const last = Math.max(rawPath.lastIndexOf("/"), rawPath.lastIndexOf("\\"));
   return last >= 0 ? rawPath.slice(last + 1) : rawPath;
@@ -121,6 +123,8 @@ export function useFileSystemEffects({
   const openFileRef = useRef(openFile);
   const loadWorkspaceRef = useRef(loadWorkspace);
   const reloadCurrentFileFromDiskRef = useRef(reloadCurrentFileFromDisk);
+  const markdownRef = useRef(markdown);
+  const lastSavedContentRef = useRef(lastSavedContent);
   const dirtyRefreshWarningPathRef = useRef<string | null>(null);
 
   // One scheduler for the document's lifetime; onSave reads the latest store
@@ -161,6 +165,14 @@ export function useFileSystemEffects({
   }, [reloadCurrentFileFromDisk]);
 
   useEffect(() => {
+    markdownRef.current = markdown;
+  }, [markdown]);
+
+  useEffect(() => {
+    lastSavedContentRef.current = lastSavedContent;
+  }, [lastSavedContent]);
+
+  useEffect(() => {
     if (!enabled) return;
     if (!desktop) return;
     const storage = getBrowserStorage();
@@ -184,7 +196,10 @@ export function useFileSystemEffects({
       if (!activeFile || !refreshPayloadTouchesFile(payload, activeFile.path)) {
         return;
       }
-      if (dirty) {
+      if (
+        dirty ||
+        hasUnsavedEditorBody(markdownRef.current, lastSavedContentRef.current)
+      ) {
         if (dirtyRefreshWarningPathRef.current !== activeFile.path) {
           toast("文件已在外部修改，已保留当前未保存内容");
           dirtyRefreshWarningPathRef.current = activeFile.path;
@@ -237,7 +252,7 @@ export function useFileSystemEffects({
 
   useEffect(() => {
     if (!enabled) return;
-    if (!currentFile || !markdown) return;
+    if (!currentFile) return;
     if (isRestoring) return;
 
     // Only the first edit after a save needs the full-content rebuild to flip
@@ -245,11 +260,7 @@ export function useFileSystemEffects({
     // once dirty we skip the expensive reconstruction and just keep the
     // autosave timer armed — this is the per-keystroke hot path.
     if (!isDirty) {
-      const fullContent = applyMarkdownFileMeta(lastSavedContent, {
-        body: markdown,
-        title: currentFile.title || stripMarkdownExtension(currentFile.name),
-      });
-      if (fullContent === lastSavedContent) return;
+      if (!hasUnsavedEditorBody(markdown, lastSavedContent)) return;
       setIsDirty(true);
     }
 
