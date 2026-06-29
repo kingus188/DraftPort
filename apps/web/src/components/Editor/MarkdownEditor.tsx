@@ -11,7 +11,6 @@ import { underlineExtension } from "./markdownUnderline";
 import { useUITheme, type UITheme } from "../../hooks/useUITheme";
 import { useEditorStore } from "../../store/editorStore";
 import { countWords, countLines } from "../../utils/wordCount";
-import { Toolbar } from "./Toolbar";
 import { SearchPanel } from "./SearchPanel";
 import { SaveIndicator } from "./SaveIndicator";
 import "./MarkdownEditor.css";
@@ -57,8 +56,8 @@ function createCodeMirrorThemeExtensions(uiTheme: UITheme): Extension[] {
 }
 
 /**
- * Hosts the CodeMirror Markdown surface, toolbar inserts, document metadata,
- * and editor-to-preview scroll synchronization.
+ * Hosts the CodeMirror Markdown surface, document metadata, and
+ * editor-to-preview scroll synchronization.
  */
 export function MarkdownEditor() {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -195,40 +194,8 @@ export function MarkdownEditor() {
     [content],
   );
 
-  const handleInsert = (
-    prefix: string,
-    suffix: string,
-    placeholder: string,
-  ) => {
-    const view = viewRef.current;
-    if (!view) return;
-
-    const selection = view.state.selection.main;
-    const selectedText = view.state.doc.sliceString(
-      selection.from,
-      selection.to,
-    );
-    const textToInsert = selectedText || placeholder;
-    const fullText = prefix + textToInsert + suffix;
-
-    view.dispatch({
-      changes: {
-        from: selection.from,
-        to: selection.to,
-        insert: fullText,
-      },
-      selection: {
-        anchor: selection.from + prefix.length,
-        head: selection.from + prefix.length + textToInsert.length,
-      },
-    });
-
-    view.focus();
-  };
-
   return (
     <div className="markdown-editor">
-      <Toolbar onInsert={handleInsert} />
       {showSearch && viewRef.current && (
         <SearchPanel
           view={viewRef.current}

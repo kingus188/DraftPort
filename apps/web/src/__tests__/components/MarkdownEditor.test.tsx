@@ -153,10 +153,6 @@ vi.mock("../../components/Editor/mouseSelectionStyle", () => ({
   paragraphSelectionStyle: { extension: "paragraphSelectionStyle" },
 }));
 
-vi.mock("../../components/Editor/Toolbar", () => ({
-  Toolbar: () => <div data-testid="toolbar" />,
-}));
-
 vi.mock("../../components/Editor/SearchPanel", () => ({
   SearchPanel: () => <div data-testid="search-panel" />,
 }));
@@ -201,10 +197,15 @@ describe("MarkdownEditor", () => {
     expect(mocks.setMarkdownMock).not.toHaveBeenCalled();
   });
 
+  it("does not render the Markdown formatting toolbar", () => {
+    render(<MarkdownEditor />);
+
+    expect(screen.queryByTestId("toolbar")).not.toBeInTheDocument();
+  });
+
   it("reconfigures CodeMirror theme without destroying the editor view", () => {
     const { rerender } = render(<MarkdownEditor />);
 
-    expect(screen.getByTestId("toolbar")).toBeInTheDocument();
     expect(mocks.editorViewConstructorMock).toHaveBeenCalledTimes(1);
 
     mocks.theme = "dark";
