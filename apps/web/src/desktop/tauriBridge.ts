@@ -141,7 +141,9 @@ export function installTauriDesktopBridge(
       renameFile: (payload) => call(COMMANDS.renameFile, { payload }),
       deleteFile: (filePath) => call(COMMANDS.deleteFile, { filePath }),
       revealInFinder: (filePath) => call(COMMANDS.revealInFinder, { filePath }),
-      createFolder: (folderName) => call(COMMANDS.createFolder, { folderName }),
+      /** Creates a folder using the payload shape expected by the Rust command. */
+      createFolder: (folderName) =>
+        call(COMMANDS.createFolder, { payload: { folderName } }),
       moveFile: (payload) => call(COMMANDS.moveFile, { payload }),
       inspectFolder: (folderPath) =>
         call(COMMANDS.inspectFolder, { folderPath }),

@@ -73,6 +73,19 @@ describe("installTauriDesktopBridge", () => {
     });
   });
 
+  it("wraps folder creation arguments for the Rust command payload", async () => {
+    const invoke = vi.fn(async () => ({ success: true }));
+    window.__TAURI_INTERNALS__ = { invoke };
+
+    installTauriDesktopBridge();
+
+    await window.desktop!.fs.createFolder("/workspace/docs/child");
+
+    expect(invoke).toHaveBeenCalledWith("folder_create", {
+      payload: { folderName: "/workspace/docs/child" },
+    });
+  });
+
   it("removes only listeners registered through the bridge", async () => {
     const callbacks: Array<() => void> = [];
     window.__TAURI_INTERNALS__ = {
