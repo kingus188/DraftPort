@@ -432,6 +432,43 @@ describe("FileSidebar", () => {
     );
   });
 
+  it("lets users type a folder name in the new-folder modal", () => {
+    const setNewFolderName = vi.fn();
+    mockUseSidebarState.mockReturnValue({
+      ...mockUseSidebarState(),
+      showNewFolderModal: true,
+      newFolderName: "",
+      setNewFolderName,
+    });
+
+    render(<FileSidebar />);
+
+    fireEvent.change(screen.getByPlaceholderText("输入文件夹名称"), {
+      target: { value: "drafts" },
+    });
+
+    expect(setNewFolderName).toHaveBeenCalledWith("drafts");
+  });
+
+  it("keeps confirmation modals above the context-menu overlay", () => {
+    const sidebarStyles = readFileSync(
+      "src/components/Sidebar/FileSidebar.css",
+      "utf8",
+    );
+    const contextOverlayRule =
+      sidebarStyles.match(/\.fs-context-menu-overlay\s*{[^}]+}/)?.[0] ?? "";
+    const confirmBackdropRule =
+      sidebarStyles.match(/\.fs-confirm-backdrop\s*{[^}]+}/)?.[0] ?? "";
+    const contextZIndex = Number(
+      contextOverlayRule.match(/z-index:\s*(\d+)/)?.[1] ?? 0,
+    );
+    const confirmZIndex = Number(
+      confirmBackdropRule.match(/z-index:\s*(\d+)/)?.[1] ?? 0,
+    );
+
+    expect(confirmZIndex).toBeGreaterThan(contextZIndex);
+  });
+
   it("highlights the active folder's effective sort mode in the sort menu", () => {
     mockUseSidebarState.mockReturnValue({
       ...mockUseSidebarState(),
