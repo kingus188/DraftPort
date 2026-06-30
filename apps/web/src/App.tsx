@@ -364,13 +364,12 @@ function App() {
                         </div>
                       ) : canUseWysiwygEditor ? (
                         <>
-                          <div
-                            hidden={activeEditorMode !== "wysiwyg"}
-                            aria-hidden={activeEditorMode !== "wysiwyg"}
-                            style={{ height: "100%" }}
-                          >
-                            <WysiwygMarkdownEditor key={wysiwygDocumentKey} />
-                          </div>
+                          {activeEditorMode === "wysiwyg" && (
+                            <div style={{ height: "100%" }}>
+                              {/* Unmount Milkdown in source mode so its serializer cannot rewrite hidden edits. */}
+                              <WysiwygMarkdownEditor key={wysiwygDocumentKey} />
+                            </div>
+                          )}
                           <div
                             hidden={activeEditorMode !== "source"}
                             aria-hidden={activeEditorMode !== "source"}

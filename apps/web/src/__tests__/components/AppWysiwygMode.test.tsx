@@ -139,7 +139,9 @@ describe("App Typora-like WYSIWYG editing mode", () => {
 
     expect(screen.getByTestId("markdown-source-editor")).toBeInTheDocument();
     expect(screen.getByTestId("markdown-source-editor")).toBeVisible();
-    expect(screen.getByTestId("wysiwyg-markdown-editor")).not.toBeVisible();
+    expect(
+      screen.queryByTestId("wysiwyg-markdown-editor"),
+    ).not.toBeInTheDocument();
 
     fireEvent.keyDown(document, { key: "/", ctrlKey: true });
 
@@ -148,7 +150,7 @@ describe("App Typora-like WYSIWYG editing mode", () => {
     expect(screen.getByTestId("markdown-source-editor")).not.toBeVisible();
   });
 
-  it("keeps the WYSIWYG editor mounted when switching editing modes", () => {
+  it("unmounts WYSIWYG while source editing so hidden serialization cannot rewrite Markdown", () => {
     render(<App />, { wrapper: MemoryRouter });
 
     expect(wysiwygMountState.mountCount).toBe(1);
@@ -156,13 +158,15 @@ describe("App Typora-like WYSIWYG editing mode", () => {
     fireEvent.keyDown(document, { key: "/", ctrlKey: true });
 
     expect(screen.getByTestId("markdown-source-editor")).toBeVisible();
-    expect(screen.getByTestId("wysiwyg-markdown-editor")).not.toBeVisible();
+    expect(
+      screen.queryByTestId("wysiwyg-markdown-editor"),
+    ).not.toBeInTheDocument();
     expect(wysiwygMountState.mountCount).toBe(1);
 
     fireEvent.keyDown(document, { key: "/", ctrlKey: true });
 
     expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeVisible();
-    expect(wysiwygMountState.mountCount).toBe(1);
+    expect(wysiwygMountState.mountCount).toBe(2);
   });
 
   it("remounts the WYSIWYG editor when the active file changes", () => {
