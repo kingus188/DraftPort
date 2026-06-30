@@ -113,14 +113,16 @@ function App() {
       }
       if ((e.metaKey || e.ctrlKey) && e.key === "/") {
         e.preventDefault();
+        e.stopPropagation();
         if (!canUseWysiwygEditor) return;
         setEditorMode((current) =>
           current === "wysiwyg" ? "source" : "wysiwyg",
         );
       }
     };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    // Capture before CodeMirror handles Mod-/ as an HTML comment shortcut.
+    document.addEventListener("keydown", handleKeyDown, true);
+    return () => document.removeEventListener("keydown", handleKeyDown, true);
   }, [canUseWysiwygEditor, saveFile]);
   // 更新提示状态
   const [updateInfo, setUpdateInfo] = useState<{

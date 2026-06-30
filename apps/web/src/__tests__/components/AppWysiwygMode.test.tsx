@@ -46,6 +46,9 @@ const editorStoreState = vi.hoisted(() => ({
   copyToZhihu: vi.fn(),
   copyToJuejin: vi.fn(),
   copyAsHtml: vi.fn(),
+  setMarkdown: vi.fn((markdown: string) => {
+    editorStoreState.markdown = markdown;
+  }),
 }));
 
 vi.mock("../../components/Header/Header", () => ({
@@ -57,7 +60,19 @@ vi.mock("../../components/Sidebar/FileSidebar", () => ({
 }));
 
 vi.mock("../../components/Editor/MarkdownEditor", () => ({
-  MarkdownEditor: () => <div data-testid="markdown-source-editor" />,
+  MarkdownEditor: () => (
+    <div
+      data-testid="markdown-source-editor"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === "/") {
+          editorStoreState.setMarkdown(
+            "<!-- " + editorStoreState.markdown + " -->",
+          );
+        }
+      }}
+    />
+  ),
 }));
 
 vi.mock("../../components/Editor/WysiwygMarkdownEditor", async () => {
@@ -148,6 +163,21 @@ describe("App Typora-like WYSIWYG editing mode", () => {
     expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeInTheDocument();
     expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeVisible();
     expect(screen.getByTestId("markdown-source-editor")).not.toBeVisible();
+  });
+
+  it("does not let the source editor comment shortcut run when toggling back to WYSIWYG", () => {
+    editorStoreState.markdown = "# Hello";
+    render(<App />, { wrapper: MemoryRouter });
+
+    fireEvent.keyDown(document, { key: "/", ctrlKey: true });
+    const sourceEditor = screen.getByTestId("markdown-source-editor");
+    editorStoreState.setMarkdown.mockClear();
+
+    fireEvent.keyDown(sourceEditor, { key: "/", ctrlKey: true });
+
+    expect(screen.getByTestId("wysiwyg-markdown-editor")).toBeVisible();
+    expect(editorStoreState.setMarkdown).not.toHaveBeenCalled();
+    expect(editorStoreState.markdown).toBe("# Hello");
   });
 
   it("unmounts WYSIWYG while source editing so hidden serialization cannot rewrite Markdown", () => {
