@@ -150,9 +150,6 @@
 /* === 内容样式优化 === */
 /* 标题 */
 .editor-container .cm-header {
-  line-height: 1.5;
-  margin-top: 1.2em;
-  margin-bottom: 0.6em;
   color: var(--text-primary);
 }
 
@@ -195,11 +192,8 @@
 .editor-container .cm-inline-code {
   background-color: rgba(247, 250, 252, 0.7);
   color: #e53e3e;
-  padding: 2px 6px;
   border-radius: 4px;
-  font-size: 0.9em;
   font-family: var(--font-mono);
-  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* 行内代码选中状态 - 确保选中时显示选中背景色 */
@@ -212,8 +206,6 @@
 /* 引用块 */
 .editor-container .cm-quote {
   color: var(--text-secondary);
-  border-left: 3px solid var(--border-color);
-  padding-left: 16px;
   margin-left: 0;
   font-style: italic;
 }
@@ -267,7 +259,6 @@
 /* 代码块背景 */
 .editor-container .cm-line.cm-code-block {
   background-color: var(--bg-hover);
-  padding: 2px 0;
 }
 
 /* === 编辑器底部状态栏 === */

@@ -9,25 +9,21 @@ const lightHighlightStyle = HighlightStyle.define([
   {
     tag: t.heading1,
     fontWeight: "700",
-    fontSize: "1.75em",
     color: "#1a202c",
   },
   {
     tag: t.heading2,
     fontWeight: "700",
-    fontSize: "1.5em",
     color: "#2d3748",
   },
   {
     tag: t.heading3,
     fontWeight: "600",
-    fontSize: "1.25em",
     color: "#4a5568",
   },
   {
     tag: t.heading4,
     fontWeight: "600",
-    fontSize: "1.1em",
     color: "#4a5568",
   },
   {
@@ -81,12 +77,8 @@ const lightHighlightStyle = HighlightStyle.define([
   // 行内代码 - 不设置 backgroundColor，让 CSS 控制，避免遮挡选中效果
   {
     tag: t.monospace,
-    fontFamily:
-      'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
     color: "#e53e3e",
-    padding: "2px 5px",
     borderRadius: "3px",
-    fontSize: "0.9em",
   },
 
   // 其他
@@ -107,25 +99,21 @@ const darkHighlightStyle = HighlightStyle.define([
   {
     tag: t.heading1,
     fontWeight: "700",
-    fontSize: "1.75em",
     color: "#81d4fa",
   },
   {
     tag: t.heading2,
     fontWeight: "700",
-    fontSize: "1.5em",
     color: "#4fc3f7",
   },
   {
     tag: t.heading3,
     fontWeight: "600",
-    fontSize: "1.25em",
     color: "#29b6f6",
   },
   {
     tag: t.heading4,
     fontWeight: "600",
-    fontSize: "1.1em",
     color: "#29b6f6",
   },
   {
@@ -179,12 +167,8 @@ const darkHighlightStyle = HighlightStyle.define([
   // 行内代码
   {
     tag: t.monospace,
-    fontFamily:
-      'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
     color: "#ce9178",
-    padding: "2px 5px",
     borderRadius: "3px",
-    fontSize: "0.9em",
   },
 
   // 其他

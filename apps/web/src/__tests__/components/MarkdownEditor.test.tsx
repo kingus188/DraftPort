@@ -173,6 +173,30 @@ vi.mock("../../store/editorStore", () => ({
   }),
 }));
 
+const complexSourceMarkdown = () =>
+  [
+    "# 源码编辑深测",
+    "",
+    "中文段落 **加粗**、行内代码 `const value = 1`、链接 [DraftPort](https://example.com)。",
+    "",
+    "> 引用块第一行",
+    "> 引用块第二行",
+    "",
+    "| 字段 | 值 |",
+    "| --- | --- |",
+    "| 中文 | 不乱码 |",
+    "",
+    "```ts",
+    'const message = "中文源码不乱码";',
+    "console.log(message);",
+    "```",
+    "",
+    "```mermaid",
+    "graph TD",
+    "A[中文节点] --> B[结束]",
+    "```",
+  ].join("\n");
+
 describe("MarkdownEditor", () => {
   beforeEach(() => {
     mocks.content = "# Draft";
@@ -197,6 +221,25 @@ describe("MarkdownEditor", () => {
     expect(mocks.setMarkdownMock).not.toHaveBeenCalled();
   });
 
+  it("writes complex Markdown source edits back exactly", () => {
+    render(<MarkdownEditor />);
+
+    const editedMarkdown = complexSourceMarkdown();
+    mocks.viewInstances[0]?.updateListener?.({
+      docChanged: true,
+      state: {
+        doc: {
+          length: editedMarkdown.length,
+          toString: () => editedMarkdown,
+        },
+      },
+    });
+
+    expect(mocks.setMarkdownMock).toHaveBeenCalledWith(editedMarkdown);
+    expect(mocks.setMarkdownMock.mock.calls[0]?.[0]).toContain(
+      "A[中文节点] --> B[结束]",
+    );
+  });
   it("does not render the Markdown formatting toolbar", () => {
     render(<MarkdownEditor />);
 

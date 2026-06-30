@@ -100,4 +100,30 @@ describe("responsive shell chrome styles", () => {
       /grid-template-columns:\s*var\(--history-width,\s*clamp\(260px,\s*22vw,\s*300px\)\)\s*minmax\(0,\s*1fr\);/,
     );
   });
+
+  it("keeps source Markdown token styles from changing CodeMirror line geometry", () => {
+    const editorCss = readWorkspaceStyle(
+      "src/components/Editor/MarkdownEditor.css",
+    );
+    const markdownTheme = readWorkspaceStyle(
+      "src/components/Editor/markdownTheme.ts",
+    );
+
+    const tokenStyleSelectors = [
+      ".editor-container .cm-header",
+      ".editor-container .cm-inline-code",
+      ".editor-container .cm-quote",
+      ".editor-container .cm-line.cm-code-block",
+    ];
+
+    for (const selector of tokenStyleSelectors) {
+      const ruleBody = getRuleBody(editorCss, selector);
+      expect(ruleBody).not.toMatch(
+        /\b(font-size|line-height|margin-top|margin-bottom|padding|border)\s*:/i,
+      );
+    }
+
+    expect(markdownTheme).not.toMatch(/\bfontSize\s*:/);
+    expect(markdownTheme).not.toMatch(/\bpadding\s*:/);
+  });
 });
